@@ -5,6 +5,13 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
+interface TonicTokens {
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExpires: number;
+  refreshTokenExpires: number;
+}
+
 export const LoginForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -70,7 +77,7 @@ export const LoginForm = () => {
           throw new Error("No session found");
         }
         
-        const { error: tonicError } = await supabase.functions.invoke('authenticate-tonic', {
+        const { data: tonicAuth, error: tonicError } = await supabase.functions.invoke('authenticate-tonic', {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
           },
@@ -82,6 +89,16 @@ export const LoginForm = () => {
           return;
         }
 
+        // Store Tonic tokens in localStorage
+        const tonicTokens: TonicTokens = {
+          accessToken: tonicAuth.data.accessToken.token,
+          refreshToken: tonicAuth.data.refreshToken.token,
+          accessTokenExpires: tonicAuth.data.accessToken.expires,
+          refreshTokenExpires: tonicAuth.data.refreshToken.expires,
+        };
+        
+        localStorage.setItem('tonicTokens', JSON.stringify(tonicTokens));
+        
         toast.success("Welcome back!");
         navigate("/dashboard");
       }
