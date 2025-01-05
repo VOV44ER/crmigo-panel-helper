@@ -20,6 +20,15 @@ serve(async (req) => {
 
     console.log('Received request with auth header:', authHeader);
 
+    // Check for required environment variables
+    const consumerKey = Deno.env.get('TONIC_CONSUMER_KEY');
+    const consumerSecret = Deno.env.get('TONIC_CONSUMER_SECRET');
+
+    if (!consumerKey || !consumerSecret) {
+      console.error('Missing Tonic API credentials');
+      throw new Error('Tonic API credentials not configured');
+    }
+
     // First authenticate with Tonic API to get a token
     const tonicAuthResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
@@ -27,8 +36,8 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
-        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+        consumer_key: consumerKey,
+        consumer_secret: consumerSecret,
       }),
     });
 
@@ -39,7 +48,7 @@ serve(async (req) => {
     }
 
     const tonicAuth = await tonicAuthResponse.json();
-    console.log('Tonic authentication successful:', tonicAuth);
+    console.log('Tonic authentication successful');
 
     // Now use the Tonic token to fetch campaigns
     const campaignsResponse = await fetch(
