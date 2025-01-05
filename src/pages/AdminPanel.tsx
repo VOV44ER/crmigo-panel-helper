@@ -40,19 +40,17 @@ const AdminPanel = () => {
     setLoading(true);
 
     try {
-      // Call the RPC function to create both auth and profile records
-      const { data, error } = await supabase
-        .rpc('create_user_with_profile', {
-          input_username: newUser.username,
-          input_password: newUser.password,
-          input_full_name: newUser.full_name
-        });
+      const { data, error } = await supabase.rpc('create_user_with_profile', {
+        input_username: newUser.username,
+        input_password: newUser.password,
+        input_full_name: newUser.full_name
+      });
 
       if (error) throw error;
 
       toast.success("User created successfully!");
       setIsModalOpen(false);
-      refetch(); // Refresh the users list
+      refetch();
     } catch (error: any) {
       console.error('Error creating user:', error);
       toast.error(error.message || "Failed to create user");
@@ -63,15 +61,14 @@ const AdminPanel = () => {
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      // Delete the auth user (this will cascade to profiles due to our foreign key)
-      const { error } = await supabase.auth.admin.deleteUser(
-        userId
-      );
+      const { data, error } = await supabase.rpc('delete_user_with_profile', {
+        user_id: userId
+      });
 
       if (error) throw error;
 
       toast.success("User deleted successfully!");
-      refetch(); // Refresh the users list
+      refetch();
     } catch (error: any) {
       console.error('Error deleting user:', error);
       toast.error(error.message || "Failed to delete user");

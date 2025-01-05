@@ -53,6 +53,12 @@ export type Database = {
             }
             Returns: Json
           }
+      delete_user_with_profile: {
+        Args: {
+          user_id: string
+        }
+        Returns: Json
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
