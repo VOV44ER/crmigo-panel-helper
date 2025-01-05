@@ -1,7 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { corsHeaders } from "../_shared/cors.ts"
 
 const TONIC_API_URL = "https://api.publisher.tonic.com/v4"
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -19,15 +23,16 @@ serve(async (req) => {
       throw new Error('Missing Tonic API credentials')
     }
 
-    // Create JWT token by base64 encoding the credentials
-    const token = btoa(`${consumerKey}:${consumerSecret}`)
-    console.log('Created authentication token')
+    // Create Bearer token using consumer key
+    const token = `Bearer ${consumerKey}`
+    console.log('Created Bearer token for authentication')
     
     const response = await fetch(`${TONIC_API_URL}/offers`, {
       method: 'GET',
       headers: {
-        'Authorization': `Basic ${token}`,
-        'Content-Type': 'application/json',
+        'Authorization': token,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
       },
     })
 
@@ -47,6 +52,7 @@ serve(async (req) => {
     let data
     try {
       data = JSON.parse(responseText)
+      console.log('Parsed API Response:', data)
     } catch (parseError) {
       console.error('JSON Parse Error:', parseError)
       throw new Error(`Failed to parse Tonic API response: ${parseError.message}`)

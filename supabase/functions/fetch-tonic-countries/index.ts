@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts"
 
 const TONIC_API_URL = "https://api.publisher.tonic.com/v4"
 
@@ -24,19 +23,16 @@ serve(async (req) => {
       throw new Error('Missing Tonic API credentials')
     }
 
-    // Create Basic auth token by base64 encoding the credentials
-    const credentials = `${consumerKey}:${consumerSecret}`
-    const encodedCredentials = base64Encode(new TextEncoder().encode(credentials))
-    const token = `Basic ${encodedCredentials}`
-    
-    console.log('Created authentication token')
+    // Create Bearer token using consumer key
+    const token = `Bearer ${consumerKey}`
+    console.log('Created Bearer token for authentication')
     
     const response = await fetch(`${TONIC_API_URL}/countries`, {
       method: 'GET',
       headers: {
         'Authorization': token,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
       },
     })
 
@@ -56,6 +52,7 @@ serve(async (req) => {
     let data
     try {
       data = JSON.parse(responseText)
+      console.log('Parsed API Response:', data)
     } catch (parseError) {
       console.error('JSON Parse Error:', parseError)
       throw new Error(`Failed to parse Tonic API response: ${parseError.message}`)
