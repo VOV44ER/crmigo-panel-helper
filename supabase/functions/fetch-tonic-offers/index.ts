@@ -14,33 +14,26 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Starting fetch-tonic-offers function...')
-    const consumerKey = Deno.env.get('TONIC_CONSUMER_KEY')
-    const consumerSecret = Deno.env.get('TONIC_CONSUMER_SECRET')
-    
-    if (!consumerKey || !consumerSecret) {
-      console.error('Missing API credentials')
-      throw new Error('Missing Tonic API credentials')
+    // Get the authorization header from the request
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('No authorization header provided')
     }
 
-    // Create Bearer token using consumer key
-    const token = `Bearer ${consumerKey}`
-    console.log('Created Bearer token for authentication')
+    console.log('Using token from request:', authHeader)
     
     const response = await fetch(`${TONIC_API_URL}/offers`, {
       method: 'GET',
       headers: {
-        'Authorization': token,
+        'Authorization': authHeader,
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
     })
 
-    console.log('Tonic API Response Status:', response.status)
-    
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Error response from Tonic API:', errorText)
+      console.error('Failed to fetch offers:', errorText)
       throw new Error(`Tonic API error: ${response.status} - ${errorText}`)
     }
 
@@ -58,10 +51,10 @@ serve(async (req) => {
       throw new Error(`Failed to parse Tonic API response: ${parseError.message}`)
     }
 
-    console.log('Successfully parsed response')
+    console.log('Successfully fetched offers')
     
     return new Response(
-      JSON.stringify({ data: data.data || [] }),
+      JSON.stringify(data),
       { 
         headers: { 
           ...corsHeaders, 
@@ -70,7 +63,7 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    console.error('Error in fetch-tonic-offers:', error.message)
+    console.error('Error:', error)
     return new Response(
       JSON.stringify({ 
         error: error.message,
