@@ -64,6 +64,20 @@ export const LoginForm = () => {
         toast.success("Welcome back, Admin!");
         navigate("/admin");
       } else {
+        // For regular users, authenticate with Tonic API
+        const { data: session } = await supabase.auth.getSession();
+        const { error: tonicError } = await supabase.functions.invoke('authenticate-tonic', {
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+        });
+
+        if (tonicError) {
+          toast.error("Failed to authenticate with Tonic API");
+          await supabase.auth.signOut();
+          return;
+        }
+
         toast.success("Welcome back!");
         navigate("/dashboard");
       }
