@@ -65,10 +65,14 @@ export const LoginForm = () => {
         navigate("/admin");
       } else {
         // For regular users, authenticate with Tonic API
-        const { data: session } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error("No session found");
+        }
+        
         const { error: tonicError } = await supabase.functions.invoke('authenticate-tonic', {
           headers: {
-            Authorization: `Bearer ${session?.access_token}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
         });
 
