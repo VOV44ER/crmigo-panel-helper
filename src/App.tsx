@@ -20,6 +20,7 @@ const ProtectedRoute = ({ children, adminOnly = false }: { children: React.React
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
+        toast.error("Please login to access this page");
         navigate("/auth");
         return;
       }
@@ -27,7 +28,8 @@ const ProtectedRoute = ({ children, adminOnly = false }: { children: React.React
       const isAdmin = session.user.email === "admin@admin.com";
       
       if (adminOnly && !isAdmin) {
-        navigate("/dashboard");
+        toast.error("Unauthorized access");
+        navigate("/auth");
       } else if (!adminOnly && isAdmin) {
         navigate("/admin");
       }
