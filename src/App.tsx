@@ -30,7 +30,7 @@ const ProtectedRoute = ({ children, adminOnly = false }: { children: React.React
       
       if (adminOnly && !isAdmin) {
         toast.error("Unauthorized access");
-        navigate("/auth");
+        navigate("/dashboard");
       } else if (!adminOnly && isAdmin) {
         navigate("/admin");
       }
