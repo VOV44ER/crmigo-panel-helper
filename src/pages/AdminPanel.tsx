@@ -22,16 +22,17 @@ const AdminPanel = () => {
   const { data: users = [], refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const { data: profiles, error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('id, username, full_name, email');
       
       if (error) {
+        console.error('Error fetching users:', error);
         toast.error("Failed to fetch users");
         throw error;
       }
       
-      return profiles as User[];
+      return data as User[];
     }
   });
 
