@@ -37,10 +37,10 @@ export type Database = {
     Functions: {
       create_user_with_profile: {
         Args: {
-          email: string
-          password: string
-          username: string
-          full_name: string
+          input_email: string
+          input_password: string
+          input_username: string
+          input_full_name: string
         }
         Returns: Json
       }

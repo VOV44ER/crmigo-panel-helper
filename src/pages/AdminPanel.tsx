@@ -44,10 +44,10 @@ const AdminPanel = () => {
 
     try {
       const { data, error } = await supabase.rpc('create_user_with_profile', {
-        email: newUser.email,
-        password: newUser.password,
-        username: newUser.username,
-        full_name: newUser.full_name
+        input_email: newUser.email,
+        input_password: newUser.password,
+        input_username: newUser.username,
+        input_full_name: newUser.full_name
       });
 
       if (error) throw error;
