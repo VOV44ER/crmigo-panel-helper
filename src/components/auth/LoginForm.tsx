@@ -95,10 +95,10 @@ export const LoginForm = () => {
           return;
         }
 
-        // Store Tonic token in localStorage
+        // Store only the Tonic token data
         const tonicToken: TonicToken = {
           token: tonicAuth.token,
-          expires: tonicAuth.expires,
+          expires: tonicAuth.expires
         };
         
         console.log('Storing Tonic token:', tonicToken);

@@ -38,8 +38,14 @@ serve(async (req) => {
       throw new Error('Failed to authenticate with Tonic API');
     }
 
-    const data = await response.json();
-    console.log('Tonic authentication successful');
+    const tonicResponse = await response.json();
+    console.log('Tonic authentication successful:', tonicResponse);
+
+    // Make sure we're returning the exact format expected by the client
+    const data = {
+      token: tonicResponse.token,
+      expires: tonicResponse.expires
+    };
 
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
