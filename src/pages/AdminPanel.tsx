@@ -31,7 +31,14 @@ const AdminPanel = () => {
 
       if (error) throw error;
 
-      const userData = data as User;
+      // Explicitly type the response data
+      const userData: User = {
+        id: data.id as string,
+        email: data.email as string,
+        username: data.username as string,
+        full_name: data.full_name as string
+      };
+
       setUsers((prevUsers) => [...prevUsers, userData]);
       setIsModalOpen(false);
       toast.success("User created successfully!");
