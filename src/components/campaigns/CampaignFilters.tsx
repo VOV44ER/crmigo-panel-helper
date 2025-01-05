@@ -93,7 +93,12 @@ const CampaignFilters = ({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent 
+          className="w-auto p-0" 
+          align="end"
+          sideOffset={8}
+          style={{ zIndex: 50 }}
+        >
           <Calendar
             initialFocus
             mode="range"
@@ -101,6 +106,7 @@ const CampaignFilters = ({
             selected={dateRange}
             onSelect={onDateRangeChange}
             numberOfMonths={2}
+            className="rounded-md border shadow-md bg-white"
           />
         </PopoverContent>
       </Popover>
