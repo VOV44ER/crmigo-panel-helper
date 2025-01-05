@@ -18,15 +18,34 @@ export const LoginForm = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // First try to sign in
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
       });
 
-      if (error) throw error;
+      if (signInError) {
+        // If error is email not confirmed, try to resend confirmation email
+        if (signInError.message.includes("Email not confirmed")) {
+          const { error: resendError } = await supabase.auth.resend({
+            type: 'signup',
+            email: credentials.email,
+          });
+          
+          if (resendError) throw resendError;
+          
+          toast.error("Please check your email to confirm your account");
+          return;
+        }
+        throw signInError;
+      }
 
-      // Check if user is admin (you might want to implement proper role checking)
-      if (credentials.email === "admin@example.com") {
+      // Check if user is admin
+      const { data: isAdmin, error: adminError } = await supabase.rpc('is_admin');
+      
+      if (adminError) throw adminError;
+
+      if (isAdmin) {
         toast.success("Welcome back, Admin!");
         navigate("/admin");
       } else {
