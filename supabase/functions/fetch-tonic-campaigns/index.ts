@@ -15,39 +15,45 @@ serve(async (req) => {
     const { states, limit, offset, from, to } = await req.json();
 
     // Get Tonic credentials from environment variables
-    const TONIC_CONSUMER_KEY = Deno.env.get('TONIC_CONSUMER_KEY');
-    const TONIC_CONSUMER_SECRET = Deno.env.get('TONIC_CONSUMER_SECRET');
+    const consumerKey = Deno.env.get('TONIC_CONSUMER_KEY');
+    const consumerSecret = Deno.env.get('TONIC_CONSUMER_SECRET');
 
-    if (!TONIC_CONSUMER_KEY || !TONIC_CONSUMER_SECRET) {
+    if (!consumerKey || !consumerSecret) {
       throw new Error('Missing Tonic API credentials');
     }
 
-    // Get authentication token
-    const tonicAuthResponse = await fetch('https://api.publisher.tonic.com/oauth/v2/token', {
+    console.log('Authenticating with Tonic API...');
+
+    // First, get JWT token
+    const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
       },
-      body: new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: TONIC_CONSUMER_KEY,
-        client_secret: TONIC_CONSUMER_SECRET,
+      body: JSON.stringify({
+        consumer_key: consumerKey,
+        consumer_secret: consumerSecret,
       }),
     });
 
-    if (!tonicAuthResponse.ok) {
+    if (!authResponse.ok) {
+      const error = await authResponse.text();
+      console.error('Tonic API authentication failed:', error);
       throw new Error('Failed to authenticate with Tonic API');
     }
 
-    const tonicAuth = await tonicAuthResponse.json();
+    const { token } = await authResponse.json();
+    console.log('Successfully obtained Tonic JWT token');
 
     // Build the campaigns URL with query parameters
     const campaignsUrl = new URL('https://api.publisher.tonic.com/v4/campaigns');
-    campaignsUrl.searchParams.set('state', states.join(','));
-    campaignsUrl.searchParams.set('limit', limit.toString());
-    campaignsUrl.searchParams.set('offset', offset.toString());
-    campaignsUrl.searchParams.set('from', from || addDays(new Date(), -30).toISOString().split('T')[0]);
-    campaignsUrl.searchParams.set('to', to || new Date().toISOString().split('T')[0]);
+    if (states && states.length > 0) {
+      campaignsUrl.searchParams.set('state', states.join(','));
+    }
+    campaignsUrl.searchParams.set('limit', limit?.toString() || '10');
+    campaignsUrl.searchParams.set('offset', offset?.toString() || '0');
+    if (from) campaignsUrl.searchParams.set('from', from);
+    if (to) campaignsUrl.searchParams.set('to', to);
     campaignsUrl.searchParams.set('stats', 'true');
     campaignsUrl.searchParams.set('orderOrientation', 'desc');
 
@@ -55,16 +61,19 @@ serve(async (req) => {
 
     const campaignsResponse = await fetch(campaignsUrl.toString(), {
       headers: {
-        'Authorization': `Bearer ${tonicAuth.access_token}`,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
     });
 
     if (!campaignsResponse.ok) {
       const errorData = await campaignsResponse.json();
-      throw new Error(`Failed to fetch campaigns: ${JSON.stringify(errorData, null, 4)}`);
+      console.error('Failed to fetch campaigns:', errorData);
+      throw new Error(`Failed to fetch campaigns: ${JSON.stringify(errorData, null, 2)}`);
     }
 
     const campaigns = await campaignsResponse.json();
+    console.log('Successfully fetched campaigns');
 
     return new Response(
       JSON.stringify(campaigns),
