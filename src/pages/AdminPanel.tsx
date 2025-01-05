@@ -20,6 +20,13 @@ interface User {
   full_name: string;
 }
 
+interface CreateUserResponse {
+  id: string;
+  email: string;
+  username: string;
+  full_name: string;
+}
+
 const AdminPanel = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [newUser, setNewUser] = useState({
@@ -45,12 +52,13 @@ const AdminPanel = () => {
 
       if (error) throw error;
 
-      // Parse the response data which now includes all the fields we need
+      // Cast the response data to our expected type
+      const responseData = data as CreateUserResponse;
       const userData: User = {
-        id: data.id,
-        email: data.email,
-        username: data.username,
-        full_name: data.full_name
+        id: responseData.id,
+        email: responseData.email,
+        username: responseData.username,
+        full_name: responseData.full_name
       };
       
       setUsers([...users, userData]);
