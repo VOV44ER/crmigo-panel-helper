@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -50,19 +51,19 @@ const AdminPanel = () => {
         input_full_name: newUser.full_name
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       if (data) {
-        // First cast to unknown, then to our expected type
-        const responseData = (data as unknown) as CreateUserResponse;
         const userData: User = {
-          id: responseData.id,
-          email: responseData.email,
-          username: responseData.username,
-          full_name: responseData.full_name
+          id: data.id,
+          email: data.email,
+          username: data.username,
+          full_name: data.full_name
         };
         
-        setUsers([...users, userData]);
+        setUsers((prevUsers) => [...prevUsers, userData]);
         setNewUser({ email: "", password: "", username: "", full_name: "" });
         setIsModalOpen(false);
         toast.success("User created successfully!");
@@ -92,6 +93,9 @@ const AdminPanel = () => {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create New User</DialogTitle>
+                <DialogDescription>
+                  Fill in the details to create a new user account.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreateUser} className="space-y-4">
                 <div className="space-y-2">
