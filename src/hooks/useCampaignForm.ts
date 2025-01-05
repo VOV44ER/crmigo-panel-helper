@@ -3,9 +3,18 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getTonicToken } from "@/utils/tokenUtils";
 
+interface Offer {
+  id: number;
+  name: string;
+  vertical: {
+    id: number;
+    name: string;
+  };
+}
+
 export const useCampaignForm = (onSuccess: () => void) => {
   const [selectedCountry, setSelectedCountry] = useState<{ code: string; name: string; } | null>(null);
-  const [selectedOffer, setSelectedOffer] = useState<{ id: number; name: string; } | null>(null);
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [campaignName, setCampaignName] = useState("");
   const [targetDomain, setTargetDomain] = useState("");
 
