@@ -10,12 +10,18 @@ import CampaignFilters from "@/components/campaigns/CampaignFilters";
 import CampaignPagination from "@/components/campaigns/CampaignPagination";
 import CampaignTable from "@/components/campaigns/CampaignTable";
 import { TonicResponse } from "@/types/tonic";
+import { DateRange } from "react-day-picker";
+import { addDays } from "date-fns";
 
 const UserDashboard = () => {
   const navigate = useNavigate();
   const [selectedStates, setSelectedStates] = useState<string[]>(['active']);
   const [limit, setLimit] = useState(10);
   const [offset, setOffset] = useState(0);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: addDays(new Date(), -30),
+    to: new Date(),
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -37,15 +43,15 @@ const UserDashboard = () => {
   }, [navigate]);
 
   const { data: response, isLoading, error } = useQuery<TonicResponse>({
-    queryKey: ['campaigns', selectedStates, limit, offset],
+    queryKey: ['campaigns', selectedStates, limit, offset, dateRange],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('fetch-tonic-campaigns', {
         body: { 
           states: selectedStates,
           limit,
           offset,
-          from: '2024-01-01',
-          to: new Date().toISOString().split('T')[0]
+          from: dateRange?.from?.toISOString().split('T')[0],
+          to: dateRange?.to?.toISOString().split('T')[0]
         }
       });
 
@@ -87,15 +93,9 @@ const UserDashboard = () => {
           <CampaignFilters 
             selectedStates={selectedStates}
             onStateChange={setSelectedStates}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
           />
-          <div className="flex gap-2">
-            <Button variant="outline" size="icon">
-              <Settings className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon">
-              <Filter className="h-4 w-4" />
-            </Button>
-          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
