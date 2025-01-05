@@ -45,16 +45,19 @@ const AdminPanel = () => {
 
       if (error) throw error;
 
-      setUsers([...users, {
-        id: data.id,
-        email: newUser.email,
-        username: newUser.username,
-        full_name: newUser.full_name
-      }]);
-      
-      setNewUser({ email: "", password: "", username: "", full_name: "" });
-      setIsModalOpen(false);
-      toast.success("User created successfully!");
+      if (data) {
+        const userData = {
+          id: data.id,
+          email: newUser.email,
+          username: newUser.username,
+          full_name: newUser.full_name
+        };
+        
+        setUsers([...users, userData]);
+        setNewUser({ email: "", password: "", username: "", full_name: "" });
+        setIsModalOpen(false);
+        toast.success("User created successfully!");
+      }
     } catch (error: any) {
       toast.error(error.message || "Failed to create user");
     } finally {
