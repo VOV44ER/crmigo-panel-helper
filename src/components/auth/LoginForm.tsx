@@ -82,7 +82,15 @@ export const LoginForm = () => {
         });
 
         if (tonicError) {
+          console.error('Tonic authentication error:', tonicError);
           toast.error("Failed to authenticate with Tonic API");
+          await supabase.auth.signOut();
+          return;
+        }
+
+        if (!tonicAuth || !tonicAuth.token) {
+          console.error('Invalid Tonic authentication response:', tonicAuth);
+          toast.error("Invalid authentication response from Tonic API");
           await supabase.auth.signOut();
           return;
         }
@@ -93,12 +101,14 @@ export const LoginForm = () => {
           expires: tonicAuth.expires,
         };
         
+        console.log('Storing Tonic token:', tonicToken);
         localStorage.setItem('tonicToken', JSON.stringify(tonicToken));
         
         toast.success("Welcome back!");
         navigate("/dashboard");
       }
     } catch (error: any) {
+      console.error('Login error:', error);
       toast.error(error.message || "Invalid credentials");
     } finally {
       setLoading(false);

@@ -5,11 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface TonicAuthResponse {
-  token: string;
-  expires: number;
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -24,7 +19,8 @@ serve(async (req) => {
       throw new Error('Missing Tonic API credentials');
     }
 
-    // Regular authentication
+    console.log('Authenticating with Tonic API...');
+
     const response = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
       headers: {
@@ -36,8 +32,14 @@ serve(async (req) => {
       }),
     });
 
-    const data: TonicAuthResponse = await response.json();
-    console.log('Tonic auth response:', data);
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('Tonic API authentication failed:', error);
+      throw new Error('Failed to authenticate with Tonic API');
+    }
+
+    const data = await response.json();
+    console.log('Tonic authentication successful');
 
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
