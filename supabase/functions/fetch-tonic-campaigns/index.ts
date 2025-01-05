@@ -18,28 +18,50 @@ serve(async (req) => {
       throw new Error('No authorization header');
     }
 
-    console.log('Forwarding request to Tonic API with token');
+    console.log('Received request with auth header:', authHeader);
 
-    // Forward the request to Tonic API
-    const response = await fetch(
+    // First authenticate with Tonic API to get a token
+    const tonicAuthResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
+        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+      }),
+    });
+
+    if (!tonicAuthResponse.ok) {
+      const error = await tonicAuthResponse.text();
+      console.error('Tonic API authentication failed:', error);
+      throw new Error(`Failed to authenticate with Tonic API: ${error}`);
+    }
+
+    const tonicAuth = await tonicAuthResponse.json();
+    console.log('Tonic authentication successful:', tonicAuth);
+
+    // Now use the Tonic token to fetch campaigns
+    const campaignsResponse = await fetch(
       'https://api.publisher.tonic.com/privileged/v3/campaign/list?state=active&output=json',
       {
         headers: {
-          'Authorization': authHeader,
+          'Authorization': `Bearer ${tonicAuth.token}`,
           'Content-Type': 'application/json',
         },
       }
     );
 
-    const data = await response.text();
-    console.log('Tonic API response:', data);
-
-    if (!response.ok) {
-      throw new Error(`Tonic API error: ${data}`);
+    if (!campaignsResponse.ok) {
+      const error = await campaignsResponse.text();
+      console.error('Failed to fetch campaigns:', error);
+      throw new Error(`Failed to fetch campaigns: ${error}`);
     }
 
-    // Return the response with CORS headers
-    return new Response(data, {
+    const campaigns = await campaignsResponse.json();
+    console.log('Successfully fetched campaigns');
+
+    return new Response(JSON.stringify(campaigns), {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/json',
