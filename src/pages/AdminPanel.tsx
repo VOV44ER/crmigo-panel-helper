@@ -60,26 +60,28 @@ const AdminPanel = () => {
   const handleCreateUser = async (newUser: NewUser) => {
     setLoading(true);
     try {
+      // Create auth user with a valid email format
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: `${newUser.username}@placeholder.com`,
+        email: `${newUser.username}@admin.com`,
         password: newUser.password,
         options: {
-          emailRedirectTo: window.location.origin,
+          data: {
+            username: newUser.username,
+            full_name: newUser.full_name
+          }
         }
       });
 
       if (signUpError) throw signUpError;
       if (!authData.user) throw new Error("No user returned from auth creation");
 
-      // Create profile with password
+      // Update profile with password
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert({
-          id: authData.user.id,
-          username: newUser.username,
-          full_name: newUser.full_name,
-          password_text: newUser.password // Store password in profiles table
-        });
+        .update({
+          password_text: newUser.password
+        })
+        .eq('id', authData.user.id);
 
       if (profileError) throw profileError;
 
@@ -96,12 +98,11 @@ const AdminPanel = () => {
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
+      const { error } = await supabase.rpc('delete_user_with_profile', {
+        user_id: userId
+      });
 
-      if (profileError) throw profileError;
+      if (error) throw error;
 
       toast.success("User deleted successfully!");
       refetch();
