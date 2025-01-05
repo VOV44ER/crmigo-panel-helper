@@ -26,6 +26,7 @@ serve(async (req) => {
       throw new Error('Tonic API credentials not configured');
     }
 
+    // Get authentication token
     const tonicAuthResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
       headers: {
