@@ -34,11 +34,13 @@ export function CreateCampaignModal() {
   const { data: countriesResponse, isLoading: isLoadingCountries } = useQuery({
     queryKey: ['countries'],
     queryFn: async () => {
+      console.log('Fetching countries...');
       const { data, error } = await supabase.functions.invoke('fetch-tonic-countries');
       if (error) {
         console.error('Error fetching countries:', error);
         throw error;
       }
+      console.log('Countries API Response:', data);
       return data;
     }
   });
@@ -46,14 +48,19 @@ export function CreateCampaignModal() {
   const { data: offersResponse, isLoading: isLoadingOffers } = useQuery({
     queryKey: ['offers'],
     queryFn: async () => {
+      console.log('Fetching offers...');
       const { data, error } = await supabase.functions.invoke('fetch-tonic-offers');
       if (error) {
         console.error('Error fetching offers:', error);
         throw error;
       }
+      console.log('Offers API Response:', data);
       return data;
     }
   });
+
+  console.log('Processed Countries Response:', countriesResponse);
+  console.log('Processed Offers Response:', offersResponse);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +70,13 @@ export function CreateCampaignModal() {
     }
 
     try {
+      console.log('Creating campaign with:', {
+        countryId: selectedCountry.code,
+        offerId: selectedOffer.id,
+        name: campaignName,
+        targetDomain: targetDomain || undefined
+      });
+
       const { error } = await supabase.functions.invoke('create-tonic-campaign', {
         body: {
           countryId: selectedCountry.code,
@@ -82,6 +96,7 @@ export function CreateCampaignModal() {
       setCampaignName("");
       setTargetDomain("");
     } catch (error: any) {
+      console.error('Campaign creation error:', error);
       toast.error(error.message || "Failed to create campaign");
     }
   };
