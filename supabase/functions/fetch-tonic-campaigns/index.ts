@@ -45,11 +45,14 @@ serve(async (req) => {
     const { token } = await authResponse.json();
     console.log('Successfully obtained Tonic JWT token');
 
+    // Ensure we have at least one state
+    if (!states || states.length === 0) {
+      throw new Error('At least one state must be selected');
+    }
+
     // Build the campaigns URL with query parameters
     const campaignsUrl = new URL('https://api.publisher.tonic.com/v4/campaigns');
-    if (states && states.length > 0) {
-      campaignsUrl.searchParams.set('state', states.join(','));
-    }
+    campaignsUrl.searchParams.set('state', states.join(','));
     campaignsUrl.searchParams.set('limit', limit?.toString() || '10');
     campaignsUrl.searchParams.set('offset', offset?.toString() || '0');
     if (from) campaignsUrl.searchParams.set('from', from);

@@ -7,12 +7,12 @@ import { useQuery } from "@tanstack/react-query";
 import CampaignFilters from "@/components/campaigns/CampaignFilters";
 import CampaignPagination from "@/components/campaigns/CampaignPagination";
 import CampaignTable from "@/components/campaigns/CampaignTable";
-import { TonicResponse } from "@/types/tonic";
 import { DateRange } from "react-day-picker";
 import { addDays } from "date-fns";
 
 const UserDashboard = () => {
   const navigate = useNavigate();
+  // Ensure we always have at least one state selected
   const [selectedStates, setSelectedStates] = useState<string[]>(['active']);
   const [limit, setLimit] = useState(10);
   const [offset, setOffset] = useState(0);
@@ -43,6 +43,12 @@ const UserDashboard = () => {
   const { data: response, isLoading, error } = useQuery({
     queryKey: ['campaigns', selectedStates, limit, offset, dateRange],
     queryFn: async () => {
+      // Ensure we have at least one state selected
+      if (selectedStates.length === 0) {
+        setSelectedStates(['active']);
+        return null;
+      }
+
       const { data, error } = await supabase.functions.invoke('fetch-tonic-campaigns', {
         body: { 
           states: selectedStates,
@@ -70,7 +76,14 @@ const UserDashboard = () => {
         <div className="flex items-center justify-between mb-6">
           <CampaignFilters 
             selectedStates={selectedStates}
-            onStateChange={setSelectedStates}
+            onStateChange={(states) => {
+              // Ensure we always have at least one state selected
+              if (states.length === 0) {
+                toast.error("At least one state must be selected");
+                return;
+              }
+              setSelectedStates(states);
+            }}
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
           />
