@@ -4,35 +4,34 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { CountrySelector } from "./CountrySelector";
+import { OfferSelector } from "./OfferSelector";
 
 interface Country {
-  id: string;
-  name: string;
   code: string;
+  name: string;
 }
 
 interface Offer {
   id: number;
   name: string;
+  vertical: {
+    id: number;
+    name: string;
+  };
 }
 
 export function CreateCampaignModal() {
   const [open, setOpen] = useState(false);
-  const [openCountryCombobox, setOpenCountryCombobox] = useState(false);
-  const [openOfferCombobox, setOpenOfferCombobox] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [campaignName, setCampaignName] = useState("");
   const [targetDomain, setTargetDomain] = useState("");
 
-  const { data: countries = [], isLoading: isLoadingCountries } = useQuery({
+  const { data: countriesResponse, isLoading: isLoadingCountries } = useQuery({
     queryKey: ['countries'],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('fetch-tonic-countries');
@@ -40,11 +39,11 @@ export function CreateCampaignModal() {
         console.error('Error fetching countries:', error);
         throw error;
       }
-      return data as Country[];
+      return data as { data: Country[] };
     }
   });
 
-  const { data: offers = [], isLoading: isLoadingOffers } = useQuery({
+  const { data: offersResponse, isLoading: isLoadingOffers } = useQuery({
     queryKey: ['offers'],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('fetch-tonic-offers');
@@ -52,7 +51,7 @@ export function CreateCampaignModal() {
         console.error('Error fetching offers:', error);
         throw error;
       }
-      return data as Offer[];
+      return data as { data: Offer[] };
     }
   });
 
@@ -66,7 +65,7 @@ export function CreateCampaignModal() {
     try {
       const { error } = await supabase.functions.invoke('create-tonic-campaign', {
         body: {
-          countryId: selectedCountry.id,
+          countryId: selectedCountry.code,
           offerId: selectedOffer.id,
           name: campaignName,
           targetDomain: targetDomain || undefined
@@ -105,102 +104,22 @@ export function CreateCampaignModal() {
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           <div className="space-y-2">
             <Label>Select Country</Label>
-            <Popover open={openCountryCombobox} onOpenChange={setOpenCountryCombobox}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={openCountryCombobox}
-                  className="w-full justify-between"
-                  disabled={isLoadingCountries}
-                >
-                  {isLoadingCountries ? (
-                    "Loading countries..."
-                  ) : selectedCountry ? (
-                    selectedCountry.name
-                  ) : (
-                    "Select country..."
-                  )}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0" align="start" style={{ zIndex: 50 }}>
-                <Command>
-                  <CommandInput placeholder="Search country..." />
-                  <CommandEmpty>No country found.</CommandEmpty>
-                  <CommandGroup className="max-h-[200px] overflow-y-auto">
-                    {countries.map((country) => (
-                      <CommandItem
-                        key={country.id}
-                        value={country.name}
-                        onSelect={() => {
-                          setSelectedCountry(country);
-                          setOpenCountryCombobox(false);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            selectedCountry?.id === country.id ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {country.name}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <CountrySelector
+              selectedCountry={selectedCountry}
+              onCountrySelect={setSelectedCountry}
+              countries={countriesResponse?.data || []}
+              isLoading={isLoadingCountries}
+            />
           </div>
 
           <div className="space-y-2">
             <Label>Select Offer</Label>
-            <Popover open={openOfferCombobox} onOpenChange={setOpenOfferCombobox}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={openOfferCombobox}
-                  className="w-full justify-between"
-                  disabled={isLoadingOffers}
-                >
-                  {isLoadingOffers ? (
-                    "Loading offers..."
-                  ) : selectedOffer ? (
-                    selectedOffer.name
-                  ) : (
-                    "Select offer..."
-                  )}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0" align="start" style={{ zIndex: 50 }}>
-                <Command>
-                  <CommandInput placeholder="Search offer..." />
-                  <CommandEmpty>No offer found.</CommandEmpty>
-                  <CommandGroup className="max-h-[200px] overflow-y-auto">
-                    {offers.map((offer) => (
-                      <CommandItem
-                        key={offer.id}
-                        value={offer.name}
-                        onSelect={() => {
-                          setSelectedOffer(offer);
-                          setOpenOfferCombobox(false);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            selectedOffer?.id === offer.id ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {offer.name}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <OfferSelector
+              selectedOffer={selectedOffer}
+              onOfferSelect={setSelectedOffer}
+              offers={offersResponse?.data || []}
+              isLoading={isLoadingOffers}
+            />
           </div>
 
           <div className="space-y-2">
