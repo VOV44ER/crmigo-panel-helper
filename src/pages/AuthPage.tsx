@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -10,19 +11,36 @@ const AuthPage = () => {
     username: "",
     password: "",
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     
-    // Simple mock authentication
-    if (credentials.username === "admin" && credentials.password === "admin") {
-      toast.success("Logged in as admin");
-      navigate("/admin");
-    } else if (credentials.username === "user" && credentials.password === "user") {
-      toast.success("Logged in as user");
-      navigate("/dashboard");
-    } else {
-      toast.error("Invalid credentials");
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: `${credentials.username}@admin.com`,
+        password: credentials.password,
+      });
+
+      if (error) throw error;
+
+      // Check if user is admin
+      const { data: isAdmin, error: adminError } = await supabase.rpc('is_admin');
+      
+      if (adminError) throw adminError;
+
+      if (isAdmin) {
+        toast.success("Logged in as admin");
+        navigate("/admin");
+      } else {
+        toast.success("Logged in as user");
+        navigate("/dashboard");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Invalid credentials");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,15 +83,15 @@ const AuthPage = () => {
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Sign In
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Signing in..." : "Sign In"}
           </Button>
         </form>
 
         <div className="text-sm text-center text-gray-600">
-          <p>Demo Credentials:</p>
-          <p>Admin: admin/admin</p>
-          <p>User: user/user</p>
+          <p>Demo Admin Credentials:</p>
+          <p>Username: admin</p>
+          <p>Password: admin123</p>
         </div>
       </div>
     </div>
