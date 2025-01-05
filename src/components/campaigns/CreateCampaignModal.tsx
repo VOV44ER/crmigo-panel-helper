@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
@@ -32,20 +32,26 @@ export function CreateCampaignModal() {
   const [campaignName, setCampaignName] = useState("");
   const [targetDomain, setTargetDomain] = useState("");
 
-  const { data: countries, isLoading: isLoadingCountries } = useQuery({
+  const { data: countries = [], isLoading: isLoadingCountries } = useQuery({
     queryKey: ['countries'],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('fetch-tonic-countries');
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching countries:', error);
+        throw error;
+      }
       return data as Country[];
     }
   });
 
-  const { data: offers, isLoading: isLoadingOffers } = useQuery({
+  const { data: offers = [], isLoading: isLoadingOffers } = useQuery({
     queryKey: ['offers'],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('fetch-tonic-offers');
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching offers:', error);
+        throw error;
+      }
       return data as Offer[];
     }
   });
@@ -92,6 +98,9 @@ export function CreateCampaignModal() {
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Create New Campaign</DialogTitle>
+          <DialogDescription>
+            Fill in the details below to create a new campaign.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           <div className="space-y-2">
@@ -103,8 +112,15 @@ export function CreateCampaignModal() {
                   role="combobox"
                   aria-expanded={openCountryCombobox}
                   className="w-full justify-between"
+                  disabled={isLoadingCountries}
                 >
-                  {selectedCountry ? selectedCountry.name : "Select country..."}
+                  {isLoadingCountries ? (
+                    "Loading countries..."
+                  ) : selectedCountry ? (
+                    selectedCountry.name
+                  ) : (
+                    "Select country..."
+                  )}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -113,7 +129,7 @@ export function CreateCampaignModal() {
                   <CommandInput placeholder="Search country..." />
                   <CommandEmpty>No country found.</CommandEmpty>
                   <CommandGroup className="max-h-[200px] overflow-y-auto">
-                    {countries?.map((country) => (
+                    {countries.map((country) => (
                       <CommandItem
                         key={country.id}
                         value={country.name}
@@ -146,8 +162,15 @@ export function CreateCampaignModal() {
                   role="combobox"
                   aria-expanded={openOfferCombobox}
                   className="w-full justify-between"
+                  disabled={isLoadingOffers}
                 >
-                  {selectedOffer ? selectedOffer.name : "Select offer..."}
+                  {isLoadingOffers ? (
+                    "Loading offers..."
+                  ) : selectedOffer ? (
+                    selectedOffer.name
+                  ) : (
+                    "Select offer..."
+                  )}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -156,7 +179,7 @@ export function CreateCampaignModal() {
                   <CommandInput placeholder="Search offer..." />
                   <CommandEmpty>No offer found.</CommandEmpty>
                   <CommandGroup className="max-h-[200px] overflow-y-auto">
-                    {offers?.map((offer) => (
+                    {offers.map((offer) => (
                       <CommandItem
                         key={offer.id}
                         value={offer.name}
@@ -181,6 +204,15 @@ export function CreateCampaignModal() {
           </div>
 
           <div className="space-y-2">
+            <Label>Campaign Name</Label>
+            <Input
+              value={campaignName}
+              onChange={(e) => setCampaignName(e.target.value)}
+              placeholder="Enter campaign name"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label>Target Domain (optional)</Label>
             <div className="flex">
               <div className="bg-muted px-3 py-2 rounded-l-md border border-r-0">
@@ -196,15 +228,6 @@ export function CreateCampaignModal() {
                 .bond
               </div>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Campaign Name</Label>
-            <Input
-              value={campaignName}
-              onChange={(e) => setCampaignName(e.target.value)}
-              placeholder="Enter campaign name"
-            />
           </div>
 
           <Button type="submit" className="w-full">
