@@ -22,7 +22,7 @@ const AdminPanel = () => {
   const { data: users = [], refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: profiles, error } = await supabase
         .from('profiles')
         .select('id, username, full_name');
       
@@ -32,7 +32,7 @@ const AdminPanel = () => {
         throw error;
       }
       
-      return data as User[];
+      return profiles as User[];
     }
   });
 
@@ -40,6 +40,7 @@ const AdminPanel = () => {
     setLoading(true);
 
     try {
+      // Call the RPC function to create both auth and profile records
       const { data, error } = await supabase
         .rpc('create_user_with_profile', {
           input_username: newUser.username,
@@ -62,10 +63,10 @@ const AdminPanel = () => {
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
+      // Delete the auth user (this will cascade to profiles due to our foreign key)
+      const { error } = await supabase.auth.admin.deleteUser(
+        userId
+      );
 
       if (error) throw error;
 
