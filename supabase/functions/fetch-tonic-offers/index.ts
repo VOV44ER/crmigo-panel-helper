@@ -20,7 +20,7 @@ serve(async (req) => {
       throw new Error('No authorization header provided')
     }
 
-    console.log('Using token from request:', authHeader)
+    console.log('Fetching offers with token...')
     
     const response = await fetch(`${TONIC_API_URL}/offers`, {
       method: 'GET',

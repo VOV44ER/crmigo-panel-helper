@@ -31,11 +31,36 @@ export function CreateCampaignModal() {
   const [campaignName, setCampaignName] = useState("");
   const [targetDomain, setTargetDomain] = useState("");
 
+  // Get Tonic token from localStorage
+  const getTonicToken = () => {
+    const tonicTokenData = localStorage.getItem('tonicToken');
+    if (!tonicTokenData) {
+      toast.error("Authentication token not found. Please login again.");
+      return null;
+    }
+    try {
+      const { token } = JSON.parse(tonicTokenData);
+      return token;
+    } catch (error) {
+      console.error('Error parsing Tonic token:', error);
+      toast.error("Invalid authentication token. Please login again.");
+      return null;
+    }
+  };
+
   const { data: countriesResponse, isLoading: isLoadingCountries } = useQuery({
     queryKey: ['countries'],
     queryFn: async () => {
       console.log('Fetching countries...');
-      const { data, error } = await supabase.functions.invoke('fetch-tonic-countries');
+      const token = getTonicToken();
+      if (!token) throw new Error('No authentication token found');
+
+      const { data, error } = await supabase.functions.invoke('fetch-tonic-countries', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
       if (error) {
         console.error('Error fetching countries:', error);
         throw error;
@@ -49,7 +74,15 @@ export function CreateCampaignModal() {
     queryKey: ['offers'],
     queryFn: async () => {
       console.log('Fetching offers...');
-      const { data, error } = await supabase.functions.invoke('fetch-tonic-offers');
+      const token = getTonicToken();
+      if (!token) throw new Error('No authentication token found');
+
+      const { data, error } = await supabase.functions.invoke('fetch-tonic-offers', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
       if (error) {
         console.error('Error fetching offers:', error);
         throw error;
@@ -70,6 +103,9 @@ export function CreateCampaignModal() {
     }
 
     try {
+      const token = getTonicToken();
+      if (!token) return;
+
       console.log('Creating campaign with:', {
         countryId: selectedCountry.code,
         offerId: selectedOffer.id,
@@ -78,6 +114,9 @@ export function CreateCampaignModal() {
       });
 
       const { error } = await supabase.functions.invoke('create-tonic-campaign', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: {
           countryId: selectedCountry.code,
           offerId: selectedOffer.id,
