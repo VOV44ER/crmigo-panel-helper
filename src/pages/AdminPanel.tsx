@@ -20,7 +20,7 @@ interface User {
   full_name: string;
 }
 
-interface CreateUserResponse {
+type CreateUserResponse = {
   id: string;
   email: string;
   username: string;
@@ -53,7 +53,8 @@ const AdminPanel = () => {
       if (error) throw error;
 
       if (data) {
-        const responseData = data as CreateUserResponse;
+        // First cast to unknown, then to our expected type
+        const responseData = (data as unknown) as CreateUserResponse;
         const userData: User = {
           id: responseData.id,
           email: responseData.email,
@@ -67,6 +68,7 @@ const AdminPanel = () => {
         toast.success("User created successfully!");
       }
     } catch (error: any) {
+      console.error('Error creating user:', error);
       toast.error(error.message || "Failed to create user");
     } finally {
       setLoading(false);
