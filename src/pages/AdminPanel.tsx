@@ -12,40 +12,46 @@ import { supabase } from "@/integrations/supabase/client";
 import { CreateUserForm } from "@/components/admin/CreateUserForm";
 import { UsersTable } from "@/components/admin/UsersTable";
 import { User, NewUser } from "@/types/admin";
-import { Json } from "@/integrations/supabase/types";
+import { useQuery } from "@tanstack/react-query";
 
 const AdminPanel = () => {
-  const [users, setUsers] = useState<User[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Fetch users using React Query
+  const { data: users = [], refetch } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, email');
+      
+      if (error) {
+        toast.error("Failed to fetch users");
+        throw error;
+      }
+      
+      return profiles as User[];
+    }
+  });
 
   const handleCreateUser = async (newUser: NewUser) => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.rpc('create_user_with_profile', {
-        input_email: newUser.email,
-        input_password: newUser.password,
-        input_username: newUser.username,
-        input_full_name: newUser.full_name
-      });
+      const { data, error } = await supabase
+        .rpc('create_user_with_profile', {
+          input_email: newUser.email,
+          input_password: newUser.password,
+          input_username: newUser.username,
+          input_full_name: newUser.full_name
+        });
 
       if (error) throw error;
 
-      // Type assertion for the JSON response
-      const jsonData = data as { [key: string]: Json };
-      
-      // Create a properly typed User object
-      const userData: User = {
-        id: String(jsonData.id),
-        email: String(jsonData.email),
-        username: String(jsonData.username),
-        full_name: String(jsonData.full_name)
-      };
-
-      setUsers((prevUsers) => [...prevUsers, userData]);
-      setIsModalOpen(false);
       toast.success("User created successfully!");
+      setIsModalOpen(false);
+      refetch(); // Refresh the users list
     } catch (error: any) {
       console.error('Error creating user:', error);
       toast.error(error.message || "Failed to create user");
