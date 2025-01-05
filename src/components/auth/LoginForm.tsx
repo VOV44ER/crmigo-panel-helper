@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,19 +13,29 @@ export const LoginForm = () => {
     password: "",
   });
 
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const isAdmin = session.user.email === "admin@admin.com";
+        navigate(isAdmin ? "/admin" : "/dashboard");
+      }
+    };
+    checkSession();
+  }, [navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // First try to sign in
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
       });
 
       if (signInError) {
-        // If error is email not confirmed, try to resend confirmation email
         if (signInError.message.includes("Email not confirmed")) {
           const { error: resendError } = await supabase.auth.resend({
             type: 'signup',
@@ -48,7 +58,7 @@ export const LoginForm = () => {
         const { data: isAdminVerified, error: adminError } = await supabase.rpc('is_admin');
         if (adminError || !isAdminVerified) {
           toast.error("Unauthorized access");
-          navigate("/dashboard");
+          await supabase.auth.signOut();
           return;
         }
         toast.success("Welcome back, Admin!");
