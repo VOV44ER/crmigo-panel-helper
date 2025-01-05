@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import CampaignFilters from "@/components/campaigns/CampaignFilters";
 import CampaignPagination from "@/components/campaigns/CampaignPagination";
 import CampaignTable from "@/components/campaigns/CampaignTable";
+import { CreateCampaignModal } from "@/components/campaigns/CreateCampaignModal";
 import { DateRange } from "react-day-picker";
 import { addDays } from "date-fns";
 
@@ -77,7 +78,6 @@ const UserDashboard = () => {
           <CampaignFilters 
             selectedStates={selectedStates}
             onStateChange={(states) => {
-              // Ensure we always have at least one state selected
               if (states.length === 0) {
                 toast.error("At least one state must be selected");
                 return;
@@ -87,6 +87,7 @@ const UserDashboard = () => {
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
           />
+          <CreateCampaignModal />
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
