@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { Settings, Filter } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,7 +40,7 @@ const UserDashboard = () => {
     checkAuth();
   }, [navigate]);
 
-  const { data: response, isLoading, error } = useQuery<TonicResponse>({
+  const { data: response, isLoading, error } = useQuery({
     queryKey: ['campaigns', selectedStates, limit, offset, dateRange],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('fetch-tonic-campaigns', {
@@ -60,28 +58,8 @@ const UserDashboard = () => {
     },
   });
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <main className="container mx-auto py-6 px-4">
-          <div className="text-center">Loading campaigns...</div>
-        </main>
-      </div>
-    );
-  }
-
   if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <main className="container mx-auto py-6 px-4">
-          <div className="text-center text-red-500">
-            Error loading campaigns: {error instanceof Error ? error.message : 'Unknown error'}
-          </div>
-        </main>
-      </div>
-    );
+    toast.error(error instanceof Error ? error.message : 'An error occurred');
   }
 
   return (
@@ -99,7 +77,10 @@ const UserDashboard = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <CampaignTable campaigns={response?.data || []} />
+          <CampaignTable 
+            campaigns={response?.data || []} 
+            isLoading={isLoading}
+          />
           <CampaignPagination
             total={response?.pagination.total || 0}
             limit={limit}

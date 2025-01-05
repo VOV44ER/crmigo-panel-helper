@@ -17,12 +17,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TonicCampaign } from "@/types/tonic";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CampaignTableProps {
   campaigns: TonicCampaign[];
+  isLoading: boolean;
 }
 
-const CampaignTable = ({ campaigns }: CampaignTableProps) => {
+const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
   const handleCopyLink = (link: string) => {
     navigator.clipboard.writeText(link);
     toast.success("Link copied to clipboard");
@@ -53,6 +55,16 @@ const CampaignTable = ({ campaigns }: CampaignTableProps) => {
     return `${(value * 100).toFixed(1)}%`;
   };
 
+  const LoadingRow = () => (
+    <TableRow>
+      {Array(16).fill(0).map((_, i) => (
+        <TableCell key={i}>
+          <Skeleton className="h-4 w-full" />
+        </TableCell>
+      ))}
+    </TableRow>
+  );
+
   return (
     <Table>
       <TableHeader>
@@ -79,7 +91,13 @@ const CampaignTable = ({ campaigns }: CampaignTableProps) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {campaigns.map((campaign) => (
+        {isLoading ? (
+          <>
+            <LoadingRow />
+            <LoadingRow />
+            <LoadingRow />
+          </>
+        ) : campaigns.map((campaign) => (
           <TableRow key={campaign.id}>
             <TableCell>
               <input type="checkbox" className="rounded border-gray-300" />

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Settings, Filter, Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -74,7 +74,7 @@ const CampaignFilters = ({
           <Button
             variant="outline"
             className={cn(
-              "justify-start text-left font-normal",
+              "w-[280px] justify-start text-left font-normal",
               !dateRange && "text-muted-foreground"
             )}
           >
@@ -93,7 +93,7 @@ const CampaignFilters = ({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="end">
+        <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             initialFocus
             mode="range"
@@ -104,12 +104,6 @@ const CampaignFilters = ({
           />
         </PopoverContent>
       </Popover>
-      <Button variant="outline" size="icon">
-        <Settings className="h-4 w-4" />
-      </Button>
-      <Button variant="outline" size="icon">
-        <Filter className="h-4 w-4" />
-      </Button>
     </div>
   );
 };
