@@ -23,6 +23,7 @@ serve(async (req) => {
     console.log('Creating Bearer token...')
     
     const response = await fetch(`${TONIC_API_URL}/countries`, {
+      method: 'GET', // Explicitly set method to GET
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
