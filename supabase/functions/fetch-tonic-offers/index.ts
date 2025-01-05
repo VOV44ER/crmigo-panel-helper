@@ -18,13 +18,13 @@ serve(async (req) => {
       throw new Error('Missing Tonic API credentials')
     }
 
-    // Create Bearer token from credentials
-    const credentials = btoa(`${consumerKey}:${consumerSecret}`)
-    console.log('Credentials encoded successfully')
+    // Create Bearer token by concatenating key and secret
+    const token = `${consumerKey}:${consumerSecret}`
+    console.log('Creating Bearer token...')
     
     const response = await fetch(`${TONIC_API_URL}/offers`, {
       headers: {
-        'Authorization': `Bearer ${credentials}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     })
