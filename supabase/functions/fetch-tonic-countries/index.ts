@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from "../_shared/cors.ts"
 
-const TONIC_API_URL = "https://api.publisher.tonic.com/privileged/v3"
+const TONIC_API_URL = "https://api.publisher.tonic.com/v4"
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -10,7 +10,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Fetching countries from Tonic API...')
+    console.log('Fetching countries from Tonic API v4...')
     const consumerKey = Deno.env.get('TONIC_CONSUMER_KEY')
     const consumerSecret = Deno.env.get('TONIC_CONSUMER_SECRET')
     
@@ -18,12 +18,13 @@ serve(async (req) => {
       throw new Error('Missing Tonic API credentials')
     }
 
-    const authHeader = `Basic ${btoa(`${consumerKey}:${consumerSecret}`)}`
-    console.log('Auth header created successfully')
+    // Create Bearer token from credentials
+    const credentials = btoa(`${consumerKey}:${consumerSecret}`)
+    console.log('Credentials encoded successfully')
     
-    const response = await fetch(`${TONIC_API_URL}/countries/list?output=json`, {
+    const response = await fetch(`${TONIC_API_URL}/countries`, {
       headers: {
-        'Authorization': authHeader,
+        'Authorization': `Bearer ${credentials}`,
         'Content-Type': 'application/json',
       },
     })
