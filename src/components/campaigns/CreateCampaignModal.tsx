@@ -4,141 +4,25 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { CountrySelector } from "./CountrySelector";
 import { OfferSelector } from "./OfferSelector";
-
-interface Country {
-  code: string;
-  name: string;
-}
-
-interface Offer {
-  id: number;
-  name: string;
-  vertical: {
-    id: number;
-    name: string;
-  };
-}
+import { useCampaignForm } from "@/hooks/useCampaignForm";
+import { useCampaignData } from "@/hooks/useCampaignData";
 
 export function CreateCampaignModal() {
   const [open, setOpen] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
-  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
-  const [campaignName, setCampaignName] = useState("");
-  const [targetDomain, setTargetDomain] = useState("");
-
-  // Get Tonic token from localStorage
-  const getTonicToken = () => {
-    const tonicTokenData = localStorage.getItem('tonicToken');
-    if (!tonicTokenData) {
-      toast.error("Authentication token not found. Please login again.");
-      return null;
-    }
-    try {
-      const { token } = JSON.parse(tonicTokenData);
-      return token;
-    } catch (error) {
-      console.error('Error parsing Tonic token:', error);
-      toast.error("Invalid authentication token. Please login again.");
-      return null;
-    }
-  };
-
-  const { data: countriesResponse, isLoading: isLoadingCountries } = useQuery({
-    queryKey: ['countries'],
-    queryFn: async () => {
-      console.log('Fetching countries...');
-      const token = getTonicToken();
-      if (!token) throw new Error('No authentication token found');
-
-      const { data, error } = await supabase.functions.invoke('fetch-tonic-countries', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
-      if (error) {
-        console.error('Error fetching countries:', error);
-        throw error;
-      }
-      console.log('Countries API Response:', data);
-      return data;
-    }
-  });
-
-  const { data: offersResponse, isLoading: isLoadingOffers } = useQuery({
-    queryKey: ['offers'],
-    queryFn: async () => {
-      console.log('Fetching offers...');
-      const token = getTonicToken();
-      if (!token) throw new Error('No authentication token found');
-
-      const { data, error } = await supabase.functions.invoke('fetch-tonic-offers', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
-      if (error) {
-        console.error('Error fetching offers:', error);
-        throw error;
-      }
-      console.log('Offers API Response:', data);
-      return data;
-    }
-  });
-
-  console.log('Processed Countries Response:', countriesResponse);
-  console.log('Processed Offers Response:', offersResponse);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedCountry || !selectedOffer || !campaignName) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    try {
-      const token = getTonicToken();
-      if (!token) return;
-
-      console.log('Creating campaign with:', {
-        countryId: selectedCountry.code,
-        offerId: selectedOffer.id,
-        name: campaignName,
-        targetDomain: targetDomain || undefined
-      });
-
-      const { error } = await supabase.functions.invoke('create-tonic-campaign', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: {
-          countryId: selectedCountry.code,
-          offerId: selectedOffer.id,
-          name: campaignName,
-          targetDomain: targetDomain || undefined
-        }
-      });
-
-      if (error) throw error;
-
-      toast.success("Campaign created successfully");
-      setOpen(false);
-      // Reset form
-      setSelectedCountry(null);
-      setSelectedOffer(null);
-      setCampaignName("");
-      setTargetDomain("");
-    } catch (error: any) {
-      console.error('Campaign creation error:', error);
-      toast.error(error.message || "Failed to create campaign");
-    }
-  };
+  const { countriesResponse, isLoadingCountries, offersResponse, isLoadingOffers } = useCampaignData();
+  const {
+    selectedCountry,
+    setSelectedCountry,
+    selectedOffer,
+    setSelectedOffer,
+    campaignName,
+    setCampaignName,
+    targetDomain,
+    setTargetDomain,
+    handleSubmit,
+  } = useCampaignForm(() => setOpen(false));
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
