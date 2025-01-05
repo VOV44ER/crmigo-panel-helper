@@ -1,6 +1,15 @@
 import { useState } from "react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Navbar } from "@/components/layout/Navbar";
 import { toast } from "sonner";
 
 interface Campaign {
@@ -16,61 +25,97 @@ const UserDashboard = () => {
     name: "",
     description: "",
   });
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleCreateCampaign = (e: React.FormEvent) => {
     e.preventDefault();
-    const id = campaigns.length + 1;
-    setCampaigns([
-      ...campaigns,
-      { ...newCampaign, id, status: "active" as const },
-    ]);
-    toast.success("Campaign created successfully!");
+    const campaign: Campaign = {
+      id: Date.now(),
+      ...newCampaign,
+      status: "active",
+    };
+    setCampaigns([...campaigns, campaign]);
     setNewCampaign({ name: "", description: "" });
+    setIsModalOpen(false);
+    toast.success("Campaign created successfully!");
   };
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-8">Campaign Dashboard</h1>
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
       
-      <div className="grid gap-8 md:grid-cols-2">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Create New Campaign</h2>
-          <form onSubmit={handleCreateCampaign} className="space-y-4">
-            <Input
-              placeholder="Campaign Name"
-              value={newCampaign.name}
-              onChange={(e) =>
-                setNewCampaign({ ...newCampaign, name: e.target.value })
-              }
-              required
-            />
-            <textarea
-              className="w-full p-2 border rounded"
-              placeholder="Campaign Description"
-              value={newCampaign.description}
-              onChange={(e) =>
-                setNewCampaign({ ...newCampaign, description: e.target.value })
-              }
-              required
-            />
-            <Button type="submit" className="w-full">
-              Create Campaign
-            </Button>
-          </form>
+      <main className="container mx-auto py-6 px-4">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Campaigns</h1>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                New Campaign
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Campaign</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleCreateCampaign} className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="name" className="text-sm font-medium">
+                    Campaign Name
+                  </label>
+                  <Input
+                    id="name"
+                    value={newCampaign.name}
+                    onChange={(e) =>
+                      setNewCampaign({ ...newCampaign, name: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="description" className="text-sm font-medium">
+                    Description
+                  </label>
+                  <Input
+                    id="description"
+                    value={newCampaign.description}
+                    onChange={(e) =>
+                      setNewCampaign({
+                        ...newCampaign,
+                        description: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full">
+                  Create Campaign
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Your Campaigns</h2>
-          <div className="space-y-4">
-            {campaigns.map((campaign) => (
-              <div
-                key={campaign.id}
-                className="p-4 bg-gray-50 rounded space-y-2"
-              >
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium">{campaign.name}</h3>
+        <div className="bg-white rounded-lg shadow">
+          {campaigns.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              No campaigns yet. Create your first one!
+            </div>
+          ) : (
+            <div className="divide-y">
+              {campaigns.map((campaign) => (
+                <div
+                  key={campaign.id}
+                  className="p-4 flex items-center justify-between"
+                >
+                  <div>
+                    <h3 className="font-medium">{campaign.name}</h3>
+                    <p className="text-sm text-gray-600">
+                      {campaign.description}
+                    </p>
+                  </div>
                   <span
-                    className={`text-xs px-2 py-1 rounded ${
+                    className={`px-2 py-1 text-xs rounded-full ${
                       campaign.status === "active"
                         ? "bg-green-100 text-green-800"
                         : campaign.status === "paused"
@@ -81,41 +126,11 @@ const UserDashboard = () => {
                     {campaign.status}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600">{campaign.description}</p>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      // Add edit functionality later
-                      toast.info("Edit functionality coming soon!");
-                    }}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => {
-                      setCampaigns(
-                        campaigns.filter((c) => c.id !== campaign.id)
-                      );
-                      toast.success("Campaign deleted successfully!");
-                    }}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            ))}
-            {campaigns.length === 0 && (
-              <p className="text-center text-gray-500">
-                No campaigns yet. Create your first one!
-              </p>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
-      </div>
+      </main>
     </div>
   );
 };

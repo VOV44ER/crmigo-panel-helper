@@ -1,15 +1,6 @@
 import { useState } from "react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -17,122 +8,155 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Navbar } from "@/components/layout/Navbar";
+import { toast } from "sonner";
 
 interface User {
   id: number;
   name: string;
   username: string;
-  role: "admin" | "user";
+  password: string;
 }
 
 const AdminPanel = () => {
-  const [users, setUsers] = useState<User[]>([
-    { id: 1, name: "Admin User", username: "admin", role: "admin" },
-    { id: 2, name: "Regular User", username: "user", role: "user" },
-  ]);
-
+  const [users, setUsers] = useState<User[]>([]);
   const [newUser, setNewUser] = useState({
     name: "",
     username: "",
     password: "",
-    role: "user" as const,
   });
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleCreateUser = (e: React.FormEvent) => {
     e.preventDefault();
-    const id = users.length + 1;
-    setUsers([...users, { id, ...newUser }]);
+    const user: User = {
+      id: Date.now(),
+      ...newUser,
+    };
+    setUsers([...users, user]);
+    setNewUser({ name: "", username: "", password: "" });
+    setIsModalOpen(false);
     toast.success("User created successfully!");
-    setNewUser({ name: "", username: "", password: "", role: "user" });
   };
 
-  const handleDeleteUser = (id: number) => {
-    setUsers(users.filter((user) => user.id !== id));
+  const handleDeleteUser = (userId: number) => {
+    setUsers(users.filter((user) => user.id !== userId));
     toast.success("User deleted successfully!");
   };
 
   return (
-    <div className="container mx-auto p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Admin Panel</h1>
-        
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>Create New User</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New User</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreateUser} className="space-y-4 mt-4">
-              <Input
-                placeholder="Name"
-                value={newUser.name}
-                onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                required
-              />
-              <Input
-                placeholder="Username"
-                value={newUser.username}
-                onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-                required
-              />
-              <Input
-                type="password"
-                placeholder="Password"
-                value={newUser.password}
-                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                required
-              />
-              <select
-                className="w-full p-2 border rounded"
-                value={newUser.role}
-                onChange={(e) => setNewUser({ ...newUser, role: e.target.value as "user" })}
-              >
-                <option value="user">Regular User</option>
-              </select>
-              <Button type="submit" className="w-full">Create User</Button>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      
+      <main className="container mx-auto py-6 px-4">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">User Management</h1>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                New User
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New User</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleCreateUser} className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="name" className="text-sm font-medium">
+                    Full Name
+                  </label>
+                  <Input
+                    id="name"
+                    value={newUser.name}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, name: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="username" className="text-sm font-medium">
+                    Username
+                  </label>
+                  <Input
+                    id="username"
+                    value={newUser.username}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, username: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="password" className="text-sm font-medium">
+                    Password
+                  </label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={newUser.password}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, password: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full">
+                  Create User
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
 
-      <div className="bg-white rounded-lg shadow">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Username</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{user.name}</TableCell>
-                <TableCell>@{user.username}</TableCell>
-                <TableCell>
-                  <Badge variant={user.role === "admin" ? "default" : "secondary"}>
-                    {user.role}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  {user.role !== "admin" && (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Username
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {users.map((user) => (
+                <tr key={user.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">{user.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{user.username}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
                     <Button
                       variant="destructive"
+                      size="sm"
                       onClick={() => handleDeleteUser(user.id)}
                     >
                       Delete
                     </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                  </td>
+                </tr>
+              ))}
+              {users.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={3}
+                    className="px-6 py-8 text-center text-gray-500"
+                  >
+                    No users yet. Create your first one!
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </main>
     </div>
   );
 };
