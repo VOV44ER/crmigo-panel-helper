@@ -19,15 +19,16 @@ serve(async (req) => {
       throw new Error('Missing Tonic API credentials')
     }
 
-    // Create JWT token by base64 encoding the credentials
-    const token = btoa(`${consumerKey}:${consumerSecret}`)
+    // Create Bearer token by concatenating the credentials
+    const token = `${consumerKey}:${consumerSecret}`
     console.log('Created authentication token')
     
     const response = await fetch(`${TONIC_API_URL}/countries`, {
       method: 'GET',
       headers: {
-        'Authorization': `Basic ${token}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
     })
 
