@@ -13,21 +13,51 @@ import { Navbar } from "@/components/layout/Navbar";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 
-interface Campaign {
-  id: number;
+interface TonicCampaign {
+  id: string;
   name: string;
-  description: string;
-  status: "active" | "paused" | "completed";
+  type: string;
+  country: string;
+  imprint: string;
+  offer_id: string;
+  offer: string;
+  vertical: string;
+  link: string;
+  target: string;
 }
+
+const fetchCampaigns = async () => {
+  const tonicTokenStr = localStorage.getItem('tonicToken');
+  if (!tonicTokenStr) {
+    throw new Error('No authentication token found');
+  }
+
+  const tonicToken = JSON.parse(tonicTokenStr);
+  if (!tonicToken.token) {
+    throw new Error('Invalid token format');
+  }
+
+  const response = await fetch(
+    'https://api.publisher.tonic.com/privileged/v3/campaign/list?state=active&output=json',
+    {
+      headers: {
+        'Authorization': `Bearer ${tonicToken.token}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch campaigns');
+  }
+
+  return response.json();
+};
 
 const UserDashboard = () => {
   const navigate = useNavigate();
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [newCampaign, setNewCampaign] = useState({
-    name: "",
-    description: "",
-  });
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Check if user is authenticated and not admin
@@ -41,7 +71,6 @@ const UserDashboard = () => {
         return;
       }
 
-      // If user is admin@admin.com, redirect to admin panel
       if (session.user.email === "admin@admin.com") {
         toast.error("Please use the admin dashboard");
         navigate("/admin");
@@ -51,18 +80,35 @@ const UserDashboard = () => {
     checkAuth();
   }, [navigate]);
 
-  const handleCreateCampaign = (e: React.FormEvent) => {
-    e.preventDefault();
-    const campaign: Campaign = {
-      id: Date.now(),
-      ...newCampaign,
-      status: "active",
-    };
-    setCampaigns([...campaigns, campaign]);
-    setNewCampaign({ name: "", description: "" });
-    setIsModalOpen(false);
-    toast.success("Campaign created successfully!");
-  };
+  // Fetch campaigns using React Query
+  const { data: campaigns = [], isLoading, error } = useQuery({
+    queryKey: ['campaigns'],
+    queryFn: fetchCampaigns,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <main className="container mx-auto py-6 px-4">
+          <div className="text-center">Loading campaigns...</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <main className="container mx-auto py-6 px-4">
+          <div className="text-center text-red-500">
+            Error loading campaigns: {error instanceof Error ? error.message : 'Unknown error'}
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -71,84 +117,52 @@ const UserDashboard = () => {
       <main className="container mx-auto py-6 px-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Campaigns</h1>
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                New Campaign
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Campaign</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleCreateCampaign} className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="name" className="text-sm font-medium">
-                    Campaign Name
-                  </label>
-                  <Input
-                    id="name"
-                    value={newCampaign.name}
-                    onChange={(e) =>
-                      setNewCampaign({ ...newCampaign, name: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="description" className="text-sm font-medium">
-                    Description
-                  </label>
-                  <Input
-                    id="description"
-                    value={newCampaign.description}
-                    onChange={(e) =>
-                      setNewCampaign({
-                        ...newCampaign,
-                        description: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full">
-                  Create Campaign
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
         </div>
 
         <div className="bg-white rounded-lg shadow">
           {campaigns.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              No campaigns yet. Create your first one!
+              No campaigns available.
             </div>
           ) : (
             <div className="divide-y">
-              {campaigns.map((campaign) => (
+              {campaigns.map((campaign: TonicCampaign) => (
                 <div
                   key={campaign.id}
-                  className="p-4 flex items-center justify-between"
+                  className="p-4 hover:bg-gray-50 transition-colors"
                 >
-                  <div>
-                    <h3 className="font-medium">{campaign.name}</h3>
-                    <p className="text-sm text-gray-600">
-                      {campaign.description}
-                    </p>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-medium text-lg">{campaign.name}</h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Offer: {campaign.offer} | Vertical: {campaign.vertical}
+                      </p>
+                      <div className="mt-2 space-y-1">
+                        <p className="text-sm">
+                          <span className="font-medium">Type:</span> {campaign.type}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-medium">Country:</span> {campaign.country}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-medium">Link:</span>{" "}
+                          <a 
+                            href={campaign.link} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
+                            {campaign.link}
+                          </a>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                        Active
+                      </span>
+                    </div>
                   </div>
-                  <span
-                    className={`px-2 py-1 text-xs rounded-full ${
-                      campaign.status === "active"
-                        ? "bg-green-100 text-green-800"
-                        : campaign.status === "paused"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {campaign.status}
-                  </span>
                 </div>
               ))}
             </div>
