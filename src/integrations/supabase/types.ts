@@ -12,21 +12,18 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string | null
-          email: string | null
           full_name: string | null
           id: string
           username: string | null
         }
         Insert: {
           created_at?: string | null
-          email?: string | null
           full_name?: string | null
           id: string
           username?: string | null
         }
         Update: {
           created_at?: string | null
-          email?: string | null
           full_name?: string | null
           id?: string
           username?: string | null
@@ -38,15 +35,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      create_user_with_profile: {
-        Args: {
-          input_email: string
-          input_password: string
-          input_username: string
-          input_full_name: string
-        }
-        Returns: Json
-      }
+      create_user_with_profile:
+        | {
+            Args: {
+              input_email: string
+              input_password: string
+              input_username: string
+              input_full_name: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              input_username: string
+              input_password: string
+              input_full_name: string
+            }
+            Returns: Json
+          }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean

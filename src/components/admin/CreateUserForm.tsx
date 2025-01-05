@@ -11,7 +11,6 @@ interface CreateUserFormProps {
 
 export const CreateUserForm = ({ onSubmit, loading }: CreateUserFormProps) => {
   const [newUser, setNewUser] = useState<NewUser>({
-    email: "",
     password: "",
     username: "",
     full_name: "",
@@ -20,7 +19,7 @@ export const CreateUserForm = ({ onSubmit, loading }: CreateUserFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await onSubmit(newUser);
-    setNewUser({ email: "", password: "", username: "", full_name: "" });
+    setNewUser({ password: "", username: "", full_name: "" });
   };
 
   return (
@@ -32,20 +31,6 @@ export const CreateUserForm = ({ onSubmit, loading }: CreateUserFormProps) => {
         </DialogDescription>
       </DialogHeader>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <label htmlFor="email" className="text-sm font-medium">
-            Email
-          </label>
-          <Input
-            id="email"
-            type="email"
-            value={newUser.email}
-            onChange={(e) =>
-              setNewUser({ ...newUser, email: e.target.value })
-            }
-            required
-          />
-        </div>
         <div className="space-y-2">
           <label htmlFor="username" className="text-sm font-medium">
             Username

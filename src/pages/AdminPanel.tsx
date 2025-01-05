@@ -24,7 +24,7 @@ const AdminPanel = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, full_name, email');
+        .select('id, username, full_name');
       
       if (error) {
         console.error('Error fetching users:', error);
@@ -42,9 +42,8 @@ const AdminPanel = () => {
     try {
       const { data, error } = await supabase
         .rpc('create_user_with_profile', {
-          input_email: newUser.email,
-          input_password: newUser.password,
           input_username: newUser.username,
+          input_password: newUser.password,
           input_full_name: newUser.full_name
         });
 
@@ -58,6 +57,23 @@ const AdminPanel = () => {
       toast.error(error.message || "Failed to create user");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      toast.success("User deleted successfully!");
+      refetch(); // Refresh the users list
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast.error(error.message || "Failed to delete user");
     }
   };
 
@@ -81,7 +97,7 @@ const AdminPanel = () => {
           </Dialog>
         </div>
 
-        <UsersTable users={users} />
+        <UsersTable users={users} onDeleteUser={handleDeleteUser} />
       </main>
     </div>
   );
