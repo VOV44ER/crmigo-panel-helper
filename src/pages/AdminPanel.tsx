@@ -52,19 +52,20 @@ const AdminPanel = () => {
 
       if (error) throw error;
 
-      // Cast the response data to our expected type
-      const responseData = data as CreateUserResponse;
-      const userData: User = {
-        id: responseData.id,
-        email: responseData.email,
-        username: responseData.username,
-        full_name: responseData.full_name
-      };
-      
-      setUsers([...users, userData]);
-      setNewUser({ email: "", password: "", username: "", full_name: "" });
-      setIsModalOpen(false);
-      toast.success("User created successfully!");
+      if (data) {
+        const responseData = data as CreateUserResponse;
+        const userData: User = {
+          id: responseData.id,
+          email: responseData.email,
+          username: responseData.username,
+          full_name: responseData.full_name
+        };
+        
+        setUsers([...users, userData]);
+        setNewUser({ email: "", password: "", username: "", full_name: "" });
+        setIsModalOpen(false);
+        toast.success("User created successfully!");
+      }
     } catch (error: any) {
       toast.error(error.message || "Failed to create user");
     } finally {
