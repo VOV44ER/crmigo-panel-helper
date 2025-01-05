@@ -10,17 +10,18 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Fetching offers from Tonic API v4...')
+    console.log('Starting fetch-tonic-offers function...')
     const consumerKey = Deno.env.get('TONIC_CONSUMER_KEY')
     const consumerSecret = Deno.env.get('TONIC_CONSUMER_SECRET')
     
     if (!consumerKey || !consumerSecret) {
+      console.error('Missing API credentials')
       throw new Error('Missing Tonic API credentials')
     }
 
     // Create JWT token by base64 encoding the credentials
     const token = btoa(`${consumerKey}:${consumerSecret}`)
-    console.log('Created JWT token for authentication')
+    console.log('Created authentication token')
     
     const response = await fetch(`${TONIC_API_URL}/offers`, {
       method: 'GET',
@@ -30,17 +31,31 @@ serve(async (req) => {
       },
     })
 
+    console.log('Tonic API Response Status:', response.status)
+    
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Failed to fetch offers:', errorText)
-      throw new Error(`Failed to fetch offers: ${errorText}`)
+      console.error('Error response from Tonic API:', errorText)
+      throw new Error(`Tonic API error: ${response.status} - ${errorText}`)
     }
 
-    const data = await response.json()
-    console.log('Successfully fetched offers')
+    // Log the raw response text for debugging
+    const responseText = await response.text()
+    console.log('Raw API Response:', responseText)
+
+    // Try to parse the response text
+    let data
+    try {
+      data = JSON.parse(responseText)
+    } catch (parseError) {
+      console.error('JSON Parse Error:', parseError)
+      throw new Error(`Failed to parse Tonic API response: ${parseError.message}`)
+    }
+
+    console.log('Successfully parsed response')
     
     return new Response(
-      JSON.stringify(data.data),
+      JSON.stringify({ data: data.data || [] }),
       { 
         headers: { 
           ...corsHeaders, 
@@ -51,9 +66,12 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in fetch-tonic-offers:', error.message)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack
+      }),
       { 
-        status: 400,
+        status: 500,
         headers: { 
           ...corsHeaders, 
           'Content-Type': 'application/json'
