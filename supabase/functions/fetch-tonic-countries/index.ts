@@ -4,11 +4,13 @@ import { corsHeaders } from '../_shared/cors.ts'
 const TONIC_API_URL = 'https://api.publisher.tonic.com/v1'
 
 serve(async (req) => {
+  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
+    // First authenticate with Tonic API
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
       headers: {
@@ -21,12 +23,12 @@ serve(async (req) => {
     })
 
     if (!authResponse.ok) {
-      const error = await authResponse.text()
-      throw new Error('Failed to authenticate with Tonic API')
+      throw new Error(`Authentication failed: ${await authResponse.text()}`)
     }
 
     const { token } = await authResponse.json()
-    
+
+    // Then fetch countries with the obtained token
     const response = await fetch(`${TONIC_API_URL}/countries`, {
       method: 'GET',
       headers: {
@@ -37,8 +39,7 @@ serve(async (req) => {
     })
 
     if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Tonic API error: ${response.status} - ${errorText}`)
+      throw new Error(`Countries fetch failed: ${await response.text()}`)
     }
 
     const data = await response.json()
@@ -54,7 +55,10 @@ serve(async (req) => {
     )
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack 
+      }),
       { 
         headers: { 
           ...corsHeaders,
