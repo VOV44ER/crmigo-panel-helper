@@ -6,7 +6,7 @@ const TONIC_API_URL = "https://api.publisher.tonic.com/v4"
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
@@ -18,14 +18,14 @@ serve(async (req) => {
       throw new Error('Missing Tonic API credentials')
     }
 
-    // Create Bearer token by concatenating key and secret
-    const token = `${consumerKey}:${consumerSecret}`
-    console.log('Creating Bearer token...')
+    // Create JWT token by base64 encoding the credentials
+    const token = btoa(`${consumerKey}:${consumerSecret}`)
+    console.log('Created JWT token for authentication')
     
     const response = await fetch(`${TONIC_API_URL}/countries`, {
-      method: 'GET', // Explicitly set method to GET
+      method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Basic ${token}`,
         'Content-Type': 'application/json',
       },
     })
@@ -40,7 +40,7 @@ serve(async (req) => {
     console.log('Successfully fetched countries')
     
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify(data.data),
       { 
         headers: { 
           ...corsHeaders, 
