@@ -1,7 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { corsHeaders } from "../_shared/cors.ts"
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts"
 
 const TONIC_API_URL = "https://api.publisher.tonic.com/v4"
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -19,14 +24,17 @@ serve(async (req) => {
       throw new Error('Missing Tonic API credentials')
     }
 
-    // Create Bearer token by concatenating the credentials
-    const token = `${consumerKey}:${consumerSecret}`
+    // Create Basic auth token by base64 encoding the credentials
+    const credentials = `${consumerKey}:${consumerSecret}`
+    const encodedCredentials = base64Encode(new TextEncoder().encode(credentials))
+    const token = `Basic ${encodedCredentials}`
+    
     console.log('Created authentication token')
     
     const response = await fetch(`${TONIC_API_URL}/countries`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': token,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
