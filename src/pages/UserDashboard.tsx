@@ -29,28 +29,32 @@ interface TonicCampaign {
 }
 
 const fetchCampaigns = async () => {
-  const tonicTokenStr = localStorage.getItem('tonicToken');
-  if (!tonicTokenStr) {
+  const session = localStorage.getItem('sb-iviaxxfodvwqjiiomzkl-auth-token');
+  if (!session) {
     throw new Error('No authentication token found');
   }
 
-  const tonicToken = JSON.parse(tonicTokenStr);
-  if (!tonicToken.token) {
+  const { access_token } = JSON.parse(session);
+  if (!access_token) {
     throw new Error('Invalid token format');
   }
+
+  console.log('Using access token:', access_token);
 
   const response = await fetch(
     'https://api.publisher.tonic.com/privileged/v3/campaign/list?state=active&output=json',
     {
       headers: {
-        'Authorization': `Bearer ${tonicToken.token}`,
+        'Authorization': `Bearer ${access_token}`,
         'Content-Type': 'application/json',
       },
     }
   );
 
   if (!response.ok) {
-    throw new Error('Failed to fetch campaigns');
+    const errorText = await response.text();
+    console.error('API Error:', errorText);
+    throw new Error('Failed to fetch campaigns: ' + errorText);
   }
 
   return response.json();
