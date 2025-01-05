@@ -1,4 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,14 +17,7 @@ serve(async (req) => {
       throw new Error('No authorization header');
     }
 
-    const url = new URL(req.url);
-    const state = url.searchParams.get('state') || 'active,pending,stopped';
-    const limit = url.searchParams.get('limit') || '10';
-    const offset = url.searchParams.get('offset') || '0';
-    const from = url.searchParams.get('from') || '2024-01-01';
-    const to = new Date().toISOString().split('T')[0];
-
-    console.log('Request parameters:', { state, limit, offset, from, to });
+    const { states, limit, offset } = await req.json();
 
     const consumerKey = Deno.env.get('TONIC_CONSUMER_KEY');
     const consumerSecret = Deno.env.get('TONIC_CONSUMER_SECRET');
@@ -52,11 +46,11 @@ serve(async (req) => {
 
     // Build the campaigns URL with query parameters
     const campaignsUrl = new URL('https://api.publisher.tonic.com/v4/campaigns');
-    campaignsUrl.searchParams.set('state', state);
-    campaignsUrl.searchParams.set('limit', limit);
-    campaignsUrl.searchParams.set('offset', offset);
-    campaignsUrl.searchParams.set('from', from);
-    campaignsUrl.searchParams.set('to', to);
+    campaignsUrl.searchParams.set('state', states.join(','));
+    campaignsUrl.searchParams.set('limit', limit.toString());
+    campaignsUrl.searchParams.set('offset', offset.toString());
+    campaignsUrl.searchParams.set('from', '2024-01-01');
+    campaignsUrl.searchParams.set('to', new Date().toISOString().split('T')[0]);
     campaignsUrl.searchParams.set('stats', 'true');
     campaignsUrl.searchParams.set('orderOrientation', 'desc');
 

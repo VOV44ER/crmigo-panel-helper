@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Copy, X, MoreVertical } from "lucide-react";
+import { Settings, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
 import { toast } from "sonner";
@@ -8,66 +8,8 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import CampaignFilters from "@/components/campaigns/CampaignFilters";
 import CampaignPagination from "@/components/campaigns/CampaignPagination";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-
-interface TonicCampaign {
-  id: string;
-  name: string;
-  type: string;
-  country: string;
-  imprint: string;
-  offer_id: string;
-  offer: string;
-  vertical: string;
-  link: string;
-  target: string;
-}
-
-const fetchCampaigns = async (states: string[], limit: number, offset: number) => {
-  const session = localStorage.getItem('sb-iviaxxfodvwqjiiomzkl-auth-token');
-  if (!session) {
-    throw new Error('No authentication token found');
-  }
-
-  const { access_token } = JSON.parse(session);
-  if (!access_token) {
-    throw new Error('Invalid token format');
-  }
-
-  const params = new URLSearchParams({
-    state: states.join(','),
-    limit: limit.toString(),
-    offset: offset.toString(),
-  });
-
-  const { data, error } = await supabase.functions.invoke('fetch-tonic-campaigns', {
-    headers: {
-      Authorization: `Bearer ${access_token}`,
-    },
-    body: { params: params.toString() }
-  });
-
-  if (error) {
-    console.error('Edge Function Error:', error);
-    throw new Error(`Failed to fetch campaigns: ${error.message}`);
-  }
-
-  return data;
-};
+import CampaignTable from "@/components/campaigns/CampaignTable";
+import { TonicResponse } from "@/types/tonic";
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -94,15 +36,23 @@ const UserDashboard = () => {
     checkAuth();
   }, [navigate]);
 
-  const { data: campaigns = [], isLoading, error } = useQuery({
+  const { data: response, isLoading, error } = useQuery<TonicResponse>({
     queryKey: ['campaigns', selectedStates, limit, offset],
-    queryFn: () => fetchCampaigns(selectedStates, limit, offset),
-  });
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('fetch-tonic-campaigns', {
+        body: { 
+          states: selectedStates,
+          limit,
+          offset,
+          from: '2024-01-01',
+          to: new Date().toISOString().split('T')[0]
+        }
+      });
 
-  const handleCopyLink = (link: string) => {
-    navigator.clipboard.writeText(link);
-    toast.success("Link copied to clipboard");
-  };
+      if (error) throw error;
+      return data;
+    },
+  });
 
   if (isLoading) {
     return (
@@ -133,87 +83,25 @@ const UserDashboard = () => {
       <Navbar />
       
       <main className="container mx-auto py-6 px-4">
-        <CampaignFilters 
-          selectedStates={selectedStates}
-          onStateChange={setSelectedStates}
-        />
+        <div className="flex items-center justify-between mb-6">
+          <CampaignFilters 
+            selectedStates={selectedStates}
+            onStateChange={setSelectedStates}
+          />
+          <div className="flex gap-2">
+            <Button variant="outline" size="icon">
+              <Settings className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon">
+              <Filter className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <input type="checkbox" className="rounded border-gray-300" />
-                </TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Id</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Vertical</TableHead>
-                <TableHead>Offer</TableHead>
-                <TableHead>Geo</TableHead>
-                <TableHead>TL</TableHead>
-                <TableHead>Imprint</TableHead>
-                <TableHead className="text-right">Views</TableHead>
-                <TableHead className="text-right">Clicks</TableHead>
-                <TableHead className="text-right">VTC</TableHead>
-                <TableHead className="text-right">RPC</TableHead>
-                <TableHead className="text-right">RPMV</TableHead>
-                <TableHead className="text-right">Revenue</TableHead>
-                <TableHead className="w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {campaigns.map((campaign: TonicCampaign) => (
-                <TableRow key={campaign.id}>
-                  <TableCell>
-                    <input type="checkbox" className="rounded border-gray-300" />
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100">
-                      Active
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{campaign.id}</TableCell>
-                  <TableCell>{campaign.name}</TableCell>
-                  <TableCell>{campaign.type}</TableCell>
-                  <TableCell>{campaign.vertical}</TableCell>
-                  <TableCell>{campaign.offer}</TableCell>
-                  <TableCell>{campaign.country}</TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => handleCopyLink(campaign.link)}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                  <TableCell>
-                    <X className="h-4 w-4" />
-                  </TableCell>
-                  <TableCell className="text-right">0</TableCell>
-                  <TableCell className="text-right">0</TableCell>
-                  <TableCell className="text-right">0.0%</TableCell>
-                  <TableCell className="text-right">$0.00</TableCell>
-                  <TableCell className="text-right">$0.00</TableCell>
-                  <TableCell className="text-right">$0.00</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <CampaignTable campaigns={response?.data || []} />
           <CampaignPagination
-            total={campaigns.length}
+            total={response?.pagination.total || 0}
             limit={limit}
             offset={offset}
             onLimitChange={setLimit}
