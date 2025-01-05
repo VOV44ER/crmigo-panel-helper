@@ -45,13 +45,22 @@ serve(async (req) => {
 
     const tonicAuth = await tonicAuthResponse.json();
 
+    // Calculate date range (last 30 days)
+    const toDate = new Date();
+    const fromDate = new Date();
+    fromDate.setDate(fromDate.getDate() - 30);
+
+    // Format dates as YYYY-MM-DD
+    const from = fromDate.toISOString().split('T')[0];
+    const to = toDate.toISOString().split('T')[0];
+
     // Build the campaigns URL with query parameters
     const campaignsUrl = new URL('https://api.publisher.tonic.com/v4/campaigns');
     campaignsUrl.searchParams.set('state', states.join(','));
     campaignsUrl.searchParams.set('limit', limit.toString());
     campaignsUrl.searchParams.set('offset', offset.toString());
-    campaignsUrl.searchParams.set('from', '2024-01-01');
-    campaignsUrl.searchParams.set('to', new Date().toISOString().split('T')[0]);
+    campaignsUrl.searchParams.set('from', from);
+    campaignsUrl.searchParams.set('to', to);
     campaignsUrl.searchParams.set('stats', 'true');
     campaignsUrl.searchParams.set('orderOrientation', 'desc');
 
