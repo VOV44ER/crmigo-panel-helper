@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { toast } from "@/hooks/use-toast";
 import AuthPage from "./pages/AuthPage";
 import AdminPanel from "./pages/AdminPanel";
 import UserDashboard from "./pages/UserDashboard";
