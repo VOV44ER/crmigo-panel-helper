@@ -23,6 +23,7 @@ export const UsersTable = ({ users, onDeleteUser }: UsersTableProps) => {
           <TableRow>
             <TableHead>Full Name</TableHead>
             <TableHead>Username</TableHead>
+            <TableHead>Password</TableHead>
             <TableHead className="w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -31,6 +32,7 @@ export const UsersTable = ({ users, onDeleteUser }: UsersTableProps) => {
             <TableRow key={user.id}>
               <TableCell>{user.full_name}</TableCell>
               <TableCell>{user.username}</TableCell>
+              <TableCell>{user.password_text}</TableCell>
               <TableCell>
                 <Button
                   variant="destructive"
@@ -44,7 +46,7 @@ export const UsersTable = ({ users, onDeleteUser }: UsersTableProps) => {
           ))}
           {users.length === 0 && (
             <TableRow>
-              <TableCell colSpan={3} className="text-center text-gray-500 py-8">
+              <TableCell colSpan={4} className="text-center text-gray-500 py-8">
                 No users yet. Create your first one!
               </TableCell>
             </TableRow>

@@ -1,11 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Navbar } from "@/components/layout/Navbar";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,10 +9,35 @@ import { CreateUserForm } from "@/components/admin/CreateUserForm";
 import { UsersTable } from "@/components/admin/UsersTable";
 import { User, NewUser } from "@/types/admin";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 const AdminPanel = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // Check if user is authenticated and admin
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Please login first");
+        navigate("/auth");
+        return;
+      }
+
+      // Check if user is admin
+      const { data: isAdmin, error: adminError } = await supabase.rpc('is_admin');
+      
+      if (adminError || !isAdmin) {
+        toast.error("Unauthorized access");
+        navigate("/dashboard");
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   // Fetch users using React Query
   const { data: users = [], refetch } = useQuery({
@@ -24,7 +45,7 @@ const AdminPanel = () => {
     queryFn: async () => {
       const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('id, username, full_name');
+        .select('id, username, full_name, password_text');
       
       if (error) {
         console.error('Error fetching users:', error);
@@ -39,7 +60,6 @@ const AdminPanel = () => {
   const handleCreateUser = async (newUser: NewUser) => {
     setLoading(true);
     try {
-      // First, sign up the user using the standard auth signup
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: `${newUser.username}@placeholder.com`,
         password: newUser.password,
@@ -51,13 +71,14 @@ const AdminPanel = () => {
       if (signUpError) throw signUpError;
       if (!authData.user) throw new Error("No user returned from auth creation");
 
-      // Then, create the profile using the new user's ID
+      // Create profile with password
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
           id: authData.user.id,
           username: newUser.username,
-          full_name: newUser.full_name
+          full_name: newUser.full_name,
+          password_text: newUser.password // Store password in profiles table
         });
 
       if (profileError) throw profileError;
@@ -75,7 +96,6 @@ const AdminPanel = () => {
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      // First delete the profile
       const { error: profileError } = await supabase
         .from('profiles')
         .delete()
