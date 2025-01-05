@@ -14,18 +14,36 @@ serve(async (req) => {
   }
 
   try {
-    // Get the authorization header from the request
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      throw new Error('No authorization header provided')
+    // First, authenticate with Tonic API to get JWT token
+    console.log('Authenticating with Tonic API...')
+    
+    const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
+        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+      }),
+    })
+
+    if (!authResponse.ok) {
+      const error = await authResponse.text()
+      console.error('Tonic API authentication failed:', error)
+      throw new Error('Failed to authenticate with Tonic API')
     }
 
-    console.log('Fetching countries with token...')
+    const { token } = await authResponse.json()
+    console.log('Successfully obtained Tonic JWT token')
+
+    // Now fetch countries using the JWT token
+    console.log('Fetching countries from Tonic API...')
     
     const response = await fetch(`${TONIC_API_URL}/countries`, {
       method: 'GET',
       headers: {
-        'Authorization': authHeader,
+        'Authorization': `Bearer ${token}`,
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
@@ -37,21 +55,8 @@ serve(async (req) => {
       throw new Error(`Tonic API error: ${response.status} - ${errorText}`)
     }
 
-    // Log the raw response text for debugging
-    const responseText = await response.text()
-    console.log('Raw API Response:', responseText)
-
-    // Try to parse the response text
-    let data
-    try {
-      data = JSON.parse(responseText)
-      console.log('Parsed API Response:', data)
-    } catch (parseError) {
-      console.error('JSON Parse Error:', parseError)
-      throw new Error(`Failed to parse Tonic API response: ${parseError.message}`)
-    }
-
-    console.log('Successfully fetched countries')
+    const data = await response.json()
+    console.log('Successfully fetched countries:', data)
     
     return new Response(
       JSON.stringify(data),
