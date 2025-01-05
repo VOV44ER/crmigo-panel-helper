@@ -1,22 +1,14 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { corsHeaders } from '../_shared/cors.ts'
 
-const TONIC_API_URL = "https://api.publisher.tonic.com/v4"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+const TONIC_API_URL = 'https://api.publisher.tonic.com/v1'
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // First, authenticate with Tonic API to get JWT token
-    console.log('Authenticating with Tonic API...')
-    
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
       headers: {
@@ -30,15 +22,10 @@ serve(async (req) => {
 
     if (!authResponse.ok) {
       const error = await authResponse.text()
-      console.error('Tonic API authentication failed:', error)
       throw new Error('Failed to authenticate with Tonic API')
     }
 
     const { token } = await authResponse.json()
-    console.log('Successfully obtained Tonic JWT token')
-
-    // Now fetch countries using the JWT token
-    console.log('Fetching countries from Tonic API...')
     
     const response = await fetch(`${TONIC_API_URL}/countries`, {
       method: 'GET',
@@ -51,35 +38,29 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Failed to fetch countries:', errorText)
       throw new Error(`Tonic API error: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
-    console.log('Successfully fetched countries:', data)
     
     return new Response(
       JSON.stringify(data),
       { 
         headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json'
-        } 
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
       },
     )
   } catch (error) {
-    console.error('Error:', error)
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        details: error.stack
-      }),
+      JSON.stringify({ error: error.message }),
       { 
-        status: 500,
         headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json'
+          ...corsHeaders,
+          'Content-Type': 'application/json',
         },
+        status: 500,
       },
     )
   }
