@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { Copy, X, MoreVertical, Settings, Filter } from "lucide-react";
+import { Copy, X, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import CampaignFilters from "@/components/campaigns/CampaignFilters";
+import CampaignPagination from "@/components/campaigns/CampaignPagination";
 import {
   Table,
   TableBody,
@@ -35,7 +37,7 @@ interface TonicCampaign {
   target: string;
 }
 
-const fetchCampaigns = async () => {
+const fetchCampaigns = async (states: string[], limit: number, offset: number) => {
   const session = localStorage.getItem('sb-iviaxxfodvwqjiiomzkl-auth-token');
   if (!session) {
     throw new Error('No authentication token found');
@@ -46,12 +48,17 @@ const fetchCampaigns = async () => {
     throw new Error('Invalid token format');
   }
 
-  console.log('Using access token:', access_token);
+  const params = new URLSearchParams({
+    state: states.join(','),
+    limit: limit.toString(),
+    offset: offset.toString(),
+  });
 
   const { data, error } = await supabase.functions.invoke('fetch-tonic-campaigns', {
     headers: {
       Authorization: `Bearer ${access_token}`,
     },
+    body: { params: params.toString() }
   });
 
   if (error) {
@@ -64,9 +71,10 @@ const fetchCampaigns = async () => {
 
 const UserDashboard = () => {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState("Active");
+  const [selectedStates, setSelectedStates] = useState<string[]>(['active']);
+  const [limit, setLimit] = useState(10);
+  const [offset, setOffset] = useState(0);
 
-  // Check if user is authenticated and not admin
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -86,10 +94,9 @@ const UserDashboard = () => {
     checkAuth();
   }, [navigate]);
 
-  // Fetch campaigns using React Query
   const { data: campaigns = [], isLoading, error } = useQuery({
-    queryKey: ['campaigns'],
-    queryFn: fetchCampaigns,
+    queryKey: ['campaigns', selectedStates, limit, offset],
+    queryFn: () => fetchCampaigns(selectedStates, limit, offset),
   });
 
   const handleCopyLink = (link: string) => {
@@ -126,38 +133,10 @@ const UserDashboard = () => {
       <Navbar />
       
       <main className="container mx-auto py-6 px-4">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="flex gap-2">
-            <Button 
-              variant={filter === "Active" ? "default" : "outline"}
-              onClick={() => setFilter("Active")}
-              className="bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900"
-            >
-              Active
-            </Button>
-            <Button 
-              variant={filter === "Pending" ? "default" : "outline"}
-              onClick={() => setFilter("Pending")}
-              className="bg-gray-100 text-gray-800 hover:bg-gray-200"
-            >
-              Pending
-            </Button>
-            <Button 
-              variant={filter === "Stopped" ? "default" : "outline"}
-              onClick={() => setFilter("Stopped")}
-              className="bg-gray-100 text-gray-800 hover:bg-gray-200"
-            >
-              Stopped
-            </Button>
-          </div>
-          <div className="flex-1" />
-          <Button variant="outline" size="icon">
-            <Settings className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
-        </div>
+        <CampaignFilters 
+          selectedStates={selectedStates}
+          onStateChange={setSelectedStates}
+        />
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <Table>
@@ -233,38 +212,13 @@ const UserDashboard = () => {
               ))}
             </TableBody>
           </Table>
-          <div className="flex items-center justify-between px-4 py-3 border-t">
-            <div className="text-sm text-gray-500">
-              Filtered campaigns: {campaigns.length}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">Rows per page:</span>
-              <select className="border rounded px-2 py-1">
-                <option>10</option>
-                <option>20</option>
-                <option>50</option>
-              </select>
-              <div className="flex items-center gap-1">
-                <Button variant="outline" size="icon">
-                  <span className="sr-only">First page</span>
-                  ⟪
-                </Button>
-                <Button variant="outline" size="icon">
-                  <span className="sr-only">Previous page</span>
-                  ⟨
-                </Button>
-                <span className="text-sm">1 of {Math.ceil(campaigns.length / 10)}</span>
-                <Button variant="outline" size="icon">
-                  <span className="sr-only">Next page</span>
-                  ⟩
-                </Button>
-                <Button variant="outline" size="icon">
-                  <span className="sr-only">Last page</span>
-                  ⟫
-                </Button>
-              </div>
-            </div>
-          </div>
+          <CampaignPagination
+            total={campaigns.length}
+            limit={limit}
+            offset={offset}
+            onLimitChange={setLimit}
+            onOffsetChange={setOffset}
+          />
         </div>
       </main>
     </div>

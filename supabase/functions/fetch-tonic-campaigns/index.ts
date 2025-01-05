@@ -6,32 +6,32 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Get the authorization header from the incoming request
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('No authorization header');
     }
 
-    console.log('Received request with auth header:', authHeader);
+    const url = new URL(req.url);
+    const state = url.searchParams.get('state') || 'active,pending,stopped';
+    const limit = url.searchParams.get('limit') || '10';
+    const offset = url.searchParams.get('offset') || '0';
+    const from = url.searchParams.get('from') || '2024-01-01';
+    const to = new Date().toISOString().split('T')[0];
 
-    // Check for required environment variables
+    console.log('Request parameters:', { state, limit, offset, from, to });
+
     const consumerKey = Deno.env.get('TONIC_CONSUMER_KEY');
     const consumerSecret = Deno.env.get('TONIC_CONSUMER_SECRET');
 
     if (!consumerKey || !consumerSecret) {
-      console.error('Missing Tonic API credentials');
       throw new Error('Tonic API credentials not configured');
     }
 
-    console.log('Attempting to authenticate with Tonic API...');
-
-    // First authenticate with Tonic API to get a token
     const tonicAuthResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
       headers: {
@@ -43,31 +43,34 @@ serve(async (req) => {
       }),
     });
 
-    const responseText = await tonicAuthResponse.text();
-    console.log('Tonic API auth response:', responseText);
-
     if (!tonicAuthResponse.ok) {
-      console.error('Tonic API authentication failed:', responseText);
-      throw new Error(`Failed to authenticate with Tonic API: ${responseText}`);
+      const error = await tonicAuthResponse.text();
+      throw new Error(`Tonic authentication failed: ${error}`);
     }
 
-    const tonicAuth = JSON.parse(responseText);
-    console.log('Tonic authentication successful');
+    const tonicAuth = await tonicAuthResponse.json();
 
-    // Now use the Tonic token to fetch campaigns
-    const campaignsResponse = await fetch(
-      'https://api.publisher.tonic.com/privileged/v3/campaign/list?state=active&output=json',
-      {
-        headers: {
-          'Authorization': `Bearer ${tonicAuth.token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    // Build the campaigns URL with query parameters
+    const campaignsUrl = new URL('https://api.publisher.tonic.com/v4/campaigns');
+    campaignsUrl.searchParams.set('state', state);
+    campaignsUrl.searchParams.set('limit', limit);
+    campaignsUrl.searchParams.set('offset', offset);
+    campaignsUrl.searchParams.set('from', from);
+    campaignsUrl.searchParams.set('to', to);
+    campaignsUrl.searchParams.set('stats', 'true');
+    campaignsUrl.searchParams.set('orderOrientation', 'desc');
+
+    console.log('Fetching campaigns from:', campaignsUrl.toString());
+
+    const campaignsResponse = await fetch(campaignsUrl.toString(), {
+      headers: {
+        'Authorization': `Bearer ${tonicAuth.token}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
     if (!campaignsResponse.ok) {
       const error = await campaignsResponse.text();
-      console.error('Failed to fetch campaigns:', error);
       throw new Error(`Failed to fetch campaigns: ${error}`);
     }
 
