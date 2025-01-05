@@ -27,14 +27,12 @@ const AdminPanel = () => {
         return;
       }
 
-      // Verify if the user is admin@admin.com
       if (session.user.email !== "admin@admin.com") {
         toast.error("Unauthorized access");
         navigate("/dashboard");
         return;
       }
 
-      // Double check admin status through RPC
       const { data: isAdmin, error: adminError } = await supabase.rpc('is_admin');
       
       if (adminError || !isAdmin) {
@@ -43,7 +41,19 @@ const AdminPanel = () => {
       }
     };
 
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate("/auth");
+      }
+    });
+
     checkAuth();
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   // Fetch users using React Query
@@ -67,7 +77,6 @@ const AdminPanel = () => {
   const handleCreateUser = async (newUser: NewUser) => {
     setLoading(true);
     try {
-      // Create auth user with a valid email format
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: `${newUser.username}@admin.com`,
         password: newUser.password,
@@ -82,7 +91,6 @@ const AdminPanel = () => {
       if (signUpError) throw signUpError;
       if (!authData.user) throw new Error("No user returned from auth creation");
 
-      // Update profile with password
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -105,11 +113,21 @@ const AdminPanel = () => {
 
   const handleDeleteUser = async (userId: string) => {
     try {
+      // Get the current user's session
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUserId = session?.user?.id;
+
       const { error } = await supabase.rpc('delete_user_with_profile', {
         user_id: userId
       });
 
       if (error) throw error;
+
+      // If the deleted user is the current user, sign them out
+      if (currentUserId === userId) {
+        await supabase.auth.signOut();
+        navigate("/auth");
+      }
 
       toast.success("User deleted successfully!");
       refetch();

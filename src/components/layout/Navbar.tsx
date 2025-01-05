@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Navbar = () => {
   const navigate = useNavigate();
@@ -10,9 +11,14 @@ export const Navbar = () => {
   const isAdmin = location.pathname.includes('admin');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    toast.success("Logged out successfully");
-    navigate("/auth");
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Logged out successfully");
+      navigate("/auth");
+    } catch (error: any) {
+      toast.error("Error logging out");
+    }
   };
 
   const toggleMobileMenu = () => {
