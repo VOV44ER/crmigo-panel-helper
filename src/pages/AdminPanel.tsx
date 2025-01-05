@@ -11,38 +11,55 @@ import {
 import { Input } from "@/components/ui/input";
 import { Navbar } from "@/components/layout/Navbar";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface User {
-  id: number;
-  name: string;
+  id: string;
+  email: string;
   username: string;
-  password: string;
+  full_name: string;
 }
 
 const AdminPanel = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [newUser, setNewUser] = useState({
-    name: "",
-    username: "",
+    email: "",
     password: "",
+    username: "",
+    full_name: "",
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleCreateUser = (e: React.FormEvent) => {
+  const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    const user: User = {
-      id: Date.now(),
-      ...newUser,
-    };
-    setUsers([...users, user]);
-    setNewUser({ name: "", username: "", password: "" });
-    setIsModalOpen(false);
-    toast.success("User created successfully!");
-  };
+    setLoading(true);
 
-  const handleDeleteUser = (userId: number) => {
-    setUsers(users.filter((user) => user.id !== userId));
-    toast.success("User deleted successfully!");
+    try {
+      const { data, error } = await supabase.rpc('create_user_with_profile', {
+        email: newUser.email,
+        password: newUser.password,
+        username: newUser.username,
+        full_name: newUser.full_name
+      });
+
+      if (error) throw error;
+
+      setUsers([...users, {
+        id: data.id,
+        email: newUser.email,
+        username: newUser.username,
+        full_name: newUser.full_name
+      }]);
+      
+      setNewUser({ email: "", password: "", username: "", full_name: "" });
+      setIsModalOpen(false);
+      toast.success("User created successfully!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to create user");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,14 +82,15 @@ const AdminPanel = () => {
               </DialogHeader>
               <form onSubmit={handleCreateUser} className="space-y-4">
                 <div className="space-y-2">
-                  <label htmlFor="name" className="text-sm font-medium">
-                    Full Name
+                  <label htmlFor="email" className="text-sm font-medium">
+                    Email
                   </label>
                   <Input
-                    id="name"
-                    value={newUser.name}
+                    id="email"
+                    type="email"
+                    value={newUser.email}
                     onChange={(e) =>
-                      setNewUser({ ...newUser, name: e.target.value })
+                      setNewUser({ ...newUser, email: e.target.value })
                     }
                     required
                   />
@@ -91,6 +109,19 @@ const AdminPanel = () => {
                   />
                 </div>
                 <div className="space-y-2">
+                  <label htmlFor="full_name" className="text-sm font-medium">
+                    Full Name
+                  </label>
+                  <Input
+                    id="full_name"
+                    value={newUser.full_name}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, full_name: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
                   <label htmlFor="password" className="text-sm font-medium">
                     Password
                   </label>
@@ -104,8 +135,8 @@ const AdminPanel = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full">
-                  Create User
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Creating..." : "Create User"}
                 </Button>
               </form>
             </DialogContent>
@@ -117,30 +148,22 @@ const AdminPanel = () => {
             <thead>
               <tr className="border-b">
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
+                  Full Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Username
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Email
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {users.map((user) => (
                 <tr key={user.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">{user.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{user.full_name}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{user.username}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteUser(user.id)}
-                    >
-                      Delete
-                    </Button>
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
                 </tr>
               ))}
               {users.length === 0 && (

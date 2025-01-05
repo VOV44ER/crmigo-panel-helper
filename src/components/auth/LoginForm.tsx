@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const LoginForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [credentials, setCredentials] = useState({
-    username: "",
+    email: "",
     password: "",
   });
 
@@ -16,29 +17,38 @@ export const LoginForm = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Mock authentication - replace with real auth later
-    if (credentials.username === "admin" && credentials.password === "admin") {
-      toast.success("Welcome back, Admin!");
-      navigate("/admin");
-    } else if (credentials.username === "user" && credentials.password === "user") {
-      toast.success("Welcome back!");
-      navigate("/dashboard");
-    } else {
-      toast.error("Invalid credentials");
-    }
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
 
-    setLoading(false);
+      if (error) throw error;
+
+      // Check if user is admin (you might want to implement proper role checking)
+      if (credentials.email === "admin@example.com") {
+        toast.success("Welcome back, Admin!");
+        navigate("/admin");
+      } else {
+        toast.success("Welcome back!");
+        navigate("/dashboard");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Invalid credentials");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm">
       <div className="space-y-2">
         <Input
-          type="text"
-          placeholder="Username"
-          value={credentials.username}
+          type="email"
+          placeholder="Email"
+          value={credentials.email}
           onChange={(e) =>
-            setCredentials({ ...credentials, username: e.target.value })
+            setCredentials({ ...credentials, email: e.target.value })
           }
           required
         />
