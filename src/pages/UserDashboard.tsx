@@ -41,23 +41,18 @@ const fetchCampaigns = async () => {
 
   console.log('Using access token:', access_token);
 
-  const response = await fetch(
-    'https://api.publisher.tonic.com/privileged/v3/campaign/list?state=active&output=json',
-    {
-      headers: {
-        'Authorization': `Bearer ${access_token}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
+  const { data, error } = await supabase.functions.invoke('fetch-tonic-campaigns', {
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+    },
+  });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('API Error:', errorText);
-    throw new Error('Failed to fetch campaigns: ' + errorText);
+  if (error) {
+    console.error('Edge Function Error:', error);
+    throw new Error(`Failed to fetch campaigns: ${error.message}`);
   }
 
-  return response.json();
+  return data;
 };
 
 const UserDashboard = () => {
