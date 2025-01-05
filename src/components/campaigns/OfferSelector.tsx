@@ -21,7 +21,7 @@ interface OfferSelectorProps {
   isLoading: boolean;
 }
 
-export function OfferSelector({ selectedOffer, onOfferSelect, offers, isLoading }: OfferSelectorProps) {
+export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoading }: OfferSelectorProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -49,7 +49,7 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers, isLoading 
           <CommandInput placeholder="Search offer..." />
           <CommandEmpty>No offer found.</CommandEmpty>
           <CommandGroup className="max-h-[200px] overflow-y-auto">
-            {offers.map((offer) => (
+            {(offers || []).map((offer) => (
               <CommandItem
                 key={offer.id}
                 value={offer.name}

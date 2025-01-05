@@ -39,7 +39,7 @@ export function CreateCampaignModal() {
         console.error('Error fetching countries:', error);
         throw error;
       }
-      return data as { data: Country[] };
+      return data;
     }
   });
 
@@ -51,7 +51,7 @@ export function CreateCampaignModal() {
         console.error('Error fetching offers:', error);
         throw error;
       }
-      return data as { data: Offer[] };
+      return data;
     }
   });
 

@@ -17,7 +17,7 @@ interface CountrySelectorProps {
   isLoading: boolean;
 }
 
-export function CountrySelector({ selectedCountry, onCountrySelect, countries, isLoading }: CountrySelectorProps) {
+export function CountrySelector({ selectedCountry, onCountrySelect, countries = [], isLoading }: CountrySelectorProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -45,7 +45,7 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries, i
           <CommandInput placeholder="Search country..." />
           <CommandEmpty>No country found.</CommandEmpty>
           <CommandGroup className="max-h-[200px] overflow-y-auto">
-            {countries.map((country) => (
+            {(countries || []).map((country) => (
               <CommandItem
                 key={country.code}
                 value={country.name}
