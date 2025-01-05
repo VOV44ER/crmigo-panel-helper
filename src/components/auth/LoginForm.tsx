@@ -5,11 +5,9 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-interface TonicTokens {
-  accessToken: string;
-  refreshToken: string;
-  accessTokenExpires: number;
-  refreshTokenExpires: number;
+interface TonicToken {
+  token: string;
+  expires: number;
 }
 
 export const LoginForm = () => {
@@ -89,15 +87,13 @@ export const LoginForm = () => {
           return;
         }
 
-        // Store Tonic tokens in localStorage
-        const tonicTokens: TonicTokens = {
-          accessToken: tonicAuth.data.accessToken.token,
-          refreshToken: tonicAuth.data.refreshToken.token,
-          accessTokenExpires: tonicAuth.data.accessToken.expires,
-          refreshTokenExpires: tonicAuth.data.refreshToken.expires,
+        // Store Tonic token in localStorage
+        const tonicToken: TonicToken = {
+          token: tonicAuth.token,
+          expires: tonicAuth.expires,
         };
         
-        localStorage.setItem('tonicTokens', JSON.stringify(tonicTokens));
+        localStorage.setItem('tonicToken', JSON.stringify(tonicToken));
         
         toast.success("Welcome back!");
         navigate("/dashboard");

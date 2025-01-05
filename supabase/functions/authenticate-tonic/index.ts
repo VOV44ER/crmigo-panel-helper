@@ -6,16 +6,8 @@ const corsHeaders = {
 }
 
 interface TonicAuthResponse {
-  data: {
-    accessToken: {
-      token: string;
-      expires: number;
-    };
-    refreshToken: {
-      token: string;
-      expires: number;
-    };
-  };
+  token: string;
+  expires: number;
 }
 
 serve(async (req) => {
@@ -32,37 +24,15 @@ serve(async (req) => {
       throw new Error('Missing Tonic API credentials');
     }
 
-    const path = new URL(req.url).pathname;
-    const isRefresh = path.endsWith('/refresh');
-
-    if (isRefresh) {
-      const { refreshToken } = await req.json();
-      
-      const response = await fetch('https://api.publisher.tonic.com/v4/jwt/refresh', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      const data = await response.json();
-      console.log('Tonic refresh response:', data);
-
-      return new Response(JSON.stringify(data), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     // Regular authentication
-    const response = await fetch('https://api.publisher.tonic.com/v4/jwt/authenticate', {
+    const response = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        consumerKey,
-        consumerSecret,
+        consumer_key: consumerKey,
+        consumer_secret: consumerSecret,
       }),
     });
 
