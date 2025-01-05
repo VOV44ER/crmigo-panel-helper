@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CreateUserForm } from "@/components/admin/CreateUserForm";
 import { UsersTable } from "@/components/admin/UsersTable";
 import { User, NewUser } from "@/types/admin";
+import { Json } from "@/integrations/supabase/types";
 
 const AdminPanel = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -31,12 +32,15 @@ const AdminPanel = () => {
 
       if (error) throw error;
 
-      // Explicitly type the response data
+      // Type assertion for the JSON response
+      const jsonData = data as { [key: string]: Json };
+      
+      // Create a properly typed User object
       const userData: User = {
-        id: data.id as string,
-        email: data.email as string,
-        username: data.username as string,
-        full_name: data.full_name as string
+        id: String(jsonData.id),
+        email: String(jsonData.email),
+        username: String(jsonData.username),
+        full_name: String(jsonData.full_name)
       };
 
       setUsers((prevUsers) => [...prevUsers, userData]);
