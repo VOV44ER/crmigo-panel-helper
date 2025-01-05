@@ -29,6 +29,8 @@ serve(async (req) => {
       throw new Error('Tonic API credentials not configured');
     }
 
+    console.log('Attempting to authenticate with Tonic API...');
+
     // First authenticate with Tonic API to get a token
     const tonicAuthResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
@@ -41,13 +43,15 @@ serve(async (req) => {
       }),
     });
 
+    const responseText = await tonicAuthResponse.text();
+    console.log('Tonic API auth response:', responseText);
+
     if (!tonicAuthResponse.ok) {
-      const error = await tonicAuthResponse.text();
-      console.error('Tonic API authentication failed:', error);
-      throw new Error(`Failed to authenticate with Tonic API: ${error}`);
+      console.error('Tonic API authentication failed:', responseText);
+      throw new Error(`Failed to authenticate with Tonic API: ${responseText}`);
     }
 
-    const tonicAuth = await tonicAuthResponse.json();
+    const tonicAuth = JSON.parse(responseText);
     console.log('Tonic authentication successful');
 
     // Now use the Tonic token to fetch campaigns
