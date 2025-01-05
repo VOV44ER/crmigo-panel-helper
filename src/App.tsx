@@ -37,6 +37,24 @@ const ProtectedRoute = ({ children, adminOnly = false }: { children: React.React
     };
 
     checkAuth();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        navigate('/auth');
+      } else if (session) {
+        const isAdmin = session.user.email === "admin@admin.com";
+        if (adminOnly && !isAdmin) {
+          navigate("/dashboard");
+        } else if (!adminOnly && isAdmin) {
+          navigate("/admin");
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate, adminOnly]);
 
   return <>{children}</>;
