@@ -38,15 +38,28 @@ const AdminPanel = () => {
 
   const handleCreateUser = async (newUser: NewUser) => {
     setLoading(true);
-
     try {
-      const { data, error } = await supabase.rpc('create_user_with_profile', {
-        input_username: newUser.username,
-        input_password: newUser.password,
-        input_full_name: newUser.full_name
+      // First, create the user in Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: `${newUser.username}@placeholder.com`,
+        password: newUser.password,
+        email_confirm: true
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
+
+      if (!authData.user) throw new Error("No user returned from auth creation");
+
+      // Then, create the profile using the new user's ID
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          username: newUser.username,
+          full_name: newUser.full_name
+        });
+
+      if (profileError) throw profileError;
 
       toast.success("User created successfully!");
       setIsModalOpen(false);
@@ -61,9 +74,7 @@ const AdminPanel = () => {
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      const { data, error } = await supabase.rpc('delete_user_with_profile', {
-        user_id: userId
-      });
+      const { error } = await supabase.auth.admin.deleteUser(userId);
 
       if (error) throw error;
 
