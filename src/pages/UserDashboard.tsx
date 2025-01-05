@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +11,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Navbar } from "@/components/layout/Navbar";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface Campaign {
   id: number;
@@ -20,12 +22,34 @@ interface Campaign {
 }
 
 const UserDashboard = () => {
+  const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [newCampaign, setNewCampaign] = useState({
     name: "",
     description: "",
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Check if user is authenticated and not admin
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Please login first");
+        navigate("/auth");
+        return;
+      }
+
+      // If user is admin@admin.com, redirect to admin panel
+      if (session.user.email === "admin@admin.com") {
+        toast.error("Please use the admin dashboard");
+        navigate("/admin");
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   const handleCreateCampaign = (e: React.FormEvent) => {
     e.preventDefault();

@@ -40,12 +40,17 @@ export const LoginForm = () => {
         throw signInError;
       }
 
-      // Check if user is admin
-      const { data: isAdmin, error: adminError } = await supabase.rpc('is_admin');
+      // Check if the user is admin (admin@admin.com)
+      const isAdmin = credentials.email === "admin@admin.com";
       
-      if (adminError) throw adminError;
-
       if (isAdmin) {
+        // Verify admin status through RPC
+        const { data: isAdminVerified, error: adminError } = await supabase.rpc('is_admin');
+        if (adminError || !isAdminVerified) {
+          toast.error("Unauthorized access");
+          navigate("/dashboard");
+          return;
+        }
         toast.success("Welcome back, Admin!");
         navigate("/admin");
       } else {

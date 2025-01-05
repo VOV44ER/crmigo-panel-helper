@@ -27,7 +27,14 @@ const AdminPanel = () => {
         return;
       }
 
-      // Check if user is admin
+      // Verify if the user is admin@admin.com
+      if (session.user.email !== "admin@admin.com") {
+        toast.error("Unauthorized access");
+        navigate("/dashboard");
+        return;
+      }
+
+      // Double check admin status through RPC
       const { data: isAdmin, error: adminError } = await supabase.rpc('is_admin');
       
       if (adminError || !isAdmin) {
