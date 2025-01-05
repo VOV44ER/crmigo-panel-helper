@@ -11,10 +11,20 @@ serve(async (req) => {
 
   try {
     console.log('Fetching offers from Tonic API...')
+    const consumerKey = Deno.env.get('TONIC_CONSUMER_KEY')
+    const consumerSecret = Deno.env.get('TONIC_CONSUMER_SECRET')
+    
+    if (!consumerKey || !consumerSecret) {
+      throw new Error('Missing Tonic API credentials')
+    }
+
+    const authHeader = `Basic ${btoa(`${consumerKey}:${consumerSecret}`)}`
+    console.log('Auth header created successfully')
     
     const response = await fetch(`${TONIC_API_URL}/offers/list?output=json`, {
       headers: {
-        'Authorization': `Basic ${btoa(`${Deno.env.get('TONIC_CONSUMER_KEY')}:${Deno.env.get('TONIC_CONSUMER_SECRET')}`)}`,
+        'Authorization': authHeader,
+        'Content-Type': 'application/json',
       },
     })
 
