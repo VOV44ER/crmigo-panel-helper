@@ -46,8 +46,13 @@ serve(async (req) => {
     campaignsUrl.searchParams.append('stats', 'true')
     if (limit) campaignsUrl.searchParams.append('limit', limit.toString())
     if (offset) campaignsUrl.searchParams.append('offset', offset.toString())
-    if (from) campaignsUrl.searchParams.append('from', from)
-    if (to) campaignsUrl.searchParams.append('to', to)
+    
+    // Only add date parameters if both from and to are provided
+    if (from && to) {
+      campaignsUrl.searchParams.append('from', from)
+      campaignsUrl.searchParams.append('to', to)
+    }
+    
     if (username) campaignsUrl.searchParams.append('campaignName', username)
 
     console.log('Fetching campaigns from URL:', campaignsUrl.toString())

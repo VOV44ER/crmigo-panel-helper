@@ -66,8 +66,11 @@ const UserDashboard = () => {
           states: selectedStates,
           limit,
           offset,
-          from: dateRange?.from?.toISOString().split('T')[0],
-          to: dateRange?.to?.toISOString().split('T')[0],
+          // Only include date parameters if both from and to are present
+          ...(dateRange?.from && dateRange?.to ? {
+            from: dateRange.from.toISOString().split('T')[0],
+            to: dateRange.to.toISOString().split('T')[0],
+          } : {}),
           username
         }
       });
