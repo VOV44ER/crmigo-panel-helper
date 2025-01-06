@@ -12,7 +12,7 @@ interface KeywordEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   campaignName: string;
-  campaignId: string;
+  campaignId: string | number;
 }
 
 export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: KeywordEditModalProps) {
