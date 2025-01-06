@@ -10,6 +10,8 @@ import { useState } from "react";
 import { DateRange } from "react-day-picker";
 import CampaignFilters from "@/components/campaigns/CampaignFilters";
 import { format } from "date-fns";
+import { FileX } from "lucide-react";
+import "flag-icons/css/flag-icons.min.css";
 
 interface KeywordStats {
   keyword: string;
@@ -60,7 +62,7 @@ export default function Keywords() {
     to: new Date(),
   });
 
-  const { data: keywordsData, isLoading, error } = useQuery<KeywordResponse>({
+  const { data: keywordsData, isLoading } = useQuery({
     queryKey: ['keywords', dateRange],
     queryFn: async () => {
       const token = getTonicToken();
@@ -97,17 +99,15 @@ export default function Keywords() {
     },
   });
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <main className="container py-8">
-          <h1 className="text-2xl font-bold mb-6">Keywords Management</h1>
-          <div className="text-red-500">Error loading keywords: {error.message}</div>
-        </main>
-      </div>
-    );
-  }
+  const EmptyState = () => (
+    <div className="flex flex-col items-center justify-center py-12 px-4">
+      <FileX className="h-12 w-12 text-gray-400 mb-4" />
+      <h3 className="text-lg font-medium text-gray-900 mb-1">No Keywords Found</h3>
+      <p className="text-sm text-gray-500">
+        There are no keywords available for the selected date range.
+      </p>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -125,20 +125,20 @@ export default function Keywords() {
         
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50 border-b">
-                  <TableHead className="font-semibold text-gray-600">Keyword</TableHead>
-                  <TableHead className="font-semibold text-gray-600">Campaigns</TableHead>
-                  <TableHead className="font-semibold text-gray-600">Campaign Offer</TableHead>
-                  <TableHead className="font-semibold text-gray-600">Geo</TableHead>
-                  <TableHead className="font-semibold text-gray-600 text-right">RPC</TableHead>
-                  <TableHead className="font-semibold text-gray-600 text-right">Conv.</TableHead>
-                  <TableHead className="font-semibold text-gray-600 text-right">Rev.</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
+            {isLoading ? (
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50 border-b">
+                    <TableHead className="font-semibold text-gray-600">Keyword</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Campaigns</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Campaign Offer</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Geo</TableHead>
+                    <TableHead className="font-semibold text-gray-600 text-right">RPC</TableHead>
+                    <TableHead className="font-semibold text-gray-600 text-right">Conv.</TableHead>
+                    <TableHead className="font-semibold text-gray-600 text-right">Rev.</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   <TableRow>
                     <TableCell colSpan={7}>
                       <div className="space-y-2">
@@ -148,15 +148,32 @@ export default function Keywords() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ) : (
-                  keywordsData?.data.map((item) => (
+                </TableBody>
+              </Table>
+            ) : !keywordsData?.data || keywordsData.data.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50 border-b">
+                    <TableHead className="font-semibold text-gray-600">Keyword</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Campaigns</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Campaign Offer</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Geo</TableHead>
+                    <TableHead className="font-semibold text-gray-600 text-right">RPC</TableHead>
+                    <TableHead className="font-semibold text-gray-600 text-right">Conv.</TableHead>
+                    <TableHead className="font-semibold text-gray-600 text-right">Rev.</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {keywordsData.data.map((item) => (
                     <TableRow key={item.keyword} className="hover:bg-gray-50">
                       <TableCell className="font-medium">{item.keyword}</TableCell>
                       <TableCell>
                         {item.campaigns.map((campaign) => (
                           <div key={campaign.id} className="mb-1">
                             <Badge 
-                              variant={campaign.status === 'active' ? 'default' : 'secondary'}
+                              variant="default"
                               className="text-xs"
                             >
                               {campaign.name}
@@ -186,10 +203,10 @@ export default function Keywords() {
                       <TableCell className="text-right">{item.clicks}</TableCell>
                       <TableCell className="text-right">${item.revenue.toFixed(2)}</TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </div>
       </main>
