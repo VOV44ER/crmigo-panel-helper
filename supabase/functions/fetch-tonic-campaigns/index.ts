@@ -1,4 +1,7 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const TONIC_API_URL = "https://api.publisher.tonic.com/privileged/v3"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,98 +9,127 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { states, limit, offset, from, to } = await req.json();
-
-    // Get Tonic credentials from environment variables
-    const consumerKey = Deno.env.get('TONIC_CONSUMER_KEY');
-    const consumerSecret = Deno.env.get('TONIC_CONSUMER_SECRET');
-
-    if (!consumerKey || !consumerSecret) {
-      throw new Error('Missing Tonic API credentials');
+    const { states, limit, offset, from, to, userId } = await req.json()
+    
+    if (!states || !userId) {
+      throw new Error('Missing required fields: states and userId are required')
     }
 
-    console.log('Authenticating with Tonic API...');
-
-    // First, get JWT token
-    const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
+    // First, get JWT token from Tonic
+    const authResponse = await fetch(`${TONIC_API_URL}/jwt/authenticate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        consumer_key: consumerKey,
-        consumer_secret: consumerSecret,
-      }),
-    });
+        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
+        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET')
+      })
+    })
 
     if (!authResponse.ok) {
-      const error = await authResponse.text();
-      console.error('Tonic API authentication failed:', error);
-      throw new Error('Failed to authenticate with Tonic API');
+      const errorText = await authResponse.text()
+      throw new Error(`Failed to authenticate with Tonic: ${errorText}`)
     }
 
-    const { token } = await authResponse.json();
-    console.log('Successfully obtained Tonic JWT token');
+    const { token: tonicToken } = await authResponse.json()
 
-    // Ensure we have at least one state
-    if (!states || states.length === 0) {
-      throw new Error('At least one state must be selected');
+    // Get user's campaign IDs from Supabase
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    const { data: userCampaigns, error: dbError } = await supabase
+      .from('campaigns')
+      .select('campaign_id')
+      .eq('user_id', userId)
+
+    if (dbError) {
+      throw new Error(`Database error: ${dbError.message}`)
     }
 
-    // Build the campaigns URL with query parameters
-    const campaignsUrl = new URL('https://api.publisher.tonic.com/v4/campaigns');
-    campaignsUrl.searchParams.set('state', states.join(','));
-    campaignsUrl.searchParams.set('limit', limit?.toString() || '10');
-    campaignsUrl.searchParams.set('offset', offset?.toString() || '0');
-    if (from) campaignsUrl.searchParams.set('from', from);
-    if (to) campaignsUrl.searchParams.set('to', to);
-    campaignsUrl.searchParams.set('stats', 'true');
-    campaignsUrl.searchParams.set('orderOrientation', 'desc');
-
-    console.log('Fetching campaigns from:', campaignsUrl.toString());
-
-    const campaignsResponse = await fetch(campaignsUrl.toString(), {
+    // Get all campaigns from Tonic
+    const campaignsResponse = await fetch(`${TONIC_API_URL}/campaigns?state=${states.join(',')}&stats=true`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${tonicToken}`,
         'Content-Type': 'application/json',
-      },
-    });
+      }
+    })
 
     if (!campaignsResponse.ok) {
-      const errorData = await campaignsResponse.json();
-      console.error('Failed to fetch campaigns:', errorData);
-      throw new Error(`Failed to fetch campaigns: ${JSON.stringify(errorData, null, 2)}`);
+      const errorText = await campaignsResponse.text()
+      throw new Error(`Failed to fetch campaigns: ${errorText}`)
     }
 
-    const campaigns = await campaignsResponse.json();
-    console.log('Successfully fetched campaigns');
+    const allCampaigns = await campaignsResponse.json()
+    
+    // Filter campaigns to only include user's campaigns
+    const userCampaignIds = new Set(userCampaigns.map(c => c.campaign_id))
+    const filteredCampaigns = allCampaigns.data.filter(campaign => 
+      userCampaignIds.has(campaign.id.toString())
+    )
+
+    // Apply date filtering if provided
+    let dateFilteredCampaigns = filteredCampaigns
+    if (from || to) {
+      dateFilteredCampaigns = filteredCampaigns.filter(campaign => {
+        const campaignDate = new Date(campaign.created)
+        const fromDate = from ? new Date(from) : null
+        const toDate = to ? new Date(to) : null
+        
+        if (fromDate && toDate) {
+          return campaignDate >= fromDate && campaignDate <= toDate
+        } else if (fromDate) {
+          return campaignDate >= fromDate
+        } else if (toDate) {
+          return campaignDate <= toDate
+        }
+        return true
+      })
+    }
+
+    // Apply pagination
+    const startIndex = offset || 0
+    const endIndex = startIndex + (limit || 10)
+    const paginatedCampaigns = dateFilteredCampaigns.slice(startIndex, endIndex)
+
+    const response = {
+      data: paginatedCampaigns,
+      pagination: {
+        total: dateFilteredCampaigns.length,
+        offset: startIndex,
+        limit: limit || 10
+      },
+      sorting: allCampaigns.sorting
+    }
 
     return new Response(
-      JSON.stringify(campaigns),
+      JSON.stringify(response),
       { 
         headers: { 
-          'Content-Type': 'application/json',
-          ...corsHeaders
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
         } 
-      },
-    );
+      }
+    )
+
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
         status: 400,
         headers: { 
-          'Content-Type': 'application/json',
-          ...corsHeaders
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         } 
-      },
-    );
+      }
+    )
   }
 })
