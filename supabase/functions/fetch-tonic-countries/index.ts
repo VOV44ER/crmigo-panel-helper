@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-const TONIC_API_URL = 'https://api.publisher.tonic.com/v1'
+const TONIC_API_URL = 'https://api.publisher.tonic.com/v4'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,55 +14,19 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Starting Tonic API request...')
+    console.log('Starting countries fetch request...')
     
-    const consumerKey = Deno.env.get('TONIC_CONSUMER_KEY')
-    const consumerSecret = Deno.env.get('TONIC_CONSUMER_SECRET')
-    
-    if (!consumerKey || !consumerSecret) {
-      console.error('Missing API credentials')
-      throw new Error('Missing Tonic API credentials')
+    // Get the Authorization header from the request
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('No authorization token provided')
     }
 
-    console.log('Authenticating with Tonic API...')
-    const authResponse = await fetch(`${TONIC_API_URL}/jwt/authenticate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        consumer_key: consumerKey,
-        consumer_secret: consumerSecret,
-      }),
-    })
-
-    const authResponseText = await authResponse.text()
-    console.log('Auth response status:', authResponse.status)
-    console.log('Auth response:', authResponseText)
-
-    if (!authResponse.ok) {
-      throw new Error(`Authentication failed with status ${authResponse.status}: ${authResponseText}`)
-    }
-
-    let authData
-    try {
-      authData = JSON.parse(authResponseText)
-    } catch (e) {
-      console.error('Failed to parse auth response:', e)
-      throw new Error(`Invalid auth response format: ${authResponseText}`)
-    }
-
-    if (!authData.token) {
-      console.error('No token in response:', authData)
-      throw new Error('No token received in auth response')
-    }
-
-    console.log('Successfully authenticated, fetching countries...')
+    console.log('Fetching countries from Tonic API...')
     const countriesResponse = await fetch(`${TONIC_API_URL}/countries`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${authData.token}`,
+        'Authorization': authHeader,
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
