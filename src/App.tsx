@@ -29,7 +29,6 @@ const ProtectedRoute = ({ children, adminOnly = false }: { children: React.React
       const isAdmin = session.user.email === "admin@admin.com";
       
       if (adminOnly && !isAdmin) {
-        toast.error("Unauthorized access");
         navigate("/dashboard");
       } else if (!adminOnly && isAdmin) {
         navigate("/admin");

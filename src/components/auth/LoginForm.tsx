@@ -21,7 +21,9 @@ export const LoginForm = () => {
 
       if (error) throw error;
 
+      // Check if user is admin by checking email
       const isAdmin = email === 'admin@admin.com';
+      
       if (isAdmin) {
         toast.success("Welcome back, Admin!");
         navigate("/admin");
