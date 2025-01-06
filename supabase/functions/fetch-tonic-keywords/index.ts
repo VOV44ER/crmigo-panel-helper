@@ -1,91 +1,84 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const TONIC_API_URL = "https://api.publisher.tonic.com/v4"
-
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { from, to, username } = await req.json()
-    
-    // First, get JWT token from Tonic
-    const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
-        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
-      }),
-    })
+    const { campaign_id } = await req.json()
 
-    if (!authResponse.ok) {
-      const error = await authResponse.text()
-      console.error('Tonic API authentication failed:', error)
-      throw new Error('Failed to authenticate with Tonic API')
+    if (!campaign_id) {
+      throw new Error('Campaign ID is required')
     }
 
-    const { token: tonicToken } = await authResponse.json()
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
-    // Build the URL with all required query parameters
-    const url = new URL(`${TONIC_API_URL}/statistics/keywords`)
-    url.searchParams.append('from', from)
-    url.searchParams.append('to', to)
-    url.searchParams.append('orderField', 'clicks')
-    url.searchParams.append('orderOrientation', 'desc')
-    url.searchParams.append('offset', '0')
-    if (username) url.searchParams.append('campaignName', username)
-
-    console.log('Fetching keywords with URL:', url.toString())
-
-    // Fetch keywords stats from Tonic
-    const response = await fetch(url.toString(), {
-      headers: {
-        'Authorization': `Bearer ${tonicToken}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    })
-
-    if (!response.ok) {
-      const error = await response.text()
-      console.error('Tonic API error:', error)
-      throw new Error(`Failed to fetch keywords stats: ${error}`)
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase environment variables')
     }
 
-    const result = await response.json()
-    console.log('Successfully fetched keywords stats:', result)
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
-    return new Response(
-      JSON.stringify(result),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
+    // Get the user's token from Tonic
+    const { data: { access_token }, error: tokenError } = await supabase
+      .functions.invoke('authenticate-tonic')
+
+    if (tokenError || !access_token) {
+      console.error('Error getting Tonic token:', tokenError)
+      throw new Error('Failed to authenticate with Tonic')
+    }
+
+    // Fetch keywords from Tonic API
+    const response = await fetch(
+      `https://api.publisher.tonic.com/privileged/v3/campaign/keywords?campaign_id=${campaign_id}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${access_token}`,
+        },
       }
     )
 
+    if (!response.ok) {
+      console.error('Tonic API error:', await response.text())
+      throw new Error(`Tonic API error: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    console.log('Successfully fetched keywords for campaign:', campaign_id)
+
+    return new Response(
+      JSON.stringify(data),
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      },
+    )
+
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error:', error.message)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
         status: 400,
         headers: { 
           ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
-      }
+          'Content-Type': 'application/json',
+        },
+      },
     )
   }
 })
