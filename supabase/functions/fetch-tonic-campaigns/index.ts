@@ -68,40 +68,15 @@ serve(async (req) => {
     const allCampaigns = await campaignsResponse.json()
     console.log('All campaigns from Tonic:', allCampaigns)
 
-    // Filter campaigns by username in campaign name (format: "name | username")
-    const userCampaigns = allCampaigns.data.filter(campaign => {
-      const parts = campaign.name.split('|')
-      return parts.length === 2 && parts[1].trim() === username
-    })
-
-    // Apply date filtering if provided
-    let dateFilteredCampaigns = userCampaigns
-    if (from || to) {
-      dateFilteredCampaigns = userCampaigns.filter(campaign => {
-        const campaignDate = new Date(campaign.created)
-        const fromDate = from ? new Date(from) : null
-        const toDate = to ? new Date(to) : null
-        
-        if (fromDate && toDate) {
-          return campaignDate >= fromDate && campaignDate <= toDate
-        } else if (fromDate) {
-          return campaignDate >= fromDate
-        } else if (toDate) {
-          return campaignDate <= toDate
-        }
-        return true
-      })
-    }
-
     // Apply pagination
     const startIndex = offset || 0
     const endIndex = startIndex + (limit || 10)
-    const paginatedCampaigns = dateFilteredCampaigns.slice(startIndex, endIndex)
+    const paginatedCampaigns = allCampaigns.data.slice(startIndex, endIndex)
 
     const response = {
       data: paginatedCampaigns,
       pagination: {
-        total: dateFilteredCampaigns.length,
+        total: allCampaigns.data.length,
         offset: startIndex,
         limit: limit || 10
       }
