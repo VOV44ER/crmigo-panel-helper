@@ -21,24 +21,14 @@ serve(async (req) => {
       throw new Error('Missing required fields: countryId, offerId, name, and userId are required')
     }
 
-    // First, get JWT token from Tonic
-    const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
-        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
-      }),
-    });
-
-    if (!authResponse.ok) {
-      const error = await authResponse.text();
-      throw new Error(`Failed to authenticate with Tonic API: ${error}`);
+    // Get authorization header from the request
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('No authorization header provided')
     }
 
-    const { token: tonicToken } = await authResponse.json();
+    const tonicToken = authHeader.replace('Bearer ', '')
+    console.log('Using Tonic token from request:', tonicToken)
     
     // Create campaign in Tonic
     const response = await fetch(`${TONIC_API_URL}/campaigns/create`, {
@@ -46,6 +36,7 @@ serve(async (req) => {
       headers: {
         'Authorization': `Bearer ${tonicToken}`,
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
         country_id: countryId,
