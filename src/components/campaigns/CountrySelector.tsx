@@ -48,30 +48,32 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
-        <Command className="w-full">
+      <PopoverContent className="w-full p-0" align="start">
+        <Command shouldFilter={false} className="w-full">
           <CommandInput placeholder="Search country..." />
           <CommandEmpty>No country found.</CommandEmpty>
-          <CommandGroup className="max-h-[300px] overflow-y-auto">
-            {validCountries.map((country) => (
-              <CommandItem
-                key={country.code}
-                value={country.code}
-                onSelect={() => {
-                  console.log('Country selected:', country);
-                  onCountrySelect(country);
-                  setOpen(false);
-                }}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    selectedCountry?.code === country.code ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {country.name}
-              </CommandItem>
-            ))}
+          <CommandGroup>
+            <div className="max-h-[300px] overflow-y-auto">
+              {validCountries.map((country) => (
+                <CommandItem
+                  key={country.code}
+                  value={country.code}
+                  onSelect={() => {
+                    console.log('Country selected:', country);
+                    onCountrySelect(country);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selectedCountry?.code === country.code ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {country.name}
+                </CommandItem>
+              ))}
+            </div>
           </CommandGroup>
         </Command>
       </PopoverContent>
