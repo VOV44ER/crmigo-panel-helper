@@ -28,6 +28,8 @@ serve(async (req) => {
     });
 
     if (!authResponse.ok) {
+      const errorText = await authResponse.text();
+      console.error('Auth Error:', errorText);
       throw new Error('Failed to authenticate with Tonic API');
     }
 
@@ -35,14 +37,32 @@ serve(async (req) => {
 
     // Build the URL with query parameters
     const url = new URL('https://api.publisher.tonic.com/v4/campaigns');
-    if (states?.length) url.searchParams.append('states', states.join(','));
-    if (limit) url.searchParams.append('limit', limit.toString());
-    if (offset) url.searchParams.append('offset', offset.toString());
-    if (from) url.searchParams.append('from', from);
-    if (to) url.searchParams.append('to', to);
-    if (username) url.searchParams.append('campaignName', username);
-    if (countryCode) url.searchParams.append('countryCode', countryCode);
-    if (offerIds) url.searchParams.append('offerIds', offerIds);
+    
+    // Only append parameters if they exist and are not empty
+    if (states?.length) {
+      url.searchParams.append('states', states.join(','));
+    }
+    if (limit) {
+      url.searchParams.append('limit', limit.toString());
+    }
+    if (offset) {
+      url.searchParams.append('offset', offset.toString());
+    }
+    if (from) {
+      url.searchParams.append('from', from);
+    }
+    if (to) {
+      url.searchParams.append('to', to);
+    }
+    if (username) {
+      url.searchParams.append('campaignName', username);
+    }
+    if (countryCode) {
+      url.searchParams.append('countryCode', countryCode);
+    }
+    if (offerIds) {
+      url.searchParams.append('offerIds', offerIds);
+    }
 
     console.log('Fetching from URL:', url.toString());
 
