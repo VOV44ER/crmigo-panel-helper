@@ -13,13 +13,13 @@ serve(async (req) => {
   }
 
   try {
-    const { states, limit, offset, from, to, userId } = await req.json()
+    const { states, limit, offset, from, to } = await req.json()
     
-    if (!states || !userId) {
-      throw new Error('Missing required fields: states and userId are required')
+    if (!states) {
+      throw new Error('Missing required field: states')
     }
 
-    console.log('Fetching campaigns with params:', { states, limit, offset, from, to, userId })
+    console.log('Fetching campaigns with params:', { states, limit, offset, from, to })
 
     // First, get JWT token from Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
