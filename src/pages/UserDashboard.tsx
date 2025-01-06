@@ -20,6 +20,7 @@ const UserDashboard = () => {
     from: addDays(new Date(), -30),
     to: new Date(),
   });
+  const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -35,24 +36,29 @@ const UserDashboard = () => {
         toast.error("Please use the admin dashboard");
         navigate("/admin");
       }
+
+      // Get username from profiles table
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profile?.username) {
+        setUsername(profile.username);
+      }
     };
 
     checkAuth();
   }, [navigate]);
 
   const { data: response, isLoading, error } = useQuery({
-    queryKey: ['campaigns', selectedStates, limit, offset, dateRange],
+    queryKey: ['campaigns', selectedStates, limit, offset, dateRange, username],
     queryFn: async () => {
       // Ensure we have at least one state selected
       if (selectedStates.length === 0) {
         setSelectedStates(['active']);
         return null;
-      }
-
-      // Get current user session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error("Not authenticated");
       }
 
       const { data, error } = await supabase.functions.invoke('fetch-tonic-campaigns', {
@@ -62,13 +68,14 @@ const UserDashboard = () => {
           offset,
           from: dateRange?.from?.toISOString().split('T')[0],
           to: dateRange?.to?.toISOString().split('T')[0],
-          userId: session.user.id // Add user ID to filter campaigns
+          username
         }
       });
 
       if (error) throw error;
       return data;
     },
+    enabled: !!username, // Only run query when we have the username
   });
 
   if (error) {
