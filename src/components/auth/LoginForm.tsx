@@ -5,11 +5,6 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-interface TonicToken {
-  token: string;
-  expires: number;
-}
-
 export const LoginForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -69,41 +64,6 @@ export const LoginForm = () => {
         toast.success("Welcome back, Admin!");
         navigate("/admin");
       } else {
-        // For regular users, authenticate with Tonic API
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          throw new Error("No session found");
-        }
-        
-        const { data: tonicAuth, error: tonicError } = await supabase.functions.invoke('authenticate-tonic', {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
-
-        if (tonicError) {
-          console.error('Tonic authentication error:', tonicError);
-          toast.error("Failed to authenticate with Tonic API");
-          await supabase.auth.signOut();
-          return;
-        }
-
-        if (!tonicAuth || !tonicAuth.token) {
-          console.error('Invalid Tonic authentication response:', tonicAuth);
-          toast.error("Invalid authentication response from Tonic API");
-          await supabase.auth.signOut();
-          return;
-        }
-
-        // Store only the Tonic token data
-        const tonicToken: TonicToken = {
-          token: tonicAuth.token,
-          expires: tonicAuth.expires
-        };
-        
-        console.log('Storing Tonic token:', tonicToken);
-        localStorage.setItem('tonicToken', JSON.stringify(tonicToken));
-        
         toast.success("Welcome back!");
         navigate("/dashboard");
       }
