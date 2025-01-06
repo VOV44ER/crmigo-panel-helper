@@ -48,12 +48,12 @@ serve(async (req) => {
       url.searchParams.append('campaignName', campaignName)
     }
 
-    // Fetch keywords stats from Tonic
+    // Fetch keywords stats from Tonic with explicit headers
     const response = await fetch(url.toString(), {
       headers: {
-        'Authorization': `Bearer ${tonicToken}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${tonicToken}`,
       }
     })
 

@@ -44,13 +44,14 @@ serve(async (req) => {
 
     console.log('Successfully authenticated with Tonic')
 
-    // Fetch keywords from Tonic API
+    // Fetch keywords from Tonic API with explicit headers
     const response = await fetch(
       `https://api.publisher.tonic.com/privileged/v3/campaign/keywords?campaign_id=${campaign_id}`,
       {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
           'Authorization': `Bearer ${access_token}`,
         },
       }
