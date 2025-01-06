@@ -25,6 +25,13 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
   const [open, setOpen] = useState(false);
   const validOffers = Array.isArray(offers) ? offers : [];
 
+  console.log('OfferSelector render:', {
+    selectedOffer,
+    offersLength: validOffers.length,
+    offers: validOffers,
+    isLoading
+  });
+
   // Group offers by vertical
   const offersByVertical = validOffers.reduce((acc, offer) => {
     const vertical = offer.vertical.name;
@@ -34,6 +41,8 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
     acc[vertical].push(offer);
     return acc;
   }, {} as Record<string, Offer[]>);
+
+  console.log('Offers grouped by vertical:', offersByVertical);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -70,6 +79,7 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
                     key={offer.id}
                     value={offer.id.toString()}
                     onSelect={() => {
+                      console.log('Offer selected:', offer);
                       onOfferSelect(offer);
                       setOpen(false);
                     }}

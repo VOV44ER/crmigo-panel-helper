@@ -21,6 +21,13 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
   const [open, setOpen] = useState(false);
   const validCountries = Array.isArray(countries) ? countries : [];
 
+  console.log('CountrySelector render:', {
+    selectedCountry,
+    countriesLength: validCountries.length,
+    countries: validCountries,
+    isLoading
+  });
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -51,6 +58,7 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
                 key={country.code}
                 value={country.code}
                 onSelect={() => {
+                  console.log('Country selected:', country);
                   onCountrySelect(country);
                   setOpen(false);
                 }}
