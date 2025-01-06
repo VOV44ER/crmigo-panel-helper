@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import CampaignFilters from "@/components/campaigns/CampaignFilters";
 import { DateRange } from "react-day-picker";
@@ -13,7 +12,6 @@ import EmptyState from "@/components/keywords/EmptyState";
 import "flag-icons/css/flag-icons.min.css";
 
 const Keywords = () => {
-  const navigate = useNavigate();
   const today = new Date();
   const [dateRange, setDateRange] = useState<DateRange>({
     from: today,
@@ -32,18 +30,12 @@ const Keywords = () => {
   }, []);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const getUsername = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
         toast.error("Please login first");
-        navigate("/auth");
         return;
-      }
-
-      if (session.user.email === "admin@admin.com") {
-        toast.error("Please use the admin dashboard");
-        navigate("/admin");
       }
 
       const { data: profile } = await supabase
@@ -57,29 +49,22 @@ const Keywords = () => {
       }
     };
 
-    checkAuth();
-  }, [navigate]);
+    getUsername();
+  }, []);
 
   const { data: response, isLoading } = useQuery({
     queryKey: ['keywords', dateRange, username],
     queryFn: async () => {
-      if (!username) throw new Error('Username is required');
+      if (!username) return null;
 
-      const { data: campaignData, error: campaignError } = await supabase
+      const { data: campaignData } = await supabase
         .from('campaigns')
         .select('campaign_id')
         .eq('user_id', (await supabase.auth.getSession()).data.session?.user.id)
         .maybeSingle();
 
-      if (campaignError) {
-        toast.error("Error fetching campaign");
-        throw campaignError;
-      }
-
       if (!campaignData?.campaign_id) {
-        toast.error("No campaign found");
-        navigate("/dashboard");
-        throw new Error('No campaign found');
+        return null;
       }
 
       const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords', {
