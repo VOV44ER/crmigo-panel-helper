@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const TONIC_API_URL = "https://api.publisher.tonic.com/privileged/v3"
+const TONIC_API_URL = "https://api.publisher.tonic.com/v4"
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { campaign_id } = await req.json()
+    const { campaign_id, from, to, username } = await req.json()
     
     if (!campaign_id) {
       throw new Error('Campaign ID is required')
@@ -41,8 +41,14 @@ serve(async (req) => {
 
     const { token: tonicToken } = await authResponse.json()
     
-    // Fetch keywords from Tonic
-    const response = await fetch(`${TONIC_API_URL}/campaign/keywords?campaign_id=${campaign_id}`, {
+    // Build the URL with query parameters
+    const url = new URL(`${TONIC_API_URL}/statistics/keywords`)
+    if (from) url.searchParams.append('from', from)
+    if (to) url.searchParams.append('to', to)
+    url.searchParams.append('campaignId', campaign_id)
+
+    // Fetch keywords stats from Tonic
+    const response = await fetch(url.toString(), {
       headers: {
         'Authorization': `Bearer ${tonicToken}`,
         'Content-Type': 'application/json',
@@ -53,11 +59,11 @@ serve(async (req) => {
     if (!response.ok) {
       const error = await response.text()
       console.error('Tonic API error:', error)
-      throw new Error(`Failed to fetch keywords: ${error}`)
+      throw new Error(`Failed to fetch keywords stats: ${error}`)
     }
 
     const result = await response.json()
-    console.log('Successfully fetched keywords:', result)
+    console.log('Successfully fetched keywords stats:', result)
 
     return new Response(
       JSON.stringify(result),

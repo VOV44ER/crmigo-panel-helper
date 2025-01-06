@@ -62,14 +62,26 @@ const Keywords = () => {
   const { data: response, isLoading } = useQuery({
     queryKey: ['keywords', dateRange, username],
     queryFn: async () => {
+      if (!username) throw new Error('Username is required');
+
+      const { data: campaignData } = await supabase
+        .from('campaigns')
+        .select('campaign_id')
+        .eq('user_id', (await supabase.auth.getSession()).data.session?.user.id)
+        .single();
+
+      if (!campaignData?.campaign_id) {
+        throw new Error('No campaign found');
+      }
+
       const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords', {
         body: { 
+          campaign_id: campaignData.campaign_id,
           ...(dateRange?.from && dateRange?.to ? {
             from: format(dateRange.from, "yyyy-MM-dd"),
             to: format(dateRange.to, "yyyy-MM-dd"),
           } : {}),
           username,
-          campaignName: username
         }
       });
 
@@ -104,14 +116,22 @@ const Keywords = () => {
             <EmptyState />
           ) : isMobile ? (
             <div className="grid grid-cols-1 gap-4 p-4">
-              {keywords.map((keyword, index) => (
-                <KeywordCard key={index} keyword={keyword} />
+              {keywords.map((keyword) => (
+                <KeywordCard 
+                  key={keyword.keyword}
+                  keyword={keyword.keyword}
+                  campaigns={keyword.campaigns}
+                  countries={keyword.countries}
+                  offers={keyword.offers}
+                  clicks={keyword.clicks}
+                  revenue={keyword.revenue}
+                  rpc={keyword.rpc}
+                />
               ))}
             </div>
           ) : (
             <KeywordTable 
               keywords={keywords}
-              isLoading={isLoading}
             />
           )}
         </div>
