@@ -1,9 +1,4 @@
-import { useState } from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Offer {
   id: number;
@@ -22,7 +17,6 @@ interface OfferSelectorProps {
 }
 
 export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoading }: OfferSelectorProps) {
-  const [open, setOpen] = useState(false);
   const validOffers = Array.isArray(offers) ? offers : [];
 
   console.log('OfferSelector render:', {
@@ -45,60 +39,36 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
   console.log('Offers grouped by vertical:', offersByVertical);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            "Loading offers..."
-          ) : selectedOffer ? (
-            selectedOffer.name
-          ) : (
-            "Select offer..."
-          )}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command>
-          <CommandInput placeholder="Search offer..." />
-          <CommandEmpty>No offer found.</CommandEmpty>
-          <CommandGroup className="max-h-[300px] overflow-y-auto">
-            {Object.entries(offersByVertical).map(([vertical, verticalOffers]) => (
-              <div key={vertical}>
-                <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                  {vertical}
-                </div>
-                {verticalOffers.map((offer) => (
-                  <CommandItem
-                    key={offer.id}
-                    value={offer.name}
-                    onSelect={() => {
-                      console.log('Offer selected:', offer);
-                      onOfferSelect(offer);
-                      setOpen(false);
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        selectedOffer?.id === offer.id ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {offer.name}
-                  </CommandItem>
-                ))}
-              </div>
+    <Select
+      value={selectedOffer?.id.toString()}
+      onValueChange={(value) => {
+        const offer = validOffers.find(o => o.id.toString() === value);
+        if (offer) {
+          console.log('Offer selected:', offer);
+          onOfferSelect(offer);
+        }
+      }}
+      disabled={isLoading}
+    >
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder={isLoading ? "Loading offers..." : "Select offer..."} />
+      </SelectTrigger>
+      <SelectContent>
+        {Object.entries(offersByVertical).map(([vertical, verticalOffers]) => (
+          <SelectGroup key={vertical}>
+            <SelectLabel>{vertical}</SelectLabel>
+            {verticalOffers.map((offer) => (
+              <SelectItem
+                key={offer.id}
+                value={offer.id.toString()}
+                className="cursor-pointer"
+              >
+                {offer.name}
+              </SelectItem>
             ))}
-          </CommandGroup>
-        </Command>
-      </PopoverContent>
-    </Popover>
+          </SelectGroup>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
