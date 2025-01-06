@@ -61,13 +61,14 @@ export default function Keywords() {
     queryFn: async () => {
       if (!dateRange?.from || !dateRange?.to) return null;
 
-      const { data } = await supabase.functions.invoke('fetch-tonic-keywords', {
+      const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords', {
         body: {
           from: format(dateRange.from, "yyyy-MM-dd"),
           to: format(dateRange.to, "yyyy-MM-dd"),
         }
       });
 
+      if (error) throw error;
       return data;
     },
     enabled: !!dateRange?.from && !!dateRange?.to,
@@ -103,7 +104,7 @@ export default function Keywords() {
             <div className="p-8 flex items-center justify-center">
               <Loader className="h-8 w-8 animate-spin text-gray-400" />
             </div>
-          ) : !keywords || keywords.length === 0 ? (
+          ) : !keywords || !Array.isArray(keywords) || keywords.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-4">
               <Database className="h-12 w-12 text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-1">No keywords data found</h3>
@@ -130,14 +131,14 @@ export default function Keywords() {
                     <TableCell>{keyword.offers[0]?.name || 'N/A'}</TableCell>
                     <TableCell>
                       {keyword.countries[0] && (
-                        <>
+                        <div className="flex items-center gap-2">
                           <img 
                             src={`https://flagcdn.com/w20/${keyword.countries[0].code.toLowerCase()}.png`}
                             alt={keyword.countries[0].name}
-                            className="inline-block mr-2"
+                            className="w-5 h-auto"
                           />
                           {keyword.countries[0].name}
-                        </>
+                        </div>
                       )}
                     </TableCell>
                     <TableCell className="text-right">{keyword.clicks}</TableCell>

@@ -103,14 +103,16 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
             <TableCell>{campaign.vertical || '-'}</TableCell>
             <TableCell>{campaign.offer_name || '-'}</TableCell>
             <TableCell>
-              <div className="flex items-center gap-2">
-                <img 
-                  src={`https://flagcdn.com/w20/${campaign.country_id.toLowerCase()}.png`}
-                  alt={campaign.country_id}
-                  className="w-5 h-auto"
-                />
-                {campaign.country_id}
-              </div>
+              {campaign.country_id && (
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={`https://flagcdn.com/w20/${campaign.country_id.toLowerCase()}.png`}
+                    alt={campaign.country_id}
+                    className="w-5 h-auto"
+                  />
+                  {campaign.country_id}
+                </div>
+              )}
             </TableCell>
             <TableCell>{formatNumber(campaign.views)}</TableCell>
             <TableCell>{formatNumber(campaign.clicks)}</TableCell>
