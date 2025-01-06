@@ -12,7 +12,7 @@ serve(async (req) => {
 
   try {
     const { from, to, username, countryCodes, offerIds } = await req.json();
-    console.log('Received request with params:', { from, to, username, countryCodes, offerIds });
+    console.log('Received params:', { from, to, username, countryCodes, offerIds });
 
     // Get JWT token from Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
@@ -52,6 +52,7 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
+      console.error('API Error:', await response.text());
       throw new Error(`Failed to fetch keywords stats: ${response.statusText}`);
     }
 
