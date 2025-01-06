@@ -19,8 +19,6 @@ export function CreateCampaignModal() {
     setSelectedOffer,
     campaignName,
     setCampaignName,
-    targetDomain,
-    setTargetDomain,
     handleSubmit,
   } = useCampaignForm(() => setOpen(false));
 
@@ -67,24 +65,6 @@ export function CreateCampaignModal() {
               onChange={(e) => setCampaignName(e.target.value)}
               placeholder="Enter campaign name"
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Target Domain (optional)</Label>
-            <div className="flex">
-              <div className="bg-muted px-3 py-2 rounded-l-md border border-r-0">
-                https://www.
-              </div>
-              <Input
-                value={targetDomain}
-                onChange={(e) => setTargetDomain(e.target.value)}
-                className="rounded-l-none"
-                placeholder="example.com"
-              />
-              <div className="bg-muted px-3 py-2 rounded-r-md border border-l-0">
-                .bond
-              </div>
-            </div>
           </div>
 
           <Button type="submit" className="w-full">

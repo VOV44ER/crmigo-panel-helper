@@ -16,7 +16,6 @@ export const useCampaignForm = (onSuccess: () => void) => {
   const [selectedCountry, setSelectedCountry] = useState<{ code: string; name: string; } | null>(null);
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [campaignName, setCampaignName] = useState("");
-  const [targetDomain, setTargetDomain] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +43,6 @@ export const useCampaignForm = (onSuccess: () => void) => {
           countryId: selectedCountry.code,
           offerId: selectedOffer.id,
           name: campaignName,
-          targetDomain: targetDomain || undefined,
           userId: session.user.id
         }
       });
@@ -57,7 +55,6 @@ export const useCampaignForm = (onSuccess: () => void) => {
       setSelectedCountry(null);
       setSelectedOffer(null);
       setCampaignName("");
-      setTargetDomain("");
     } catch (error: any) {
       toast.error(error.message || "Failed to create campaign");
     }
@@ -70,8 +67,6 @@ export const useCampaignForm = (onSuccess: () => void) => {
     setSelectedOffer,
     campaignName,
     setCampaignName,
-    targetDomain,
-    setTargetDomain,
     handleSubmit,
   };
 };

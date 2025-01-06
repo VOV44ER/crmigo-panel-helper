@@ -99,7 +99,6 @@ const CampaignFilters = ({
           className="w-auto p-0" 
           align="end"
           sideOffset={8}
-          style={{ zIndex: 50 }}
         >
           <Calendar
             initialFocus
@@ -107,7 +106,7 @@ const CampaignFilters = ({
             defaultMonth={dateRange?.from}
             selected={dateRange}
             onSelect={onDateRangeChange}
-            numberOfMonths={1}
+            numberOfMonths={2}
             className="rounded-md border shadow-md bg-white"
           />
         </PopoverContent>
