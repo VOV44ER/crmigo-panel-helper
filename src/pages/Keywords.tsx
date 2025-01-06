@@ -64,13 +64,20 @@ const Keywords = () => {
     queryFn: async () => {
       if (!username) throw new Error('Username is required');
 
-      const { data: campaignData } = await supabase
+      const { data: campaignData, error: campaignError } = await supabase
         .from('campaigns')
         .select('campaign_id')
         .eq('user_id', (await supabase.auth.getSession()).data.session?.user.id)
-        .single();
+        .maybeSingle();
 
-      if (!campaignData?.campaign_id) {
+      if (campaignError) {
+        console.error('Error fetching campaign:', campaignError);
+        throw campaignError;
+      }
+
+      if (!campaignData) {
+        toast.error("No campaign found. Please create a campaign first.");
+        navigate("/");
         throw new Error('No campaign found');
       }
 
