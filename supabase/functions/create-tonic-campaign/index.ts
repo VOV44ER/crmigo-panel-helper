@@ -27,8 +27,33 @@ serve(async (req) => {
       throw new Error('No authorization header provided')
     }
 
-    const tonicToken = authHeader.replace('Bearer ', '')
-    console.log('Using Tonic token:', tonicToken)
+    const token = authHeader.split(' ')[1]
+    if (!token) {
+      throw new Error('No token provided in authorization header')
+    }
+
+    console.log('Creating campaign with token...')
+
+    // First, get JWT token from Tonic
+    const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
+        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+      }),
+    })
+
+    if (!authResponse.ok) {
+      const error = await authResponse.text()
+      console.error('Tonic API authentication failed:', error)
+      throw new Error('Failed to authenticate with Tonic API')
+    }
+
+    const { token: tonicToken } = await authResponse.json()
+    console.log('Successfully obtained Tonic JWT token')
     
     // Create campaign in Tonic
     const response = await fetch(`${TONIC_API_URL}/campaigns/create`, {
