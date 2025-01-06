@@ -4,36 +4,46 @@ import { corsHeaders } from '../_shared/cors.ts'
 const TONIC_API_URL = 'https://api.publisher.tonic.com/v1'
 
 serve(async (req) => {
-  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    console.log('Authenticating with Tonic API...')
+    console.log('Starting Tonic API authentication...')
+    
+    const consumerKey = Deno.env.get('TONIC_CONSUMER_KEY')
+    const consumerSecret = Deno.env.get('TONIC_CONSUMER_SECRET')
+    
+    if (!consumerKey || !consumerSecret) {
+      throw new Error('Missing Tonic API credentials')
+    }
+
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       body: JSON.stringify({
-        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
-        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+        consumer_key: consumerKey,
+        consumer_secret: consumerSecret,
       }),
     })
 
+    console.log('Auth response status:', authResponse.status)
     const authText = await authResponse.text()
-    console.log('Auth response:', authText)
+    console.log('Auth response body:', authText)
 
     if (!authResponse.ok) {
-      throw new Error(`Authentication failed: ${authText}`)
+      throw new Error(`Authentication failed with status ${authResponse.status}: ${authText}`)
     }
 
     let authData
     try {
       authData = JSON.parse(authText)
     } catch (e) {
-      throw new Error(`Failed to parse auth response: ${authText}`)
+      console.error('Failed to parse auth response:', e)
+      throw new Error(`Invalid auth response format: ${authText}`)
     }
 
     if (!authData.token) {
@@ -43,27 +53,29 @@ serve(async (req) => {
     console.log('Successfully authenticated with Tonic API')
     console.log('Fetching offers...')
 
-    const response = await fetch(`${TONIC_API_URL}/offers`, {
+    const offersResponse = await fetch(`${TONIC_API_URL}/offers`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${authData.token}`,
         'Accept': 'application/json',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
     })
 
-    const responseText = await response.text()
-    console.log('Offers response:', responseText)
+    console.log('Offers response status:', offersResponse.status)
+    const offersText = await offersResponse.text()
+    console.log('Offers response body:', offersText)
 
-    if (!response.ok) {
-      throw new Error(`Offers fetch failed: ${responseText}`)
+    if (!offersResponse.ok) {
+      throw new Error(`Offers fetch failed with status ${offersResponse.status}: ${offersText}`)
     }
 
     let data
     try {
-      data = JSON.parse(responseText)
+      data = JSON.parse(offersText)
     } catch (e) {
-      throw new Error(`Failed to parse offers response: ${responseText}`)
+      console.error('Failed to parse offers response:', e)
+      throw new Error(`Invalid offers response format: ${offersText}`)
     }
     
     return new Response(
