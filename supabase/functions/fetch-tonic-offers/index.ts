@@ -23,6 +23,7 @@ serve(async (req) => {
       throw new Error('Missing Tonic API credentials')
     }
 
+    // First, authenticate with Tonic API
     console.log('Authenticating with Tonic API...')
     const authResponse = await fetch(`${TONIC_API_URL}/jwt/authenticate`, {
       method: 'POST',
@@ -49,6 +50,7 @@ serve(async (req) => {
       throw new Error('No token received in auth response')
     }
 
+    // Now fetch offers with the token
     console.log('Fetching offers...')
     const offersResponse = await fetch(`${TONIC_API_URL}/offers`, {
       method: 'GET',
