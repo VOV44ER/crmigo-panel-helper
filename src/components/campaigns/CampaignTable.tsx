@@ -49,7 +49,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
               <TableRow>
                 <TableHead className="w-24">Status</TableHead>
                 <TableHead className="w-20">Id</TableHead>
-                <TableHead className="font-semibold text-base">Name</TableHead>
+                <TableHead className="w-64">Name</TableHead>
                 <TableHead className="w-24">Type</TableHead>
                 <TableHead className="w-24">Vertical</TableHead>
                 <TableHead className="w-32">Offer</TableHead>
@@ -90,7 +90,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
             <TableRow>
               <TableHead className="w-24">Status</TableHead>
               <TableHead className="w-20">Id</TableHead>
-              <TableHead className="font-semibold text-base">Name</TableHead>
+              <TableHead className="w-64">Name</TableHead>
               <TableHead className="w-24">Type</TableHead>
               <TableHead className="w-24">Vertical</TableHead>
               <TableHead className="w-32">Offer</TableHead>
