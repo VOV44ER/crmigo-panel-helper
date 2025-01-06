@@ -91,8 +91,8 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
           <TableRow key={campaign.id}>
             <TableCell>
               <Badge 
-                variant={campaign.state === 'active' ? 'success' : 'secondary'}
-                className="capitalize"
+                variant={campaign.state === 'active' ? 'default' : 'secondary'}
+                className={`capitalize ${campaign.state === 'active' ? 'bg-green-500 hover:bg-green-600' : ''}`}
               >
                 {campaign.state}
               </Badge>
