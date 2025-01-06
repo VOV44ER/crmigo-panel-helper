@@ -1,99 +1,98 @@
-import { Edit, Copy, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { TonicCampaign } from "@/types/tonic";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Copy, Edit, X } from "lucide-react";
 import { getStatusColor, formatCurrency, formatPercentage } from "./campaignUtils";
 import { toast } from "sonner";
 
 interface CampaignCardProps {
   campaign: TonicCampaign;
-  onEdit: (campaign: TonicCampaign) => void;
+  onEdit: () => void;
 }
 
 const CampaignCard = ({ campaign, onEdit }: CampaignCardProps) => {
-  const copyTrackingLink = (trackingLink: string) => {
-    navigator.clipboard.writeText(trackingLink);
+  const copyTrackingLink = () => {
+    navigator.clipboard.writeText(campaign.trackingLink);
     toast.success("Tracking link copied to clipboard");
   };
 
   return (
-    <Card className="p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <Badge variant="secondary" className={getStatusColor(campaign.status)}>
-          {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
-        </Badge>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="flex flex-col space-y-1.5">
+          <Badge variant="secondary" className={getStatusColor(campaign.status)}>
+            {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
+          </Badge>
+          <h2 className="font-semibold text-base">{campaign.name}</h2>
+        </div>
         <div className="flex gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => copyTrackingLink(campaign.trackingLink)}
-          >
+          <Button variant="ghost" size="icon" onClick={copyTrackingLink}>
             <Copy className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => onEdit(campaign)}>
+          <Button variant="ghost" size="icon" onClick={onEdit}>
             <Edit className="h-4 w-4" />
           </Button>
         </div>
-      </div>
-
-      <div>
-        <div className="flex justify-between items-start">
-          <div>
-            <p className="text-sm text-gray-500">ID: {campaign.id}</p>
-            <h3 className="font-medium">{campaign.name}</h3>
-            <p className="text-sm text-gray-500">{campaign.offer.name}</p>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">ID</p>
+            <p className="text-sm font-medium">{campaign.id}</p>
           </div>
-          <div className="text-right">
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Type</p>
+            <p className="text-sm font-medium capitalize">{campaign.type}</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Vertical</p>
+            <p className="text-sm font-medium">{campaign.offer.vertical.name}</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Offer</p>
+            <p className="text-sm font-medium">{campaign.offer.name}</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Geo</p>
             <p className="text-sm font-medium">{campaign.country.code}</p>
-            <p className="text-sm text-gray-500 capitalize">{campaign.type}</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Imprint</p>
+            <p className="text-sm font-medium">
+              {campaign.imprint === 'yes' ? (
+                <span className="text-green-600">✓</span>
+              ) : (
+                <X className="h-4 w-4 text-red-600" />
+              )}
+            </p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Views</p>
+            <p className="text-sm font-medium">{campaign.views.toLocaleString()}</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Clicks</p>
+            <p className="text-sm font-medium">{campaign.clicks.toLocaleString()}</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">VTC</p>
+            <p className="text-sm font-medium">{formatPercentage(campaign.vtc / 100)}</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">RPC</p>
+            <p className="text-sm font-medium">{formatCurrency(campaign.rpc)}</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">RPMV</p>
+            <p className="text-sm font-medium">{formatCurrency(campaign.rpmv)}</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Revenue</p>
+            <p className="text-sm font-medium">{formatCurrency(campaign.revenue)}</p>
           </div>
         </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2 text-sm">
-        <div>
-          <p className="text-gray-500">Views</p>
-          <p className="font-medium">{campaign.views.toLocaleString()}</p>
-        </div>
-        <div>
-          <p className="text-gray-500">Clicks</p>
-          <p className="font-medium">{campaign.clicks.toLocaleString()}</p>
-        </div>
-        <div>
-          <p className="text-gray-500">VTC</p>
-          <p className="font-medium">{formatPercentage(campaign.vtc / 100)}</p>
-        </div>
-        <div>
-          <p className="text-gray-500">RPC</p>
-          <p className="font-medium">{formatCurrency(campaign.rpc)}</p>
-        </div>
-        <div>
-          <p className="text-gray-500">RPMV</p>
-          <p className="font-medium">{formatCurrency(campaign.rpmv)}</p>
-        </div>
-        <div>
-          <p className="text-gray-500">Revenue</p>
-          <p className="font-medium">{formatCurrency(campaign.revenue)}</p>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between text-sm">
-        <div>
-          <p className="text-gray-500">Imprint</p>
-          <p className="font-medium">
-            {campaign.imprint === 'yes' ? (
-              <span className="text-green-600">Yes</span>
-            ) : (
-              <span className="text-red-600">No</span>
-            )}
-          </p>
-        </div>
-        <div>
-          <p className="text-gray-500">Vertical</p>
-          <p className="font-medium">{campaign.offer.vertical.name}</p>
-        </div>
-      </div>
+      </CardContent>
     </Card>
   );
 };

@@ -14,6 +14,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import CampaignCard from "./CampaignCard";
 import { getStatusColor, formatCurrency, formatPercentage } from "./campaignUtils";
 import { toast } from "sonner";
+import { useState } from "react";
+import { KeywordEditModal } from "./KeywordEditModal";
 
 interface CampaignTableProps {
   campaigns: TonicCampaign[];
@@ -21,10 +23,7 @@ interface CampaignTableProps {
 }
 
 const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
-  const handleEdit = (campaign: TonicCampaign) => {
-    // Handle edit action
-    console.log('Edit campaign:', campaign);
-  };
+  const [selectedCampaign, setSelectedCampaign] = useState<TonicCampaign | null>(null);
 
   const copyTrackingLink = (trackingLink: string) => {
     navigator.clipboard.writeText(trackingLink);
@@ -33,7 +32,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
 
   const LoadingRow = () => (
     <TableRow>
-      {Array(14).fill(0).map((_, i) => (
+      {Array(15).fill(0).map((_, i) => (
         <TableCell key={i}>
           <Skeleton className="h-4 w-full" />
         </TableCell>
@@ -50,7 +49,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
               <TableRow>
                 <TableHead>Status</TableHead>
                 <TableHead>Id</TableHead>
-                <TableHead>Name</TableHead>
+                <TableHead className="font-semibold text-base">Name</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Vertical</TableHead>
                 <TableHead>Offer</TableHead>
@@ -63,6 +62,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
                 <TableHead className="text-right">RPC</TableHead>
                 <TableHead className="text-right">RPMV</TableHead>
                 <TableHead className="text-right">Revenue</TableHead>
+                <TableHead className="text-center">Edit</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -90,7 +90,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
             <TableRow>
               <TableHead>Status</TableHead>
               <TableHead>Id</TableHead>
-              <TableHead>Name</TableHead>
+              <TableHead className="font-semibold text-base">Name</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Vertical</TableHead>
               <TableHead>Offer</TableHead>
@@ -103,6 +103,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
               <TableHead className="text-right">RPC</TableHead>
               <TableHead className="text-right">RPMV</TableHead>
               <TableHead className="text-right">Revenue</TableHead>
+              <TableHead className="text-center">Edit</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -114,7 +115,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
                   </Badge>
                 </TableCell>
                 <TableCell>{campaign.id}</TableCell>
-                <TableCell>{campaign.name}</TableCell>
+                <TableCell className="font-medium text-base">{campaign.name}</TableCell>
                 <TableCell className="capitalize">{campaign.type}</TableCell>
                 <TableCell>{campaign.offer.vertical.name}</TableCell>
                 <TableCell>{campaign.offer.name}</TableCell>
@@ -141,6 +142,15 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
                 <TableCell className="text-right">{formatCurrency(campaign.rpc)}</TableCell>
                 <TableCell className="text-right">{formatCurrency(campaign.rpmv)}</TableCell>
                 <TableCell className="text-right">{formatCurrency(campaign.revenue)}</TableCell>
+                <TableCell className="text-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setSelectedCampaign(campaign)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -153,10 +163,17 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
           <CampaignCard 
             key={campaign.id} 
             campaign={campaign}
-            onEdit={handleEdit}
+            onEdit={() => setSelectedCampaign(campaign)}
           />
         ))}
       </div>
+
+      {/* Edit Modal */}
+      <KeywordEditModal
+        isOpen={!!selectedCampaign}
+        onClose={() => setSelectedCampaign(null)}
+        campaignName={selectedCampaign?.name || ""}
+      />
     </div>
   );
 };
