@@ -1,6 +1,5 @@
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { Label } from "@/components/ui/label";
 
 interface Country {
   code: string;
@@ -24,41 +23,37 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
 
   return (
     <div className="space-y-2">
-      <Select
-        value={selectedCountry?.code}
-        onValueChange={(value) => {
-          const country = validCountries.find(c => c.code === value);
-          if (country) onCountrySelect(country);
-        }}
-        disabled={isLoading}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder={isLoading ? "Loading countries..." : "Select country..."} />
-        </SelectTrigger>
-        <SelectContent 
-          className="bg-white border shadow-lg"
-          style={{ maxHeight: '300px' }}
-        >
-          <div className="sticky top-0 z-10 bg-white p-2 border-b shadow-sm">
-            <Input
-              placeholder="Search countries..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full"
-              onClick={(e) => e.stopPropagation()}
-            />
+      <div className="relative">
+        <input
+          type="text"
+          placeholder={isLoading ? "Loading countries..." : "Search and select country..."}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        {filteredCountries.length > 0 && searchTerm && (
+          <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+            {filteredCountries.map((country) => (
+              <div
+                key={country.code}
+                className="px-3 py-2 cursor-pointer hover:bg-gray-100"
+                onClick={() => {
+                  onCountrySelect(country);
+                  setSearchTerm(country.name);
+                }}
+              >
+                {country.name}
+              </div>
+            ))}
           </div>
-          <div className="overflow-y-auto" style={{ maxHeight: 'calc(300px - 60px)' }}>
-            <SelectGroup>
-              {filteredCountries.map((country) => (
-                <SelectItem key={country.code} value={country.code}>
-                  {country.name}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </div>
-        </SelectContent>
-      </Select>
+        )}
+      </div>
+      {selectedCountry && (
+        <div className="flex items-center gap-2 mt-2">
+          <Label>Selected:</Label>
+          <span className="text-sm font-medium">{selectedCountry.name}</span>
+        </div>
+      )}
     </div>
   );
 }
