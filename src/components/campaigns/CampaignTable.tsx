@@ -1,6 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Database, Copy, X } from "lucide-react";
+import { Database } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Campaign {
@@ -19,7 +19,6 @@ interface Campaign {
   rpmv?: number;
   revenue?: number;
   created_at: string;
-  target_domain?: string;
 }
 
 interface CampaignTableProps {
@@ -60,7 +59,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
 
   const formatPercentage = (value: number | undefined) => {
     if (typeof value !== 'number') return '0%';
-    return `${value.toFixed(1)} %`;
+    return `${value.toFixed(1)}%`;
   };
 
   const formatNumber = (value: number | undefined) => {
@@ -73,14 +72,12 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
       <TableHeader>
         <TableRow>
           <TableHead>Status</TableHead>
-          <TableHead>Id</TableHead>
+          <TableHead>ID</TableHead>
           <TableHead>Name</TableHead>
           <TableHead>Type</TableHead>
           <TableHead>Vertical</TableHead>
           <TableHead>Offer</TableHead>
           <TableHead>Geo</TableHead>
-          <TableHead>TL</TableHead>
-          <TableHead>Imprint</TableHead>
           <TableHead>Views</TableHead>
           <TableHead>Clicks</TableHead>
           <TableHead>VTC</TableHead>
@@ -94,12 +91,8 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
           <TableRow key={campaign.id}>
             <TableCell>
               <Badge 
-                variant="default"
-                className={`capitalize ${
-                  campaign.state === 'active' 
-                    ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                    : ''
-                }`}
+                variant={campaign.state === 'active' ? 'default' : 'secondary'}
+                className={`capitalize ${campaign.state === 'active' ? 'bg-green-500 hover:bg-green-600' : ''}`}
               >
                 {campaign.state}
               </Badge>
@@ -120,12 +113,6 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
                   {campaign.country_id}
                 </div>
               )}
-            </TableCell>
-            <TableCell>
-              <Copy className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700" />
-            </TableCell>
-            <TableCell>
-              <X className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700" />
             </TableCell>
             <TableCell>{formatNumber(campaign.views)}</TableCell>
             <TableCell>{formatNumber(campaign.clicks)}</TableCell>

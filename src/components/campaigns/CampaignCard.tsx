@@ -2,7 +2,7 @@ import { TonicCampaign } from "@/types/tonic";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, Edit, X } from "lucide-react";
+import { Copy, Edit } from "lucide-react";
 import { getStatusColor, formatCurrency, formatPercentage } from "./campaignUtils";
 import { toast } from "sonner";
 
@@ -73,16 +73,6 @@ const CampaignCard = ({ campaign, onEdit }: CampaignCardProps) => {
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Geo</p>
             <p className="text-sm font-medium">{campaign.country.code}</p>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Imprint</p>
-            <p className="text-sm font-medium">
-              {campaign.imprint === 'yes' ? (
-                <span className="text-green-600">✓</span>
-              ) : (
-                <X className="h-4 w-4 text-red-600" />
-              )}
-            </p>
           </div>
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Views</p>
