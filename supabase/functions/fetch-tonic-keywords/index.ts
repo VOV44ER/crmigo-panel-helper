@@ -9,8 +9,7 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url)
-    const campaign_id = url.searchParams.get('campaign_id')
+    const { campaign_id } = await req.json()
     
     if (!campaign_id) {
       throw new Error('Campaign ID is required')

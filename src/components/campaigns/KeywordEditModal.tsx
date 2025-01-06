@@ -28,7 +28,7 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
       try {
         setIsLoading(true);
         const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords', {
-          query: { campaign_id: campaignId }
+          body: { campaign_id: campaignId }
         });
 
         if (error) throw error;
