@@ -10,7 +10,7 @@ serve(async (req) => {
   }
 
   try {
-    // First authenticate with Tonic API
+    console.log('Authenticating with Tonic API...')
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
       headers: {
@@ -22,27 +22,49 @@ serve(async (req) => {
       }),
     })
 
+    const authText = await authResponse.text()
+    console.log('Auth response:', authText)
+
     if (!authResponse.ok) {
-      throw new Error(`Authentication failed: ${await authResponse.text()}`)
+      throw new Error(`Authentication failed: ${authText}`)
     }
 
-    const { token } = await authResponse.json()
+    let authData
+    try {
+      authData = JSON.parse(authText)
+    } catch (e) {
+      throw new Error(`Failed to parse auth response: ${authText}`)
+    }
 
-    // Then fetch offers with the obtained token
+    if (!authData.token) {
+      throw new Error('No token received in auth response')
+    }
+
+    console.log('Successfully authenticated with Tonic API')
+    console.log('Fetching offers...')
+
     const response = await fetch(`${TONIC_API_URL}/offers`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${authData.token}`,
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
     })
 
+    const responseText = await response.text()
+    console.log('Offers response:', responseText)
+
     if (!response.ok) {
-      throw new Error(`Offers fetch failed: ${await response.text()}`)
+      throw new Error(`Offers fetch failed: ${responseText}`)
     }
 
-    const data = await response.json()
+    let data
+    try {
+      data = JSON.parse(responseText)
+    } catch (e) {
+      throw new Error(`Failed to parse offers response: ${responseText}`)
+    }
     
     return new Response(
       JSON.stringify(data),
@@ -54,6 +76,7 @@ serve(async (req) => {
       },
     )
   } catch (error) {
+    console.error('Error in fetch-tonic-offers:', error)
     return new Response(
       JSON.stringify({ 
         error: error.message,
