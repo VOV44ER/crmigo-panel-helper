@@ -64,14 +64,28 @@ serve(async (req) => {
       }
     })
 
+    const responseText = await response.text()
+    console.log('Raw Tonic API response:', responseText)
+
     if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Tonic API error:', errorText)
-      throw new Error(`Failed to create campaign: ${errorText}`)
+      console.error('Tonic API error. Status:', response.status, 'Response:', responseText)
+      throw new Error(`Failed to create campaign: ${responseText}`)
     }
 
-    const campaign = await response.json()
+    let campaign
+    try {
+      campaign = JSON.parse(responseText)
+      console.log('Parsed Tonic API response:', campaign)
+    } catch (e) {
+      console.error('Failed to parse Tonic API response:', e)
+      throw new Error('Invalid response from Tonic API')
+    }
+
     console.log('Campaign created in Tonic:', campaign)
+    console.log('Campaign data structure:', {
+      id: campaign.data?.id,
+      fullData: campaign
+    })
 
     // Store campaign in Supabase with userId
     const supabase = createClient(
@@ -83,7 +97,7 @@ serve(async (req) => {
       .from('campaigns')
       .insert({
         user_id: userId,
-        campaign_id: campaign.data.id.toString(),
+        campaign_id: campaign.data?.id?.toString(),
         name: name,
         offer_id: parseInt(offerId),
         country_id: countryId,
