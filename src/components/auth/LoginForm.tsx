@@ -32,10 +32,8 @@ export const LoginForm = () => {
       const isAdmin = email === 'admin@admin.com';
       
       if (isAdmin) {
-        toast.success("Welcome back, Admin!");
         navigate("/admin");
       } else {
-        toast.success("Welcome back!");
         navigate("/dashboard");
       }
     } catch (error: any) {
