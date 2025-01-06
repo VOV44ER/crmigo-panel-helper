@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,25 +22,26 @@ serve(async (req) => {
 
     console.log('Processing request for campaign_id:', campaign_id)
 
-    // Create Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase environment variables')
+    // First, get JWT token from Tonic
+    const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
+        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+      }),
+    })
+
+    if (!authResponse.ok) {
+      const error = await authResponse.text()
+      console.error('Tonic API authentication failed:', error)
+      throw new Error('Failed to authenticate with Tonic API')
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
-
-    // Get the user's token from Tonic
-    const { data: { access_token }, error: tokenError } = await supabase
-      .functions.invoke('authenticate-tonic')
-
-    if (tokenError || !access_token) {
-      console.error('Error getting Tonic token:', tokenError)
-      throw new Error('Failed to authenticate with Tonic')
-    }
-
+    const { token: tonicToken } = await authResponse.json()
     console.log('Successfully authenticated with Tonic')
 
     // Fetch keywords from Tonic API with explicit headers
@@ -52,7 +52,7 @@ serve(async (req) => {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${access_token}`,
+          'Authorization': `Bearer ${tonicToken}`,
         },
       }
     )

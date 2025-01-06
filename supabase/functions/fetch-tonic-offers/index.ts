@@ -12,25 +12,14 @@ serve(async (req) => {
   }
 
   try {
-    // Get the authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header provided');
-    }
-
-    // Extract the token
-    const token = authHeader.split(' ')[1];
-    if (!token) {
-      throw new Error('No token provided in authorization header');
-    }
-
-    console.log('Fetching offers with token...');
+    console.log('Authenticating with Tonic API...');
 
     // First, get JWT token from Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
         consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
@@ -51,25 +40,19 @@ serve(async (req) => {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${tonicToken}`,
+        'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
     });
 
-    const responseText = await response.text();
-    console.log('Offers API Response Status:', response.status);
-    console.log('Offers API Response:', responseText);
-
     if (!response.ok) {
-      throw new Error(`Offers fetch failed with status ${response.status}: ${responseText}`);
+      const errorText = await response.text();
+      console.error('Offers API error:', errorText);
+      throw new Error(`Offers fetch failed with status ${response.status}: ${errorText}`);
     }
 
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (e) {
-      console.error('Failed to parse offers response:', e);
-      throw new Error(`Invalid offers response format: ${responseText}`);
-    }
+    const data = await response.json();
+    console.log('Successfully fetched offers');
 
     return new Response(JSON.stringify(data), { 
       headers: { 
