@@ -22,6 +22,28 @@ serve(async (req) => {
 
     console.log('Creating campaign with params:', { countryId, offerId, name, targetDomain })
 
+    // Create Supabase client to fetch user profile
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    // Fetch user's profile to get username
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', userId)
+      .single()
+
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError)
+      throw new Error('Failed to fetch user profile')
+    }
+
+    const username = profile.username || 'unknown'
+    const campaignName = `${username}-${name}`
+    console.log('Generated campaign name:', campaignName)
+
     // First, get JWT token from Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
@@ -44,9 +66,9 @@ serve(async (req) => {
     const { token: tonicToken } = await authResponse.json()
     console.log('Successfully obtained Tonic JWT token')
     
-    // Create campaign in Tonic (without userId)
+    // Create campaign in Tonic
     const tonicUrl = new URL(`${TONIC_API_URL}/campaign/create`)
-    tonicUrl.searchParams.append('name', name)
+    tonicUrl.searchParams.append('name', campaignName)
     tonicUrl.searchParams.append('offer_id', offerId.toString())
     tonicUrl.searchParams.append('country', countryId)
     if (targetDomain) {
@@ -88,17 +110,12 @@ serve(async (req) => {
     })
 
     // Store campaign in Supabase with userId
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
     const { error: dbError } = await supabase
       .from('campaigns')
       .insert({
         user_id: userId,
         campaign_id: campaign.data?.id?.toString(),
-        name: name,
+        name: campaignName,
         offer_id: parseInt(offerId),
         country_id: countryId,
         target_domain: targetDomain
