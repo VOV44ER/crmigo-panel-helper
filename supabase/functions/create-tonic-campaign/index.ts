@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const TONIC_API_URL = "https://api.publisher.tonic.com/privileged/v3"
+const TONIC_API_URL = "https://api.publisher.tonic.com/v3"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,12 +18,6 @@ serve(async (req) => {
     
     if (!countryId || !offerId || !name || !userId) {
       throw new Error('Missing required fields')
-    }
-
-    // Get authorization header from the request
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      throw new Error('No authorization header provided')
     }
 
     // First, get JWT token from Tonic
@@ -49,7 +43,7 @@ serve(async (req) => {
     console.log('Successfully obtained Tonic JWT token')
     
     // Create campaign in Tonic (without userId)
-    const response = await fetch(`${TONIC_API_URL}/campaigns/create`, {
+    const response = await fetch(`${TONIC_API_URL}/campaigns`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${tonicToken}`,
