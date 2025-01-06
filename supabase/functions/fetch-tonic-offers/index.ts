@@ -1,11 +1,16 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { corsHeaders } from '../_shared/cors.ts'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const TONIC_API_URL = 'https://api.publisher.tonic.com/v1'
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
@@ -18,7 +23,8 @@ serve(async (req) => {
       throw new Error('Missing Tonic API credentials')
     }
 
-    const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
+    console.log('Authenticating with Tonic API...')
+    const authResponse = await fetch(`${TONIC_API_URL}/jwt/authenticate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -30,29 +36,20 @@ serve(async (req) => {
       }),
     })
 
-    console.log('Auth response status:', authResponse.status)
-    const authText = await authResponse.text()
-    console.log('Auth response body:', authText)
-
     if (!authResponse.ok) {
-      throw new Error(`Authentication failed with status ${authResponse.status}: ${authText}`)
+      const errorText = await authResponse.text()
+      console.error('Auth response error:', errorText)
+      throw new Error(`Authentication failed with status ${authResponse.status}: ${errorText}`)
     }
 
-    let authData
-    try {
-      authData = JSON.parse(authText)
-    } catch (e) {
-      console.error('Failed to parse auth response:', e)
-      throw new Error(`Invalid auth response format: ${authText}`)
-    }
+    const authData = await authResponse.json()
+    console.log('Successfully authenticated with Tonic API')
 
     if (!authData.token) {
       throw new Error('No token received in auth response')
     }
 
-    console.log('Successfully authenticated with Tonic API')
     console.log('Fetching offers...')
-
     const offersResponse = await fetch(`${TONIC_API_URL}/offers`, {
       method: 'GET',
       headers: {
@@ -62,31 +59,21 @@ serve(async (req) => {
       },
     })
 
-    console.log('Offers response status:', offersResponse.status)
-    const offersText = await offersResponse.text()
-    console.log('Offers response body:', offersText)
-
     if (!offersResponse.ok) {
-      throw new Error(`Offers fetch failed with status ${offersResponse.status}: ${offersText}`)
+      const errorText = await offersResponse.text()
+      console.error('Offers response error:', errorText)
+      throw new Error(`Offers fetch failed with status ${offersResponse.status}: ${errorText}`)
     }
 
-    let data
-    try {
-      data = JSON.parse(offersText)
-    } catch (e) {
-      console.error('Failed to parse offers response:', e)
-      throw new Error(`Invalid offers response format: ${offersText}`)
-    }
+    const offersData = await offersResponse.json()
+    console.log('Successfully fetched offers')
     
-    return new Response(
-      JSON.stringify(data),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
+    return new Response(JSON.stringify(offersData), { 
+      headers: { 
+        ...corsHeaders,
+        'Content-Type': 'application/json',
       },
-    )
+    })
   } catch (error) {
     console.error('Error in fetch-tonic-offers:', error)
     return new Response(
