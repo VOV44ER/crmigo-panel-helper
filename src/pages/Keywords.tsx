@@ -1,113 +1,123 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { DateRange } from "react-day-picker";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import CampaignFilters from "@/components/campaigns/CampaignFilters";
-import { format } from "date-fns";
-import { useState } from "react";
-import KeywordTable from "@/components/keywords/KeywordTable";
-import KeywordCard from "@/components/keywords/KeywordCard";
-import EmptyState from "@/components/keywords/EmptyState";
-import { KeywordStats } from "@/types/tonic";
+import { DateRange } from "react-day-picker";
+import { addDays, format } from "date-fns";
+import { KeywordTable } from "@/components/keywords/KeywordTable";
+import { KeywordCard } from "@/components/keywords/KeywordCard";
+import { EmptyState } from "@/components/keywords/EmptyState";
+import "flag-icons/css/flag-icons.min.css";
 
-export default function Keywords() {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(),
+const Keywords = () => {
+  const navigate = useNavigate();
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: addDays(new Date(), -30),
     to: new Date(),
   });
+  const [username, setUsername] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  const { data: keywordsData, isLoading } = useQuery({
-    queryKey: ['keywords', dateRange],
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Please login first");
+        navigate("/auth");
+        return;
+      }
+
+      if (session.user.email === "admin@admin.com") {
+        toast.error("Please use the admin dashboard");
+        navigate("/admin");
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profile?.username) {
+        setUsername(profile.username);
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
+
+  const { data: response, isLoading } = useQuery({
+    queryKey: ['keywords', dateRange, username],
     queryFn: async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      const username = userData.user?.email?.split('@')[0] || '';
-
-      const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords-stats', {
-        body: {
-          from: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
-          to: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
-          orderField: 'clicks',
-          orderOrientation: 'desc',
-          offset: 0,
+      const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords', {
+        body: { 
+          ...(dateRange?.from && dateRange?.to ? {
+            from: format(dateRange.from, "yyyy-MM-dd"),
+            to: format(dateRange.to, "yyyy-MM-dd"),
+          } : {}),
+          username,
           campaignName: username
         }
       });
 
-      if (error) {
-        console.error('Error fetching keywords:', error);
-        throw error;
-      }
-
+      if (error) throw error;
       return data;
     },
-    meta: {
-      onError: (error: Error) => {
-        toast.error(`Failed to fetch keywords: ${error.message}`);
-      },
-    },
+    enabled: !!username,
   });
 
-  const LoadingSkeleton = () => (
-    <div className="space-y-4">
-      <div className="hidden sm:block">
-        <Skeleton className="h-[400px] w-full" />
-      </div>
-      <div className="sm:hidden space-y-4">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-[200px] w-full" />
-        ))}
-      </div>
-    </div>
-  );
+  const keywords = response?.data || [];
+  const showEmptyState = !isLoading && (!keywords || keywords.length === 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <main className="container py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-          <h1 className="text-2xl font-bold mb-4 sm:mb-0">Keywords Management</h1>
-          <CampaignFilters
-            selectedStates={[]}
-            onStateChange={() => {}}
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-            hideStateFilter
-          />
+      
+      <main className="container mx-auto py-6 px-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+          <div className="flex-grow">
+            <CampaignFilters 
+              selectedStates={[]}
+              onStateChange={() => {}}
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              hideStateFilter={true}
+            />
+          </div>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          {isLoading ? (
-            <LoadingSkeleton />
-          ) : !keywordsData?.data || keywordsData.data.length === 0 ? (
+          {showEmptyState ? (
             <EmptyState />
+          ) : isMobile ? (
+            <div className="grid grid-cols-1 gap-4 p-4">
+              {keywords.map((keyword, index) => (
+                <KeywordCard key={index} keyword={keyword} />
+              ))}
+            </div>
           ) : (
-            <>
-              {/* Desktop View */}
-              <div className="hidden sm:block">
-                <KeywordTable keywords={keywordsData.data} />
-              </div>
-              
-              {/* Mobile View */}
-              <div className="sm:hidden p-4 space-y-4">
-                {keywordsData.data.map((item: KeywordStats) => (
-                  <KeywordCard
-                    key={item.keyword}
-                    keyword={item.keyword}
-                    campaigns={item.campaigns}
-                    countries={item.countries}
-                    offers={item.offers}
-                    clicks={item.clicks}
-                    revenue={item.revenue}
-                    rpc={item.rpc}
-                  />
-                ))}
-              </div>
-            </>
+            <KeywordTable 
+              keywords={keywords}
+              isLoading={isLoading}
+            />
           )}
         </div>
       </main>
     </div>
   );
-}
+};
+
+export default Keywords;
