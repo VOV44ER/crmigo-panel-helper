@@ -8,7 +8,6 @@ const corsHeaders = {
 const TONIC_API_URL = "https://api.publisher.tonic.com/v4"
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -41,11 +40,17 @@ serve(async (req) => {
 
     const { token: tonicToken } = await authResponse.json()
     
-    // Build the URL with query parameters
+    // Build the URL with all required query parameters
     const url = new URL(`${TONIC_API_URL}/statistics/keywords`)
     if (from) url.searchParams.append('from', from)
     if (to) url.searchParams.append('to', to)
     url.searchParams.append('campaignId', campaign_id)
+    url.searchParams.append('orderField', 'clicks')
+    url.searchParams.append('orderOrientation', 'desc')
+    url.searchParams.append('offset', '0')
+    if (username) url.searchParams.append('campaignName', username)
+
+    console.log('Fetching keywords with URL:', url.toString())
 
     // Fetch keywords stats from Tonic
     const response = await fetch(url.toString(), {
