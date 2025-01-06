@@ -13,7 +13,6 @@ import { addDays } from "date-fns";
 
 const UserDashboard = () => {
   const navigate = useNavigate();
-  // Ensure we always have at least one state selected
   const [selectedStates, setSelectedStates] = useState<string[]>(['active']);
   const [limit, setLimit] = useState(10);
   const [offset, setOffset] = useState(0);
@@ -50,13 +49,20 @@ const UserDashboard = () => {
         return null;
       }
 
+      // Get current user session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
+
       const { data, error } = await supabase.functions.invoke('fetch-tonic-campaigns', {
         body: { 
           states: selectedStates,
           limit,
           offset,
           from: dateRange?.from?.toISOString().split('T')[0],
-          to: dateRange?.to?.toISOString().split('T')[0]
+          to: dateRange?.to?.toISOString().split('T')[0],
+          userId: session.user.id // Add user ID to filter campaigns
         }
       });
 

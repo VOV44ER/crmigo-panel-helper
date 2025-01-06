@@ -29,6 +29,13 @@ export const useCampaignForm = (onSuccess: () => void) => {
       const token = getTonicToken();
       if (!token) return;
 
+      // Get current user
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("You must be logged in to create campaigns");
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('create-tonic-campaign', {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -37,7 +44,8 @@ export const useCampaignForm = (onSuccess: () => void) => {
           countryId: selectedCountry.code,
           offerId: selectedOffer.id,
           name: campaignName,
-          targetDomain: targetDomain || undefined
+          targetDomain: targetDomain || undefined,
+          userId: session.user.id
         }
       });
 
