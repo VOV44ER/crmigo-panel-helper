@@ -6,21 +6,54 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { getTonicToken } from "@/utils/tokenUtils";
 
 interface KeywordEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   campaignName: string;
+  campaignId: string;
 }
 
-export function KeywordEditModal({ isOpen, onClose, campaignName }: KeywordEditModalProps) {
-  const [keywordAmount, setKeywordAmount] = useState("6");
-  const [keywords, setKeywords] = useState(Array(6).fill(""));
+export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: KeywordEditModalProps) {
+  const [keywordAmount, setKeywordAmount] = useState("3");
+  const [keywords, setKeywords] = useState(Array(3).fill(""));
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
-    // Here you would typically save the keywords to your backend
-    toast.success("Keywords saved successfully");
-    onClose();
+  const handleSave = async () => {
+    const token = getTonicToken();
+    if (!token) return;
+
+    // Filter out empty keywords
+    const filteredKeywords = keywords.filter(keyword => keyword.trim() !== "");
+
+    try {
+      setIsSaving(true);
+      const response = await fetch('https://api.publisher.tonic.com/privileged/v3/campaign/keywords', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          campaign_id: campaignId,
+          keywords: filteredKeywords,
+          keyword_amount: Number(keywordAmount)
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save keywords');
+      }
+
+      toast.success("Keywords saved successfully");
+      onClose();
+    } catch (error) {
+      console.error('Error saving keywords:', error);
+      toast.error("Failed to save keywords");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -32,14 +65,24 @@ export function KeywordEditModal({ isOpen, onClose, campaignName }: KeywordEditM
         <div className="flex flex-col space-y-6">
           <div className="space-y-2">
             <Label>Keyword amount</Label>
-            <Select value={keywordAmount} onValueChange={setKeywordAmount}>
-              <SelectTrigger>
+            <Select 
+              value={keywordAmount} 
+              onValueChange={(value) => {
+                setKeywordAmount(value);
+                setKeywords(Array(Number(value)).fill(""));
+              }}
+            >
+              <SelectTrigger className="bg-white">
                 <SelectValue placeholder="Select amount" />
               </SelectTrigger>
-              <SelectContent>
-                {[...Array(10)].map((_, i) => (
-                  <SelectItem key={i + 1} value={(i + 1).toString()}>
-                    {i + 1}
+              <SelectContent className="bg-white">
+                {[...Array(8)].map((_, i) => (
+                  <SelectItem 
+                    key={i + 3} 
+                    value={(i + 3).toString()}
+                    className="hover:bg-gray-100"
+                  >
+                    {i + 3}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -62,14 +105,19 @@ export function KeywordEditModal({ isOpen, onClose, campaignName }: KeywordEditM
                       setKeywords(newKeywords);
                     }}
                     placeholder="Empty fields will be filled by us"
+                    className="bg-white"
                   />
                 </div>
               ))}
             </div>
           </ScrollArea>
 
-          <Button onClick={handleSave} className="w-full mt-4">
-            Save Keywords
+          <Button 
+            onClick={handleSave} 
+            className="w-full mt-4"
+            disabled={isSaving}
+          >
+            {isSaving ? "Saving..." : "Save Keywords"}
           </Button>
         </div>
       </DialogContent>
