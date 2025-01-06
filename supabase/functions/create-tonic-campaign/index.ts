@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const TONIC_API_URL = "https://api.publisher.tonic.com/v3"
+const TONIC_API_URL = "https://api.publisher.tonic.com/privileged/v3"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -45,23 +45,23 @@ serve(async (req) => {
     console.log('Successfully obtained Tonic JWT token')
     
     // Create campaign in Tonic (without userId)
-    const campaignData = {
-      country_id: countryId,
-      offer_id: parseInt(offerId),
-      name: name,
-      ...(targetDomain && { target_domain: targetDomain })
+    const tonicUrl = new URL(`${TONIC_API_URL}/campaign/create`)
+    tonicUrl.searchParams.append('name', name)
+    tonicUrl.searchParams.append('offer_id', offerId.toString())
+    tonicUrl.searchParams.append('country', countryId)
+    if (targetDomain) {
+      tonicUrl.searchParams.append('domain', targetDomain)
     }
 
-    console.log('Sending campaign data to Tonic:', campaignData)
+    console.log('Creating campaign in Tonic with URL:', tonicUrl.toString())
 
-    const response = await fetch(`${TONIC_API_URL}/campaigns`, {
+    const response = await fetch(tonicUrl.toString(), {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${tonicToken}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
-      },
-      body: JSON.stringify(campaignData)
+      }
     })
 
     if (!response.ok) {
@@ -85,7 +85,7 @@ serve(async (req) => {
         user_id: userId,
         campaign_id: campaign.data.id.toString(),
         name: name,
-        offer_id: offerId,
+        offer_id: parseInt(offerId),
         country_id: countryId,
         target_domain: targetDomain
       })
