@@ -22,6 +22,25 @@ serve(async (req) => {
 
     console.log('Fetching campaigns with params:', { states, limit, offset, from, to, userId })
 
+    // Get user's username from Supabase
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', userId)
+      .single()
+
+    if (profileError) {
+      throw new Error(`Failed to fetch user profile: ${profileError.message}`)
+    }
+
+    const username = profile.username || 'unknown'
+    console.log('Fetching campaigns for username:', username)
+
     // First, get JWT token from Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
@@ -69,33 +88,15 @@ serve(async (req) => {
     const allCampaigns = await campaignsResponse.json()
     console.log('All campaigns from Tonic:', allCampaigns)
 
-    // Get user's campaign IDs from Supabase
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    const { data: userCampaigns, error: dbError } = await supabase
-      .from('campaigns')
-      .select('campaign_id')
-      .eq('user_id', userId)
-
-    if (dbError) {
-      throw new Error(`Database error: ${dbError.message}`)
-    }
-
-    console.log('User campaigns from database:', userCampaigns)
-
-    // Filter campaigns to only include user's campaigns
-    const userCampaignIds = new Set(userCampaigns.map(c => c.campaign_id))
-    const filteredCampaigns = allCampaigns.data.filter(campaign => 
-      userCampaignIds.has(campaign.id.toString())
+    // Filter campaigns by username in campaign name
+    const userCampaigns = allCampaigns.data.filter(campaign => 
+      campaign.name.includes(`| ${username}`)
     )
 
     // Apply date filtering if provided
-    let dateFilteredCampaigns = filteredCampaigns
+    let dateFilteredCampaigns = userCampaigns
     if (from || to) {
-      dateFilteredCampaigns = filteredCampaigns.filter(campaign => {
+      dateFilteredCampaigns = userCampaigns.filter(campaign => {
         const campaignDate = new Date(campaign.created)
         const fromDate = from ? new Date(from) : null
         const toDate = to ? new Date(to) : null

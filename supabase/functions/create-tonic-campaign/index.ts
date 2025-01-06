@@ -41,7 +41,7 @@ serve(async (req) => {
     }
 
     const username = profile.username || 'unknown'
-    const campaignName = `${username}-${name}`
+    const campaignName = `${name} | ${username}`
     console.log('Generated campaign name:', campaignName)
 
     // First, get JWT token from Tonic
@@ -104,27 +104,6 @@ serve(async (req) => {
     }
 
     console.log('Campaign created in Tonic:', campaign)
-    console.log('Campaign data structure:', {
-      id: campaign.data?.id,
-      fullData: campaign
-    })
-
-    // Store campaign in Supabase with userId
-    const { error: dbError } = await supabase
-      .from('campaigns')
-      .insert({
-        user_id: userId,
-        campaign_id: campaign.data?.id?.toString(),
-        name: campaignName,
-        offer_id: parseInt(offerId),
-        country_id: countryId,
-        target_domain: targetDomain
-      })
-
-    if (dbError) {
-      console.error('Database error:', dbError)
-      throw new Error(`Failed to store campaign in database: ${dbError.message}`)
-    }
 
     return new Response(
       JSON.stringify(campaign),
