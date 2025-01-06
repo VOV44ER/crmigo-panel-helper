@@ -20,24 +20,14 @@ serve(async (req) => {
       throw new Error('Missing required fields: states and userId are required')
     }
 
-    // First, get JWT token from Tonic
-    const authResponse = await fetch(`${TONIC_API_URL}/jwt/authenticate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
-        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET')
-      })
-    })
-
-    if (!authResponse.ok) {
-      const errorText = await authResponse.text()
-      throw new Error(`Failed to authenticate with Tonic: ${errorText}`)
+    // Get authorization header from the request
+    const authHeader = req.headers.get('authorization')
+    if (!authHeader) {
+      throw new Error('No authorization token provided')
     }
 
-    const { token: tonicToken } = await authResponse.json()
+    const tonicToken = authHeader.replace('Bearer ', '')
+    console.log('Using Tonic token from request:', tonicToken)
 
     // Get user's campaign IDs from Supabase
     const supabase = createClient(
@@ -54,7 +44,9 @@ serve(async (req) => {
       throw new Error(`Database error: ${dbError.message}`)
     }
 
-    // Get all campaigns from Tonic
+    console.log('User campaigns from database:', userCampaigns)
+
+    // Get all campaigns from Tonic using the token from the request
     const campaignsResponse = await fetch(`${TONIC_API_URL}/campaigns?state=${states.join(',')}&stats=true`, {
       headers: {
         'Authorization': `Bearer ${tonicToken}`,
@@ -64,16 +56,20 @@ serve(async (req) => {
 
     if (!campaignsResponse.ok) {
       const errorText = await campaignsResponse.text()
+      console.error('Tonic API error:', errorText)
       throw new Error(`Failed to fetch campaigns: ${errorText}`)
     }
 
     const allCampaigns = await campaignsResponse.json()
+    console.log('All campaigns from Tonic:', allCampaigns)
     
     // Filter campaigns to only include user's campaigns
     const userCampaignIds = new Set(userCampaigns.map(c => c.campaign_id))
     const filteredCampaigns = allCampaigns.data.filter(campaign => 
       userCampaignIds.has(campaign.id.toString())
     )
+
+    console.log('Filtered campaigns for user:', filteredCampaigns)
 
     // Apply date filtering if provided
     let dateFilteredCampaigns = filteredCampaigns
