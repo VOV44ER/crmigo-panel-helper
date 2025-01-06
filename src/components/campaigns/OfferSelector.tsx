@@ -60,28 +60,30 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
           <CommandInput placeholder="Search offer..." />
           <CommandEmpty>No offer found.</CommandEmpty>
           <div className="max-h-[300px] overflow-y-auto">
-            {Object.entries(offersByVertical).map(([vertical, verticalOffers]) => (
-              <CommandGroup key={vertical} heading={vertical} className="px-2">
-                {verticalOffers.map((offer) => (
-                  <CommandItem
-                    key={offer.id}
-                    value={offer.id.toString()}
-                    onSelect={() => {
-                      onOfferSelect(offer);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        selectedOffer?.id === offer.id ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {offer.name}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            ))}
+            {Object.entries(offersByVertical).length > 0 && 
+              Object.entries(offersByVertical).map(([vertical, verticalOffers]) => (
+                <CommandGroup key={vertical} heading={vertical}>
+                  {verticalOffers.map((offer) => (
+                    <CommandItem
+                      key={offer.id}
+                      value={offer.id.toString()}
+                      onSelect={() => {
+                        onOfferSelect(offer);
+                        setOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedOffer?.id === offer.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {offer.name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ))
+            }
           </div>
         </Command>
       </PopoverContent>
