@@ -35,7 +35,10 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
         <SelectTrigger className="w-full">
           <SelectValue placeholder={isLoading ? "Loading countries..." : "Select country..."} />
         </SelectTrigger>
-        <SelectContent className="max-h-[300px] overflow-y-auto">
+        <SelectContent 
+          className="bg-white border shadow-lg"
+          style={{ overflowY: 'auto' }}
+        >
           <div className="sticky top-0 bg-white p-2 border-b">
             <Input
               placeholder="Search countries..."

@@ -56,7 +56,10 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
         <SelectTrigger className="w-full">
           <SelectValue placeholder={isLoading ? "Loading offers..." : "Select offer..."} />
         </SelectTrigger>
-        <SelectContent className="max-h-[300px] overflow-y-auto">
+        <SelectContent 
+          className="bg-white border shadow-lg"
+          style={{ overflowY: 'auto' }}
+        >
           <div className="sticky top-0 bg-white p-2 border-b">
             <Input
               placeholder="Search offers..."
@@ -67,7 +70,7 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
           </div>
           {Object.entries(filteredOffersByVertical).map(([vertical, verticalOffers]) => (
             <SelectGroup key={vertical}>
-              <SelectLabel className="px-2 py-1.5 text-sm font-semibold bg-gray-50 text-gray-700">
+              <SelectLabel className="px-2 py-1.5 text-sm font-semibold bg-gray-50">
                 {vertical}
               </SelectLabel>
               {verticalOffers.map((offer) => (
