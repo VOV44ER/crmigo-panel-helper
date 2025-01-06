@@ -20,6 +20,8 @@ serve(async (req) => {
       throw new Error('Missing required fields: states and userId are required')
     }
 
+    console.log('Fetching campaigns with params:', { states, limit, offset, from, to, userId })
+
     // First, get JWT token from Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
@@ -43,7 +45,13 @@ serve(async (req) => {
     console.log('Successfully obtained Tonic JWT token')
 
     // Get all campaigns from Tonic using the token
-    const campaignsResponse = await fetch(`${TONIC_API_URL}/campaigns?state=${states.join(',')}`, {
+    const campaignsUrl = new URL(`${TONIC_API_URL}/campaigns`)
+    campaignsUrl.searchParams.append('state', states.join(','))
+    campaignsUrl.searchParams.append('stats', 'true')
+
+    console.log('Fetching campaigns from Tonic URL:', campaignsUrl.toString())
+
+    const campaignsResponse = await fetch(campaignsUrl.toString(), {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${tonicToken}`,

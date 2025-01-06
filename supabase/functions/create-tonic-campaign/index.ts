@@ -20,6 +20,8 @@ serve(async (req) => {
       throw new Error('Missing required fields')
     }
 
+    console.log('Creating campaign with params:', { countryId, offerId, name, targetDomain })
+
     // First, get JWT token from Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
@@ -43,6 +45,15 @@ serve(async (req) => {
     console.log('Successfully obtained Tonic JWT token')
     
     // Create campaign in Tonic (without userId)
+    const campaignData = {
+      country_id: countryId,
+      offer_id: parseInt(offerId),
+      name: name,
+      ...(targetDomain && { target_domain: targetDomain })
+    }
+
+    console.log('Sending campaign data to Tonic:', campaignData)
+
     const response = await fetch(`${TONIC_API_URL}/campaigns`, {
       method: 'POST',
       headers: {
@@ -50,12 +61,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify({
-        country_id: countryId,
-        offer_id: offerId,
-        name: name,
-        target_domain: targetDomain
-      })
+      body: JSON.stringify(campaignData)
     })
 
     if (!response.ok) {
