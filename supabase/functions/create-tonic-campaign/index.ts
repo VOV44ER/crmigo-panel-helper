@@ -1,12 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { corsHeaders } from "../_shared/cors.ts"
 
 const TONIC_API_URL = "https://api.publisher.tonic.com/privileged/v3"
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
@@ -16,8 +20,26 @@ serve(async (req) => {
       throw new Error('Missing required fields: countryId, offerId, and name are required')
     }
 
-    console.log('Creating campaign with:', { countryId, offerId, name, targetDomain })
+    // First, get JWT token from Tonic
+    const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
+        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+      }),
+    });
+
+    if (!authResponse.ok) {
+      const error = await authResponse.text();
+      throw new Error(`Failed to authenticate with Tonic API: ${error}`);
+    }
+
+    const { token: tonicToken } = await authResponse.json();
     
+    // Prepare the campaign creation request
     const payload = {
       country_id: countryId,
       offer_id: offerId,
@@ -28,7 +50,7 @@ serve(async (req) => {
     const response = await fetch(`${TONIC_API_URL}/campaigns/create`, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${btoa(`${Deno.env.get('TONIC_CONSUMER_KEY')}:${Deno.env.get('TONIC_CONSUMER_SECRET')}`)}`,
+        'Authorization': `Bearer ${tonicToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload)
@@ -36,12 +58,10 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Failed to create campaign:', errorText)
       throw new Error(`Failed to create campaign: ${errorText}`)
     }
 
     const data = await response.json()
-    console.log('Successfully created campaign')
     
     return new Response(
       JSON.stringify(data),
@@ -53,7 +73,6 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    console.error('Error in create-tonic-campaign:', error.message)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 

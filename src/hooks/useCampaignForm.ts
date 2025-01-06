@@ -29,7 +29,7 @@ export const useCampaignForm = (onSuccess: () => void) => {
       const token = getTonicToken();
       if (!token) return;
 
-      const { error } = await supabase.functions.invoke('create-tonic-campaign', {
+      const { data, error } = await supabase.functions.invoke('create-tonic-campaign', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
