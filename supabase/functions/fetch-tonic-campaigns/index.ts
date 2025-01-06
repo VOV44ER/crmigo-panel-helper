@@ -21,13 +21,39 @@ serve(async (req) => {
     }
 
     // Get authorization header from the request
-    const authHeader = req.headers.get('authorization')
+    const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('No authorization token provided')
+      throw new Error('No authorization header provided');
     }
 
-    const tonicToken = authHeader.replace('Bearer ', '')
-    console.log('Using Tonic token from request:', tonicToken)
+    // Extract the token
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      throw new Error('No token provided in authorization header');
+    }
+
+    console.log('Fetching campaigns with token...');
+
+    // First, get JWT token from Tonic
+    const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
+        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+      }),
+    });
+
+    if (!authResponse.ok) {
+      const error = await authResponse.text();
+      console.error('Tonic API authentication failed:', error);
+      throw new Error('Failed to authenticate with Tonic API');
+    }
+
+    const { token: tonicToken } = await authResponse.json();
+    console.log('Successfully obtained Tonic JWT token');
 
     // Get user's campaign IDs from Supabase
     const supabase = createClient(
@@ -46,22 +72,31 @@ serve(async (req) => {
 
     console.log('User campaigns from database:', userCampaigns)
 
-    // Get all campaigns from Tonic using the token from the request
+    // Get all campaigns from Tonic using the token
     const campaignsResponse = await fetch(`${TONIC_API_URL}/campaigns?state=${states.join(',')}&stats=true`, {
       headers: {
         'Authorization': `Bearer ${tonicToken}`,
-        'Content-Type': 'application/json',
-      }
-    })
+        'Accept': 'application/json',
+      },
+    });
+
+    const responseText = await campaignsResponse.text();
+    console.log('Campaigns API Response Status:', campaignsResponse.status);
+    console.log('Campaigns API Response:', responseText);
 
     if (!campaignsResponse.ok) {
-      const errorText = await campaignsResponse.text()
-      console.error('Tonic API error:', errorText)
-      throw new Error(`Failed to fetch campaigns: ${errorText}`)
+      throw new Error(`Campaigns fetch failed with status ${campaignsResponse.status}: ${responseText}`);
     }
 
-    const allCampaigns = await campaignsResponse.json()
-    console.log('All campaigns from Tonic:', allCampaigns)
+    let allCampaigns;
+    try {
+      allCampaigns = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Failed to parse campaigns response:', e);
+      throw new Error(`Invalid campaigns response format: ${responseText}`);
+    }
+
+    console.log('All campaigns from Tonic:', allCampaigns);
     
     // Filter campaigns to only include user's campaigns
     const userCampaignIds = new Set(userCampaigns.map(c => c.campaign_id))
@@ -105,27 +140,26 @@ serve(async (req) => {
       sorting: allCampaigns.sorting
     }
 
-    return new Response(
-      JSON.stringify(response),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    )
-
+    return new Response(JSON.stringify(response), { 
+      headers: { 
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+      },
+    });
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error in fetch-tonic-campaigns:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack 
+      }),
       { 
-        status: 400,
         headers: { 
           ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
-      }
-    )
+          'Content-Type': 'application/json',
+        },
+        status: 500,
+      },
+    );
   }
 })
