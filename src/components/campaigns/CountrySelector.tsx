@@ -37,12 +37,12 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
       <SelectTrigger className="w-full">
         <SelectValue placeholder={isLoading ? "Loading countries..." : "Select country..."} />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="max-h-[200px] overflow-y-auto">
         {validCountries.map((country) => (
           <SelectItem 
             key={country.code} 
             value={country.code}
-            className="cursor-pointer"
+            className="cursor-pointer hover:bg-accent"
           >
             {country.name}
           </SelectItem>
