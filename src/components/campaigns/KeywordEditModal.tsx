@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,43 +18,48 @@ interface KeywordEditModalProps {
 
 export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: KeywordEditModalProps) {
   const [keywordAmount, setKeywordAmount] = useState("3");
-  const [keywords, setKeywords] = useState(Array(3).fill(""));
+  const [keywords, setKeywords] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const fetchExistingKeywords = async () => {
-      if (!isOpen || !campaignId) return;
-
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords', {
-          body: { campaign_id: campaignId }
-        });
-
-        if (error) throw error;
-
-        if (data.KwAmount && data.Keywords) {
-          setKeywordAmount(data.KwAmount.toString());
-          const newKeywords = Array(data.KwAmount).fill("");
-          data.Keywords.forEach((kw: string, index: number) => {
-            newKeywords[index] = kw;
-          });
-          setKeywords(newKeywords);
-        }
-      } catch (error) {
-        console.error('Error fetching keywords:', error);
-        toast.error("Failed to fetch existing keywords");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchExistingKeywords();
+    // Reset keywords when modal opens
+    if (isOpen) {
+      setKeywords(Array(Number(keywordAmount)).fill(""));
+      fetchExistingKeywords();
+    }
   }, [isOpen, campaignId]);
 
+  const fetchExistingKeywords = async () => {
+    if (!campaignId) return;
+
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords', {
+        body: { campaign_id: campaignId }
+      });
+
+      if (error) throw error;
+
+      if (data?.KwAmount && Array.isArray(data?.Keywords)) {
+        setKeywordAmount(data.KwAmount.toString());
+        const newKeywords = Array(data.KwAmount).fill("");
+        data.Keywords.forEach((kw: string, index: number) => {
+          if (index < newKeywords.length) {
+            newKeywords[index] = kw;
+          }
+        });
+        setKeywords(newKeywords);
+      }
+    } catch (error) {
+      console.error('Error fetching keywords:', error);
+      toast.error("Failed to fetch existing keywords");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSave = async () => {
-    // Filter out empty keywords
     const filteredKeywords = keywords.filter(keyword => keyword.trim() !== "");
 
     try {
@@ -93,6 +99,7 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
                 setKeywordAmount(value);
                 setKeywords(Array(Number(value)).fill(""));
               }}
+              disabled={isLoading}
             >
               <SelectTrigger className="bg-white">
                 <SelectValue placeholder="Select amount" />
@@ -117,9 +124,12 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
           <ScrollArea className="h-[40vh] pr-4">
             <div className="space-y-4">
               {isLoading ? (
-                <div className="flex items-center justify-center py-4">
-                  Loading existing keywords...
-                </div>
+                [...Array(Number(keywordAmount))].map((_, index) => (
+                  <div key={index} className="space-y-2">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                ))
               ) : (
                 [...Array(Number(keywordAmount))].map((_, index) => (
                   <div key={index} className="space-y-2">
