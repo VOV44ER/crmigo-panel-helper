@@ -18,8 +18,15 @@ export const LoginForm = () => {
     const password = formData.get('password') as string;
 
     try {
-      // Determine if this is an admin login or regular user login
+      // For admin login, use exact credentials
       const email = username === 'admin' ? 'admin@admin.com' : `${username}@user.com`;
+      
+      // Make sure password matches expected format
+      if (username === 'admin' && password !== 'admin123') {
+        toast.error("Invalid admin credentials");
+        setLoading(false);
+        return;
+      }
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
