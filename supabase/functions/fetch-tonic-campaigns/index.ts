@@ -48,23 +48,6 @@ serve(async (req) => {
     const { token: tonicToken } = await authResponse.json()
     console.log('Successfully obtained Tonic JWT token')
 
-    // Get user's campaign IDs from Supabase
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    const { data: userCampaigns, error: dbError } = await supabase
-      .from('campaigns')
-      .select('campaign_id')
-      .eq('user_id', userId)
-
-    if (dbError) {
-      throw new Error(`Database error: ${dbError.message}`)
-    }
-
-    console.log('User campaigns from database:', userCampaigns)
-
     // Get all campaigns from Tonic using the token
     const campaignsResponse = await fetch(`${TONIC_API_URL}/campaigns?state=${states.join(',')}&stats=true`, {
       method: 'GET',
@@ -83,7 +66,24 @@ serve(async (req) => {
 
     const allCampaigns = await campaignsResponse.json()
     console.log('All campaigns from Tonic:', allCampaigns)
-    
+
+    // Get user's campaign IDs from Supabase
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    const { data: userCampaigns, error: dbError } = await supabase
+      .from('campaigns')
+      .select('campaign_id')
+      .eq('user_id', userId)
+
+    if (dbError) {
+      throw new Error(`Database error: ${dbError.message}`)
+    }
+
+    console.log('User campaigns from database:', userCampaigns)
+
     // Filter campaigns to only include user's campaigns
     const userCampaignIds = new Set(userCampaigns.map(c => c.campaign_id))
     const filteredCampaigns = allCampaigns.data.filter(campaign => 
@@ -120,8 +120,7 @@ serve(async (req) => {
         total: dateFilteredCampaigns.length,
         offset: startIndex,
         limit: limit || 10
-      },
-      sorting: allCampaigns.sorting
+      }
     }
 
     return new Response(

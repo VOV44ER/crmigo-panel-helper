@@ -48,7 +48,7 @@ serve(async (req) => {
     const { token: tonicToken } = await authResponse.json()
     console.log('Successfully obtained Tonic JWT token')
     
-    // Create campaign in Tonic
+    // Create campaign in Tonic (without userId)
     const response = await fetch(`${TONIC_API_URL}/campaigns/create`, {
       method: 'POST',
       headers: {
@@ -73,7 +73,7 @@ serve(async (req) => {
     const campaign = await response.json()
     console.log('Campaign created in Tonic:', campaign)
 
-    // Store campaign in Supabase
+    // Store campaign in Supabase with userId
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
