@@ -5,7 +5,6 @@ import { Database, Loader } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
-import CampaignFilters from "@/components/campaigns/CampaignFilters";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -91,12 +90,6 @@ export default function Keywords() {
       <main className="container mx-auto py-6 px-4">
         <div className="mb-6">
           <h1 className="text-2xl font-bold mb-6">Keywords Management</h1>
-          <CampaignFilters 
-            selectedStates={[]}
-            onStateChange={() => {}}
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-          />
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
