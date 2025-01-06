@@ -58,28 +58,31 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
         </SelectTrigger>
         <SelectContent 
           className="bg-white border shadow-lg"
-          style={{ overflowY: 'auto' }}
+          style={{ maxHeight: '300px' }}
         >
-          <div className="sticky top-0 bg-white p-2 border-b">
+          <div className="sticky top-0 z-10 bg-white p-2 border-b shadow-sm">
             <Input
               placeholder="Search offers..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full"
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
-          {Object.entries(filteredOffersByVertical).map(([vertical, verticalOffers]) => (
-            <SelectGroup key={vertical}>
-              <SelectLabel className="px-2 py-1.5 text-sm font-semibold bg-gray-50">
-                {vertical}
-              </SelectLabel>
-              {verticalOffers.map((offer) => (
-                <SelectItem key={offer.id} value={offer.id.toString()}>
-                  {offer.name}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          ))}
+          <div className="overflow-y-auto" style={{ maxHeight: 'calc(300px - 60px)' }}>
+            {Object.entries(filteredOffersByVertical).map(([vertical, verticalOffers]) => (
+              <SelectGroup key={vertical}>
+                <SelectLabel className="px-2 py-1.5 text-sm font-semibold bg-gray-50">
+                  {vertical}
+                </SelectLabel>
+                {verticalOffers.map((offer) => (
+                  <SelectItem key={offer.id} value={offer.id.toString()}>
+                    {offer.name}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            ))}
+          </div>
         </SelectContent>
       </Select>
     </div>

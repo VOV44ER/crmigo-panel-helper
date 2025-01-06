@@ -37,23 +37,26 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
         </SelectTrigger>
         <SelectContent 
           className="bg-white border shadow-lg"
-          style={{ overflowY: 'auto' }}
+          style={{ maxHeight: '300px' }}
         >
-          <div className="sticky top-0 bg-white p-2 border-b">
+          <div className="sticky top-0 z-10 bg-white p-2 border-b shadow-sm">
             <Input
               placeholder="Search countries..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full"
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
-          <SelectGroup>
-            {filteredCountries.map((country) => (
-              <SelectItem key={country.code} value={country.code}>
-                {country.name}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+          <div className="overflow-y-auto" style={{ maxHeight: 'calc(300px - 60px)' }}>
+            <SelectGroup>
+              {filteredCountries.map((country) => (
+                <SelectItem key={country.code} value={country.code}>
+                  {country.name}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </div>
         </SelectContent>
       </Select>
     </div>
