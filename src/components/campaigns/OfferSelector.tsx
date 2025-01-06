@@ -64,39 +64,38 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
-        <Command shouldFilter={false} className="w-full">
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
           <CommandInput placeholder="Search offer..." />
           <CommandEmpty>No offer found.</CommandEmpty>
-          <CommandGroup>
-            <div className="max-h-[300px] overflow-y-auto">
-              {Object.entries(offersByVertical).map(([vertical, verticalOffers]) => (
-                <div key={vertical}>
-                  <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                    {vertical}
-                  </div>
-                  {verticalOffers.map((offer) => (
-                    <CommandItem
-                      key={offer.id}
-                      value={offer.id.toString()}
-                      onSelect={() => {
-                        console.log('Offer selected:', offer);
-                        onOfferSelect(offer);
-                        setOpen(false);
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          selectedOffer?.id === offer.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {offer.name}
-                    </CommandItem>
-                  ))}
+          <CommandGroup className="max-h-[300px] overflow-y-auto">
+            {Object.entries(offersByVertical).map(([vertical, verticalOffers]) => (
+              <div key={vertical}>
+                <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                  {vertical}
                 </div>
-              ))}
-            </div>
+                {verticalOffers.map((offer) => (
+                  <CommandItem
+                    key={offer.id}
+                    value={offer.name}
+                    onSelect={() => {
+                      console.log('Offer selected:', offer);
+                      onOfferSelect(offer);
+                      setOpen(false);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedOffer?.id === offer.id ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {offer.name}
+                  </CommandItem>
+                ))}
+              </div>
+            ))}
           </CommandGroup>
         </Command>
       </PopoverContent>
