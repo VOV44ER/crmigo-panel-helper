@@ -41,34 +41,30 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent className="w-full p-0">
         <Command>
           <CommandInput placeholder="Search country..." />
           <CommandEmpty>No country found.</CommandEmpty>
-          <div className="max-h-[200px] overflow-y-auto">
-            {validCountries.length > 0 && (
-              <CommandGroup>
-                {validCountries.map((country) => (
-                  <CommandItem
-                    key={country.code}
-                    value={country.code}
-                    onSelect={() => {
-                      onCountrySelect(country);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        selectedCountry?.code === country.code ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {country.name}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
-          </div>
+          <CommandGroup className="max-h-[200px] overflow-y-auto">
+            {validCountries.map((country) => (
+              <CommandItem
+                key={country.code}
+                value={country.code}
+                onSelect={() => {
+                  onCountrySelect(country);
+                  setOpen(false);
+                }}
+              >
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    selectedCountry?.code === country.code ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                {country.name}
+              </CommandItem>
+            ))}
+          </CommandGroup>
         </Command>
       </PopoverContent>
     </Popover>
