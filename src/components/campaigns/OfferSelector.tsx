@@ -19,11 +19,12 @@ interface OfferSelectorProps {
 
 export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoading }: OfferSelectorProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
   const validOffers = Array.isArray(offers) ? offers : [];
 
   // Group and filter offers
   const filteredOffers = validOffers.filter(offer =>
-    offer.name.toLowerCase().includes(searchTerm.toLowerCase())
+    searchTerm === "" ? true : offer.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const groupedOffers = filteredOffers.reduce((acc, offer) => {
@@ -35,6 +36,12 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
     return acc;
   }, {} as Record<string, Offer[]>);
 
+  const handleSelect = (offer: Offer) => {
+    onOfferSelect(offer);
+    setSearchTerm(offer.name);
+    setIsOpen(false);
+  };
+
   return (
     <div className="space-y-2">
       <div className="relative">
@@ -43,9 +50,10 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
           placeholder={isLoading ? "Loading offers..." : "Search and select offer..."}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          onFocus={() => setIsOpen(true)}
           className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        {Object.keys(groupedOffers).length > 0 && searchTerm && (
+        {isOpen && Object.keys(groupedOffers).length > 0 && (
           <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
             {Object.entries(groupedOffers).map(([vertical, verticalOffers]) => (
               <div key={vertical}>
@@ -56,10 +64,7 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
                   <div
                     key={offer.id}
                     className="px-3 py-2 cursor-pointer hover:bg-gray-100"
-                    onClick={() => {
-                      onOfferSelect(offer);
-                      setSearchTerm(offer.name);
-                    }}
+                    onClick={() => handleSelect(offer)}
                   >
                     {offer.name}
                   </div>
