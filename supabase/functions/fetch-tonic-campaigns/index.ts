@@ -55,6 +55,8 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Tonic API Error:', errorText);
       throw new Error(`Failed to fetch campaigns: ${response.statusText}`);
     }
 

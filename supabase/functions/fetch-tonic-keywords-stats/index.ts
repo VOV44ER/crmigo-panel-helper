@@ -28,6 +28,8 @@ serve(async (req) => {
     });
 
     if (!authResponse.ok) {
+      const errorText = await authResponse.text();
+      console.error('Auth Error:', errorText);
       throw new Error('Failed to authenticate with Tonic API');
     }
 
@@ -52,7 +54,8 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      console.error('API Error:', await response.text());
+      const errorText = await response.text();
+      console.error('Tonic API Error:', errorText);
       throw new Error(`Failed to fetch keywords stats: ${response.statusText}`);
     }
 
