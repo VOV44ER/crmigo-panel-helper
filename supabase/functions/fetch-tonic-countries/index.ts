@@ -17,7 +17,7 @@ serve(async (req) => {
       throw new Error('No authorization token provided');
     }
 
-    console.log('Fetching countries with auth header:', authHeader);
+    console.log('Fetching countries with auth token...');
 
     const response = await fetch('https://api.publisher.tonic.com/v4/countries', {
       method: 'GET',
@@ -28,8 +28,8 @@ serve(async (req) => {
     });
 
     const responseText = await response.text();
-    console.log('Countries response status:', response.status);
-    console.log('Countries response:', responseText);
+    console.log('Countries API Response Status:', response.status);
+    console.log('Countries API Response:', responseText);
 
     if (!response.ok) {
       throw new Error(`Countries fetch failed with status ${response.status}: ${responseText}`);

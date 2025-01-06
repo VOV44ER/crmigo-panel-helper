@@ -7,15 +7,21 @@ export const useCampaignData = () => {
     queryKey: ['countries'],
     queryFn: async () => {
       const token = getTonicToken();
-      if (!token) throw new Error('No authentication token found');
+      if (!token) throw new Error('No Tonic authentication token found');
 
+      console.log('Fetching countries with token...');
       const { data, error } = await supabase.functions.invoke('fetch-tonic-countries', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching countries:', error);
+        throw error;
+      }
+      
+      console.log('Countries response:', data);
       return data;
     }
   });
@@ -24,15 +30,21 @@ export const useCampaignData = () => {
     queryKey: ['offers'],
     queryFn: async () => {
       const token = getTonicToken();
-      if (!token) throw new Error('No authentication token found');
+      if (!token) throw new Error('No Tonic authentication token found');
 
+      console.log('Fetching offers with token...');
       const { data, error } = await supabase.functions.invoke('fetch-tonic-offers', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching offers:', error);
+        throw error;
+      }
+      
+      console.log('Offers response:', data);
       return data;
     }
   });

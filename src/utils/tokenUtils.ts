@@ -1,17 +1,17 @@
 import { toast } from "sonner";
 
 export const getTonicToken = () => {
-  const tokenData = localStorage.getItem('sb-iviaxxfodvwqjiiomzkl-auth-token');
+  const tokenData = localStorage.getItem('tonicToken');
   if (!tokenData) {
-    toast.error("Authentication token not found. Please login again.");
+    toast.error("Tonic authentication token not found. Please login again.");
     return null;
   }
   try {
-    const { access_token } = JSON.parse(tokenData);
-    return access_token;
+    const { token } = JSON.parse(tokenData);
+    return token;
   } catch (error) {
-    console.error('Error parsing auth token:', error);
-    toast.error("Invalid authentication token. Please login again.");
+    console.error('Error parsing Tonic token:', error);
+    toast.error("Invalid Tonic authentication token. Please login again.");
     return null;
   }
 };

@@ -17,7 +17,7 @@ serve(async (req) => {
       throw new Error('No authorization token provided');
     }
 
-    console.log('Fetching offers with auth header:', authHeader);
+    console.log('Fetching offers with auth token...');
 
     const response = await fetch('https://api.publisher.tonic.com/v4/offers', {
       method: 'GET',
@@ -28,8 +28,8 @@ serve(async (req) => {
     });
 
     const responseText = await response.text();
-    console.log('Offers response status:', response.status);
-    console.log('Offers response:', responseText);
+    console.log('Offers API Response Status:', response.status);
+    console.log('Offers API Response:', responseText);
 
     if (!response.ok) {
       throw new Error(`Offers fetch failed with status ${response.status}: ${responseText}`);
