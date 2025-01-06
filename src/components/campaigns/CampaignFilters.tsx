@@ -109,18 +109,31 @@ const CampaignFilters = ({
           align="end"
           sideOffset={8}
         >
-          <div className="p-3 space-y-3">
+          <div className="p-3 space-y-3 bg-white rounded-md border shadow-lg">
             <Calendar
               initialFocus
               mode="range"
               defaultMonth={tempDateRange?.from}
               selected={tempDateRange}
-              onSelect={setTempDateRange}
+              onSelect={(newRange) => {
+                // Ensure we keep both dates when selecting
+                if (newRange?.from && !newRange.to && tempDateRange?.to) {
+                  setTempDateRange({
+                    from: newRange.from,
+                    to: tempDateRange.to
+                  });
+                } else {
+                  setTempDateRange(newRange);
+                }
+              }}
               numberOfMonths={2}
               className="rounded-md border shadow-md bg-white"
             />
             <div className="flex justify-end">
-              <Button onClick={handleSaveDate}>
+              <Button 
+                onClick={handleSaveDate}
+                className="bg-primary text-white hover:bg-primary/90"
+              >
                 Save
               </Button>
             </div>
