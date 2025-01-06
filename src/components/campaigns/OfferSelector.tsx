@@ -23,9 +23,17 @@ interface OfferSelectorProps {
 
 export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoading }: OfferSelectorProps) {
   const [open, setOpen] = useState(false);
-
-  // Ensure we have a valid array to work with
   const validOffers = Array.isArray(offers) ? offers : [];
+
+  // Group offers by vertical
+  const offersByVertical = validOffers.reduce((acc, offer) => {
+    const vertical = offer.vertical.name;
+    if (!acc[vertical]) {
+      acc[vertical] = [];
+    }
+    acc[vertical].push(offer);
+    return acc;
+  }, {} as Record<string, Offer[]>);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -51,26 +59,30 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
         <Command>
           <CommandInput placeholder="Search offer..." />
           <CommandEmpty>No offer found.</CommandEmpty>
-          <CommandGroup className="max-h-[200px] overflow-y-auto">
-            {validOffers.map((offer) => (
-              <CommandItem
-                key={offer.id}
-                value={offer.name}
-                onSelect={() => {
-                  onOfferSelect(offer);
-                  setOpen(false);
-                }}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    selectedOffer?.id === offer.id ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {offer.name} ({offer.vertical.name})
-              </CommandItem>
+          <div className="max-h-[300px] overflow-y-auto">
+            {Object.entries(offersByVertical).map(([vertical, verticalOffers]) => (
+              <CommandGroup key={vertical} heading={vertical} className="px-2">
+                {verticalOffers.map((offer) => (
+                  <CommandItem
+                    key={offer.id}
+                    value={offer.id.toString()}
+                    onSelect={() => {
+                      onOfferSelect(offer);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedOffer?.id === offer.id ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {offer.name}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
             ))}
-          </CommandGroup>
+          </div>
         </Command>
       </PopoverContent>
     </Popover>

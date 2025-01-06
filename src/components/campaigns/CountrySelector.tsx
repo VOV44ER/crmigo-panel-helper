@@ -19,8 +19,6 @@ interface CountrySelectorProps {
 
 export function CountrySelector({ selectedCountry, onCountrySelect, countries = [], isLoading }: CountrySelectorProps) {
   const [open, setOpen] = useState(false);
-
-  // Ensure we have a valid array to work with
   const validCountries = Array.isArray(countries) ? countries : [];
 
   return (
@@ -51,7 +49,7 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
             {validCountries.map((country) => (
               <CommandItem
                 key={country.code}
-                value={country.name}
+                value={country.code}
                 onSelect={() => {
                   onCountrySelect(country);
                   setOpen(false);
