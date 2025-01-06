@@ -9,7 +9,7 @@ import CampaignPagination from "@/components/campaigns/CampaignPagination";
 import CampaignTable from "@/components/campaigns/CampaignTable";
 import { CreateCampaignModal } from "@/components/campaigns/CreateCampaignModal";
 import { DateRange } from "react-day-picker";
-import { addDays } from "date-fns";
+import { addDays, format } from "date-fns";
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -66,10 +66,9 @@ const UserDashboard = () => {
           states: selectedStates,
           limit,
           offset,
-          // Only include date parameters if both from and to are present
           ...(dateRange?.from && dateRange?.to ? {
-            from: dateRange.from.toISOString().split('T')[0],
-            to: dateRange.to.toISOString().split('T')[0],
+            from: format(dateRange.from, "yyyy-MM-dd"),
+            to: format(dateRange.to, "yyyy-MM-dd"),
           } : {}),
           username
         }

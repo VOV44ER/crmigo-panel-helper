@@ -31,6 +31,14 @@ const CampaignFilters = ({
     }
   };
 
+  const [tempDateRange, setTempDateRange] = useState<DateRange | undefined>(dateRange);
+  const [open, setOpen] = useState(false);
+
+  const handleSaveDate = () => {
+    onDateRangeChange(tempDateRange);
+    setOpen(false);
+  };
+
   return (
     <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center">
       <div className="flex flex-wrap gap-2">
@@ -71,7 +79,7 @@ const CampaignFilters = ({
           Stopped
         </Button>
       </div>
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -84,11 +92,11 @@ const CampaignFilters = ({
             {dateRange?.from ? (
               dateRange.to ? (
                 <>
-                  {format(dateRange.from, "LLL dd, y")} -{" "}
-                  {format(dateRange.to, "LLL dd, y")}
+                  {format(dateRange.from, "yyyy-MM-dd")} -{" "}
+                  {format(dateRange.to, "yyyy-MM-dd")}
                 </>
               ) : (
-                format(dateRange.from, "LLL dd, y")
+                format(dateRange.from, "yyyy-MM-dd")
               )
             ) : (
               <span>Pick a date range</span>
@@ -100,15 +108,22 @@ const CampaignFilters = ({
           align="end"
           sideOffset={8}
         >
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={dateRange?.from}
-            selected={dateRange}
-            onSelect={onDateRangeChange}
-            numberOfMonths={2}
-            className="rounded-md border shadow-md bg-white"
-          />
+          <div className="p-3 space-y-3">
+            <Calendar
+              initialFocus
+              mode="range"
+              defaultMonth={tempDateRange?.from}
+              selected={tempDateRange}
+              onSelect={setTempDateRange}
+              numberOfMonths={2}
+              className="rounded-md border shadow-md bg-white"
+            />
+            <div className="flex justify-end">
+              <Button onClick={handleSaveDate}>
+                Save
+              </Button>
+            </div>
+          </div>
         </PopoverContent>
       </Popover>
     </div>
