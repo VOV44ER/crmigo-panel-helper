@@ -13,12 +13,8 @@ serve(async (req) => {
   }
 
   try {
-    const { campaign_id, from, to, username } = await req.json()
+    const { from, to, username } = await req.json()
     
-    if (!campaign_id) {
-      throw new Error('Campaign ID is required')
-    }
-
     // First, get JWT token from Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
@@ -42,9 +38,8 @@ serve(async (req) => {
     
     // Build the URL with all required query parameters
     const url = new URL(`${TONIC_API_URL}/statistics/keywords`)
-    if (from) url.searchParams.append('from', from)
-    if (to) url.searchParams.append('to', to)
-    url.searchParams.append('campaignId', campaign_id)
+    url.searchParams.append('from', from)
+    url.searchParams.append('to', to)
     url.searchParams.append('orderField', 'clicks')
     url.searchParams.append('orderOrientation', 'desc')
     url.searchParams.append('offset', '0')

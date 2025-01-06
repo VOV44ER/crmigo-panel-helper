@@ -57,23 +57,10 @@ const Keywords = () => {
     queryFn: async () => {
       if (!username) return null;
 
-      const { data: campaignData } = await supabase
-        .from('campaigns')
-        .select('campaign_id')
-        .eq('user_id', (await supabase.auth.getSession()).data.session?.user.id)
-        .maybeSingle();
-
-      if (!campaignData?.campaign_id) {
-        return null;
-      }
-
       const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords', {
         body: { 
-          campaign_id: campaignData.campaign_id,
-          ...(dateRange?.from && dateRange?.to ? {
-            from: format(dateRange.from, "yyyy-MM-dd"),
-            to: format(dateRange.to, "yyyy-MM-dd"),
-          } : {}),
+          from: format(dateRange.from, "yyyy-MM-dd"),
+          to: format(dateRange.to, "yyyy-MM-dd"),
           username,
         }
       });
