@@ -21,7 +21,6 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
   const [isOpen, setIsOpen] = useState(false);
   const validOffers = Array.isArray(offers) ? offers : [];
 
-  // Group and filter offers
   const filteredOffers = validOffers.filter(offer =>
     searchTerm === "" ? true : offer.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
