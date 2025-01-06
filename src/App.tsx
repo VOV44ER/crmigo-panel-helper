@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import AuthPage from "./pages/AuthPage";
 import AdminPanel from "./pages/AdminPanel";
 import UserDashboard from "./pages/UserDashboard";
+import Keywords from "./pages/Keywords";
 import { supabase } from "@/integrations/supabase/client";
 
 const queryClient = new QueryClient();
@@ -89,6 +90,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <UserDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/keywords" 
+              element={
+                <ProtectedRoute>
+                  <Keywords />
                 </ProtectedRoute>
               } 
             />

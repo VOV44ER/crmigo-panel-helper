@@ -28,7 +28,6 @@ export const Navbar = () => {
   return (
     <nav className="border-b bg-white">
       <div className="flex h-16 items-center px-4 md:px-8">
-        {/* Mobile menu button */}
         <button
           onClick={toggleMobileMenu}
           className="md:hidden mr-4 p-2 hover:bg-gray-100 rounded-lg"
@@ -44,7 +43,7 @@ export const Navbar = () => {
           <h2 className="text-lg font-semibold">Takahuli</h2>
           
           {/* Desktop navigation */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-6">
             {isAdmin ? (
               <Link 
                 to="/admin" 
@@ -53,12 +52,28 @@ export const Navbar = () => {
                 User Management
               </Link>
             ) : (
-              <Link 
-                to="/dashboard" 
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
-                Campaigns
-              </Link>
+              <>
+                <Link 
+                  to="/dashboard" 
+                  className={`text-sm font-medium transition-colors ${
+                    location.pathname === '/dashboard' 
+                      ? 'text-primary' 
+                      : 'hover:text-primary'
+                  }`}
+                >
+                  Overview
+                </Link>
+                <Link 
+                  to="/keywords" 
+                  className={`text-sm font-medium transition-colors ${
+                    location.pathname === '/keywords' 
+                      ? 'text-primary' 
+                      : 'hover:text-primary'
+                  }`}
+                >
+                  Keywords
+                </Link>
+              </>
             )}
           </div>
         </div>
@@ -82,13 +97,30 @@ export const Navbar = () => {
                 User Management
               </Link>
             ) : (
-              <Link 
-                to="/dashboard" 
-                className="block text-sm font-medium hover:text-primary transition-colors py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Campaigns
-              </Link>
+              <>
+                <Link 
+                  to="/dashboard" 
+                  className={`block text-sm font-medium transition-colors py-2 ${
+                    location.pathname === '/dashboard' 
+                      ? 'text-primary' 
+                      : 'hover:text-primary'
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Overview
+                </Link>
+                <Link 
+                  to="/keywords" 
+                  className={`block text-sm font-medium transition-colors py-2 ${
+                    location.pathname === '/keywords' 
+                      ? 'text-primary' 
+                      : 'hover:text-primary'
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Keywords
+                </Link>
+              </>
             )}
           </div>
         </div>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -23,7 +24,6 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Reset keywords when modal opens
     if (isOpen) {
       setKeywords(Array(Number(keywordAmount)).fill(""));
       fetchExistingKeywords();
@@ -142,7 +142,7 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
                         setKeywords(newKeywords);
                       }}
                       placeholder="Empty fields will be filled by us"
-                      className="bg-white"
+                      className="bg-white focus-visible:ring-offset-0"
                     />
                   </div>
                 ))
@@ -155,7 +155,14 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
             className="w-full mt-4"
             disabled={isSaving || isLoading}
           >
-            {isSaving ? "Saving..." : "Save Keywords"}
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Keywords"
+            )}
           </Button>
         </div>
       </DialogContent>
