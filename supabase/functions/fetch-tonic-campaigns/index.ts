@@ -13,9 +13,9 @@ serve(async (req) => {
   }
 
   try {
-    const { states, limit, offset, from, to } = await req.json()
+    const { states, limit, offset, from, to, username } = await req.json()
     
-    console.log('Received request params:', { states, limit, offset, from, to })
+    console.log('Received request params:', { states, limit, offset, from, to, username })
 
     // First, get JWT token from Tonic
     console.log('Authenticating with Tonic API...')
@@ -48,6 +48,7 @@ serve(async (req) => {
     if (offset) campaignsUrl.searchParams.append('offset', offset.toString())
     if (from) campaignsUrl.searchParams.append('from', from)
     if (to) campaignsUrl.searchParams.append('to', to)
+    if (username) campaignsUrl.searchParams.append('campaignName', username)
 
     console.log('Fetching campaigns from URL:', campaignsUrl.toString())
 
