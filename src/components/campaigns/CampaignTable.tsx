@@ -173,6 +173,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
         isOpen={!!selectedCampaign}
         onClose={() => setSelectedCampaign(null)}
         campaignName={selectedCampaign?.name || ""}
+        campaignId={selectedCampaign?.id || ""}
       />
     </div>
   );
