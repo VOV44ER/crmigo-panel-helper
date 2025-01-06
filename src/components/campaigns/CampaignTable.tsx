@@ -1,7 +1,11 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Database } from "lucide-react";
+import { Database, Copy, X, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { KeywordEditModal } from "./KeywordEditModal";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface Campaign {
   id: string;
@@ -19,6 +23,7 @@ interface Campaign {
   rpmv?: number;
   revenue?: number;
   created_at: string;
+  target_domain?: string;
 }
 
 interface CampaignTableProps {
@@ -27,6 +32,8 @@ interface CampaignTableProps {
 }
 
 const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+
   if (isLoading) {
     return (
       <div className="p-4">
@@ -59,7 +66,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
 
   const formatPercentage = (value: number | undefined) => {
     if (typeof value !== 'number') return '0%';
-    return `${value.toFixed(1)}%`;
+    return `${value.toFixed(1)} %`;
   };
 
   const formatNumber = (value: number | undefined) => {
@@ -67,63 +74,105 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
     return new Intl.NumberFormat('en-US').format(value);
   };
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+      .then(() => toast.success("Tracking link copied to clipboard"))
+      .catch(() => toast.error("Failed to copy tracking link"));
+  };
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Status</TableHead>
-          <TableHead>ID</TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Vertical</TableHead>
-          <TableHead>Offer</TableHead>
-          <TableHead>Geo</TableHead>
-          <TableHead>Views</TableHead>
-          <TableHead>Clicks</TableHead>
-          <TableHead>VTC</TableHead>
-          <TableHead>RPC</TableHead>
-          <TableHead>RPMV</TableHead>
-          <TableHead>Revenue</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {campaigns.map((campaign) => (
-          <TableRow key={campaign.id}>
-            <TableCell>
-              <Badge 
-                variant={campaign.state === 'active' ? 'default' : 'secondary'}
-                className={`capitalize ${campaign.state === 'active' ? 'bg-green-500 hover:bg-green-600' : ''}`}
-              >
-                {campaign.state}
-              </Badge>
-            </TableCell>
-            <TableCell>{campaign.id}</TableCell>
-            <TableCell className="font-medium">{campaign.name}</TableCell>
-            <TableCell>{campaign.type || 'Display'}</TableCell>
-            <TableCell>{campaign.vertical || '-'}</TableCell>
-            <TableCell>{campaign.offer_name || '-'}</TableCell>
-            <TableCell>
-              {campaign.country_id && (
-                <div className="flex items-center gap-2">
-                  <img 
-                    src={`https://flagcdn.com/w20/${campaign.country_id.toLowerCase()}.png`}
-                    alt={campaign.country_id}
-                    className="w-5 h-auto"
-                  />
-                  {campaign.country_id}
-                </div>
-              )}
-            </TableCell>
-            <TableCell>{formatNumber(campaign.views)}</TableCell>
-            <TableCell>{formatNumber(campaign.clicks)}</TableCell>
-            <TableCell>{formatPercentage(campaign.vtc)}</TableCell>
-            <TableCell>{formatCurrency(campaign.rpc)}</TableCell>
-            <TableCell>{formatCurrency(campaign.rpmv)}</TableCell>
-            <TableCell>{formatCurrency(campaign.revenue)}</TableCell>
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Status</TableHead>
+            <TableHead>Id</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Vertical</TableHead>
+            <TableHead>Offer</TableHead>
+            <TableHead>Geo</TableHead>
+            <TableHead>TL</TableHead>
+            <TableHead>Imprint</TableHead>
+            <TableHead>Views</TableHead>
+            <TableHead>Clicks</TableHead>
+            <TableHead>VTC</TableHead>
+            <TableHead>RPC</TableHead>
+            <TableHead>RPMV</TableHead>
+            <TableHead>Revenue</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {campaigns.map((campaign) => (
+            <TableRow key={campaign.id}>
+              <TableCell>
+                <Badge 
+                  variant="default"
+                  className={`capitalize ${
+                    campaign.state === 'active' 
+                      ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                      : ''
+                  }`}
+                >
+                  {campaign.state}
+                </Badge>
+              </TableCell>
+              <TableCell>{campaign.id}</TableCell>
+              <TableCell className="font-medium">{campaign.name}</TableCell>
+              <TableCell>{campaign.type || 'Display'}</TableCell>
+              <TableCell>{campaign.vertical || '-'}</TableCell>
+              <TableCell>{campaign.offer_name || '-'}</TableCell>
+              <TableCell>
+                {campaign.country_id && (
+                  <div className="flex items-center gap-2">
+                    <img 
+                      src={`https://flagcdn.com/w20/${campaign.country_id.toLowerCase()}.png`}
+                      alt={campaign.country_id}
+                      className="w-5 h-auto"
+                    />
+                    {campaign.country_id}
+                  </div>
+                )}
+              </TableCell>
+              <TableCell>
+                <Copy 
+                  className="h-4 w-4 text-gray-500 cursor-pointer hover:text-gray-700"
+                  onClick={() => campaign.target_domain && copyToClipboard(campaign.target_domain)}
+                />
+              </TableCell>
+              <TableCell>
+                <X className="h-4 w-4 text-gray-500" />
+              </TableCell>
+              <TableCell>{formatNumber(campaign.views)}</TableCell>
+              <TableCell>{formatNumber(campaign.clicks)}</TableCell>
+              <TableCell>{formatPercentage(campaign.vtc)}</TableCell>
+              <TableCell>{formatCurrency(campaign.rpc)}</TableCell>
+              <TableCell>{formatCurrency(campaign.rpmv)}</TableCell>
+              <TableCell>{formatCurrency(campaign.revenue)}</TableCell>
+              <TableCell>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSelectedCampaign(campaign)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      {selectedCampaign && (
+        <KeywordEditModal
+          isOpen={!!selectedCampaign}
+          onClose={() => setSelectedCampaign(null)}
+          campaignName={selectedCampaign.name}
+          campaignId={selectedCampaign.id}
+        />
+      )}
+    </>
   );
 };
 
