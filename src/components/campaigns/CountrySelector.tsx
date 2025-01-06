@@ -38,18 +38,19 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
         <SelectValue placeholder={isLoading ? "Loading countries..." : "Select country..."} />
       </SelectTrigger>
       <SelectContent 
-        className="bg-popover border shadow-md"
+        className="bg-white border border-gray-200 shadow-lg"
+        position="popper"
         style={{ 
           maxHeight: "200px",
           overflowY: "auto",
-          scrollBehavior: "smooth"
+          zIndex: 50
         }}
       >
         {validCountries.map((country) => (
           <SelectItem 
             key={country.code} 
             value={country.code}
-            className="cursor-pointer hover:bg-accent focus:bg-accent"
+            className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100 py-2"
           >
             {country.name}
           </SelectItem>

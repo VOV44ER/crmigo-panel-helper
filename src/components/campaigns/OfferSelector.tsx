@@ -54,23 +54,24 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
         <SelectValue placeholder={isLoading ? "Loading offers..." : "Select offer..."} />
       </SelectTrigger>
       <SelectContent 
-        className="bg-popover border shadow-md"
+        className="bg-white border border-gray-200 shadow-lg"
+        position="popper"
         style={{ 
           maxHeight: "200px",
           overflowY: "auto",
-          scrollBehavior: "smooth"
+          zIndex: 50
         }}
       >
         {Object.entries(offersByVertical).map(([vertical, verticalOffers]) => (
           <SelectGroup key={vertical}>
-            <SelectLabel className="px-2 py-1.5 text-sm font-semibold bg-muted/50">
+            <SelectLabel className="px-2 py-1.5 text-sm font-semibold bg-gray-50 text-gray-700">
               {vertical}
             </SelectLabel>
             {verticalOffers.map((offer) => (
               <SelectItem
                 key={offer.id}
                 value={offer.id.toString()}
-                className="cursor-pointer hover:bg-accent focus:bg-accent"
+                className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100 py-2"
               >
                 {offer.name}
               </SelectItem>
