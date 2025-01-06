@@ -15,9 +15,13 @@ serve(async (req) => {
   try {
     const { campaign_id } = await req.json()
 
-    if (!campaign_id) {
+    // Enhanced validation
+    if (!campaign_id || campaign_id.trim() === '') {
+      console.error('Missing or empty campaign_id:', campaign_id)
       throw new Error('Campaign ID is required')
     }
+
+    console.log('Processing request for campaign_id:', campaign_id)
 
     // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -38,6 +42,8 @@ serve(async (req) => {
       throw new Error('Failed to authenticate with Tonic')
     }
 
+    console.log('Successfully authenticated with Tonic')
+
     // Fetch keywords from Tonic API
     const response = await fetch(
       `https://api.publisher.tonic.com/privileged/v3/campaign/keywords?campaign_id=${campaign_id}`,
@@ -51,7 +57,8 @@ serve(async (req) => {
     )
 
     if (!response.ok) {
-      console.error('Tonic API error:', await response.text())
+      const errorText = await response.text()
+      console.error('Tonic API error:', errorText)
       throw new Error(`Tonic API error: ${response.statusText}`)
     }
 

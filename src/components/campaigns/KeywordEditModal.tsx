@@ -28,7 +28,7 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
       setKeywords(Array(Number(keywordAmount)).fill(""));
       fetchExistingKeywords();
     }
-  }, [isOpen, campaignId]);
+  }, [isOpen, campaignId, keywordAmount]);
 
   const fetchExistingKeywords = async () => {
     if (!campaignId) {
@@ -41,10 +41,15 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
       console.log('Fetching keywords for campaign:', campaignId);
       
       const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords', {
-        body: { campaign_id: campaignId.toString() }
+        body: { 
+          campaign_id: campaignId.toString()
+        }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching keywords:', error);
+        throw error;
+      }
 
       console.log('Received keywords data:', data);
 
