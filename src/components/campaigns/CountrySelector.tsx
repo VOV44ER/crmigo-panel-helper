@@ -1,8 +1,5 @@
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
 interface Country {
@@ -18,56 +15,44 @@ interface CountrySelectorProps {
 }
 
 export function CountrySelector({ selectedCountry, onCountrySelect, countries = [], isLoading }: CountrySelectorProps) {
-  const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const validCountries = Array.isArray(countries) ? countries : [];
 
-  console.log('CountrySelector render:', {
-    selectedCountry,
-    countriesLength: validCountries.length,
-    countries: validCountries,
-    isLoading
-  });
+  const filteredCountries = validCountries.filter(country =>
+    country.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between"
-          disabled={isLoading}
-        >
-          {selectedCountry ? selectedCountry.name : isLoading ? "Loading countries..." : "Select country..."}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
-        <Command>
-          <CommandInput placeholder="Search country..." />
-          <CommandEmpty>No country found.</CommandEmpty>
-          <CommandGroup className="max-h-[200px] overflow-y-auto">
-            {validCountries.map((country) => (
-              <CommandItem
-                key={country.code}
-                value={country.name}
-                onSelect={() => {
-                  onCountrySelect(country);
-                  setOpen(false);
-                }}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    selectedCountry?.code === country.code ? "opacity-100" : "opacity-0"
-                  )}
-                />
+    <div className="space-y-2">
+      <Select
+        value={selectedCountry?.code}
+        onValueChange={(value) => {
+          const country = validCountries.find(c => c.code === value);
+          if (country) onCountrySelect(country);
+        }}
+        disabled={isLoading}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder={isLoading ? "Loading countries..." : "Select country..."} />
+        </SelectTrigger>
+        <SelectContent className="max-h-[300px] overflow-y-auto">
+          <div className="sticky top-0 bg-white p-2 border-b">
+            <Input
+              placeholder="Search countries..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <SelectGroup>
+            {filteredCountries.map((country) => (
+              <SelectItem key={country.code} value={country.code}>
                 {country.name}
-              </CommandItem>
+              </SelectItem>
             ))}
-          </CommandGroup>
-        </Command>
-      </PopoverContent>
-    </Popover>
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
