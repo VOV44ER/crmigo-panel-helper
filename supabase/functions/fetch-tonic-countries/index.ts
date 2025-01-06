@@ -12,19 +12,24 @@ serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization token provided');
+    // Get the Tonic API credentials from environment variables
+    const consumerKey = Deno.env.get('TONIC_CONSUMER_KEY');
+    const consumerSecret = Deno.env.get('TONIC_CONSUMER_SECRET');
+
+    if (!consumerKey || !consumerSecret) {
+      throw new Error('Tonic API credentials not configured');
     }
 
-    // Extract the token from the Bearer format
-    const token = authHeader.replace('Bearer ', '');
-    console.log('Using token for Tonic API request:', token);
+    // Create Basic auth token for Tonic API
+    const credentials = btoa(`${consumerKey}:${consumerSecret}`);
+    const basicAuth = `Basic ${credentials}`;
+
+    console.log('Fetching countries from Tonic API...');
 
     const response = await fetch('https://api.publisher.tonic.com/v4/countries', {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': basicAuth,
         'Accept': 'application/json',
       },
     });
