@@ -115,6 +115,7 @@ const Keywords = () => {
           ) : (
             <KeywordTable 
               keywords={keywords}
+              isLoading={isLoading}
             />
           )}
         </div>

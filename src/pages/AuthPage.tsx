@@ -10,12 +10,6 @@ const AuthPage = () => {
         </div>
 
         <LoginForm />
-
-        <div className="text-sm text-center text-gray-600">
-          <p>Demo Admin Credentials:</p>
-          <p>Username: admin</p>
-          <p>Password: admin123</p>
-        </div>
       </div>
     </div>
   );

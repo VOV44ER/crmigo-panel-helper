@@ -22,7 +22,7 @@ export const LoginForm = () => {
       const email = username === 'admin' ? 'admin@admin.com' : `${username}@user.com`;
       
       // Make sure password matches expected format
-      if (username === 'admin' && password !== 'admin123') {
+      if (username === 'admin' && password !== 'Qwerty98761') {
         toast.error("Invalid admin credentials");
         setLoading(false);
         return;
