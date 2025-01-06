@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import CampaignFilters from "@/components/campaigns/CampaignFilters";
 import { DateRange } from "react-day-picker";
-import { addDays, format } from "date-fns";
+import { format } from "date-fns";
 import KeywordTable from "@/components/keywords/KeywordTable";
 import KeywordCard from "@/components/keywords/KeywordCard";
 import EmptyState from "@/components/keywords/EmptyState";
@@ -14,9 +14,10 @@ import "flag-icons/css/flag-icons.min.css";
 
 const Keywords = () => {
   const navigate = useNavigate();
+  const today = new Date();
   const [dateRange, setDateRange] = useState<DateRange>({
-    from: addDays(new Date(), -30),
-    to: new Date(),
+    from: today,
+    to: today,
   });
   const [username, setUsername] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -64,13 +65,20 @@ const Keywords = () => {
     queryFn: async () => {
       if (!username) throw new Error('Username is required');
 
-      const { data: campaignData } = await supabase
+      const { data: campaignData, error: campaignError } = await supabase
         .from('campaigns')
         .select('campaign_id')
         .eq('user_id', (await supabase.auth.getSession()).data.session?.user.id)
-        .single();
+        .maybeSingle();
+
+      if (campaignError) {
+        toast.error("Error fetching campaign");
+        throw campaignError;
+      }
 
       if (!campaignData?.campaign_id) {
+        toast.error("No campaign found");
+        navigate("/dashboard");
         throw new Error('No campaign found');
       }
 
