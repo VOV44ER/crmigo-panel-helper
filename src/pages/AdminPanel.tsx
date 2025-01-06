@@ -77,8 +77,9 @@ const AdminPanel = () => {
   const handleCreateUser = async (newUser: NewUser) => {
     setLoading(true);
     try {
+      // Changed email domain from @admin.com to @user.com for regular users
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: `${newUser.username}@admin.com`,
+        email: `${newUser.username}@user.com`,
         password: newUser.password,
         options: {
           data: {

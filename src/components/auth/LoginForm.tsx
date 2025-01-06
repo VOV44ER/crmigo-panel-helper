@@ -10,10 +10,13 @@ export const LoginForm = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
+    const username = formData.get('email') as string;
     const password = formData.get('password') as string;
 
     try {
+      // Determine if this is an admin login or regular user login
+      const email = username === 'admin' ? 'admin@admin.com' : `${username}@user.com`;
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -21,7 +24,7 @@ export const LoginForm = () => {
 
       if (error) throw error;
 
-      // Check if user is admin by checking email
+      // Check if user is admin
       const isAdmin = email === 'admin@admin.com';
       
       if (isAdmin) {
@@ -41,9 +44,9 @@ export const LoginForm = () => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Input
-          type="email"
+          type="text"
           name="email"
-          placeholder="Email"
+          placeholder="Username"
           required
           className="w-full"
         />
