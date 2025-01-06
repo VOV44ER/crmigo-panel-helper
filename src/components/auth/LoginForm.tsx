@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,9 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const LoginForm = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
+    
     const formData = new FormData(e.currentTarget);
     const username = formData.get('email') as string;
     const password = formData.get('password') as string;
@@ -36,7 +40,9 @@ export const LoginForm = () => {
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.message || "Failed to login");
+      toast.error("Invalid username or password");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,8 +66,8 @@ export const LoginForm = () => {
           className="w-full"
         />
       </div>
-      <Button type="submit" className="w-full">
-        Sign In
+      <Button type="submit" className="w-full" disabled={loading}>
+        {loading ? "Signing in..." : "Sign In"}
       </Button>
     </form>
   );
