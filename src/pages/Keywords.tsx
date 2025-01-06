@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { database, loader } from "lucide-react";
+import { Database, Loader } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
@@ -64,11 +64,11 @@ export default function Keywords() {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           {isLoading ? (
             <div className="p-8 flex items-center justify-center">
-              <loader className="h-8 w-8 animate-spin text-gray-400" />
+              <Loader className="h-8 w-8 animate-spin text-gray-400" />
             </div>
           ) : !keywords || keywords.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-4">
-              <database className="h-12 w-12 text-gray-400 mb-4" />
+              <Database className="h-12 w-12 text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-1">No keywords data found</h3>
               <p className="text-sm text-gray-500">Try selecting a different date range.</p>
             </div>

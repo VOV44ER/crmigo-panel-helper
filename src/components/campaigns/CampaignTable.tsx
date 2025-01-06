@@ -38,6 +38,11 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
     );
   }
 
+  const formatNumber = (value: number | undefined | null) => {
+    if (typeof value !== 'number') return '$0.00';
+    return `$${value.toFixed(2)}`;
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -67,9 +72,9 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
                 {campaign.state}
               </span>
             </TableCell>
-            <TableCell>${campaign.budget.toFixed(2)}</TableCell>
-            <TableCell>${campaign.spent.toFixed(2)}</TableCell>
-            <TableCell>${campaign.remaining.toFixed(2)}</TableCell>
+            <TableCell>{formatNumber(campaign.budget)}</TableCell>
+            <TableCell>{formatNumber(campaign.spent)}</TableCell>
+            <TableCell>{formatNumber(campaign.remaining)}</TableCell>
             <TableCell>{new Date(campaign.created_at).toLocaleDateString()}</TableCell>
           </TableRow>
         ))}
