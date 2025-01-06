@@ -74,20 +74,24 @@ const UserDashboard = () => {
       <Navbar />
       
       <main className="container mx-auto py-6 px-4">
-        <div className="flex items-center justify-between mb-6">
-          <CampaignFilters 
-            selectedStates={selectedStates}
-            onStateChange={(states) => {
-              if (states.length === 0) {
-                toast.error("At least one state must be selected");
-                return;
-              }
-              setSelectedStates(states);
-            }}
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-          />
-          <CreateCampaignModal />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+          <div className="flex-grow">
+            <CampaignFilters 
+              selectedStates={selectedStates}
+              onStateChange={(states) => {
+                if (states.length === 0) {
+                  toast.error("At least one state must be selected");
+                  return;
+                }
+                setSelectedStates(states);
+              }}
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+            />
+          </div>
+          <div className="shrink-0">
+            <CreateCampaignModal />
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
