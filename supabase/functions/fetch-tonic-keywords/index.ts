@@ -12,15 +12,15 @@ serve(async (req) => {
   }
 
   try {
-    const { campaign_id } = await req.json()
+    const { from, to, username } = await req.json()
 
     // Enhanced validation
-    if (!campaign_id || campaign_id.trim() === '') {
-      console.error('Missing or empty campaign_id:', campaign_id)
-      throw new Error('Campaign ID is required')
+    if (!from || !to) {
+      console.error('Missing date range parameters')
+      throw new Error('Date range is required')
     }
 
-    console.log('Processing request for campaign_id:', campaign_id)
+    console.log('Processing request for date range:', { from, to, username })
 
     // First, get JWT token from Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
@@ -44,18 +44,28 @@ serve(async (req) => {
     const { token: tonicToken } = await authResponse.json()
     console.log('Successfully authenticated with Tonic')
 
-    // Fetch keywords from Tonic API with explicit headers
-    const response = await fetch(
-      `https://api.publisher.tonic.com/privileged/v3/campaign/keywords?campaign_id=${campaign_id}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${tonicToken}`,
-        },
-      }
-    )
+    // Build the URL with query parameters
+    const url = new URL('https://api.publisher.tonic.com/v4/statistics/keywords')
+    url.searchParams.set('from', from)
+    url.searchParams.set('to', to)
+    url.searchParams.set('orderField', 'clicks')
+    url.searchParams.set('orderOrientation', 'desc')
+    url.searchParams.set('offset', '0')
+    if (username) {
+      url.searchParams.set('campaignName', username)
+    }
+
+    console.log('Fetching keywords from URL:', url.toString())
+
+    // Fetch keywords from Tonic API
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${tonicToken}`,
+      },
+    })
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -64,7 +74,7 @@ serve(async (req) => {
     }
 
     const data = await response.json()
-    console.log('Successfully fetched keywords for campaign:', campaign_id)
+    console.log('Successfully fetched keywords statistics')
 
     return new Response(
       JSON.stringify(data),
