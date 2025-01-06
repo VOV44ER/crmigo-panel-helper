@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
+const TONIC_API_URL = "https://api.publisher.tonic.com/v4"
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -12,10 +14,13 @@ serve(async (req) => {
   }
 
   try {
-    const { states, limit, offset, from, to, username, countryCode, offerIds } = await req.json();
-    console.log('Received params:', { states, limit, offset, from, to, username, countryCode, offerIds });
+    console.log('Received request to fetch campaigns');
+    const { states, limit, offset, from, to, username } = await req.json();
+    
+    console.log('Request params:', { states, limit, offset, from, to, username });
 
-    // Get JWT token from Tonic
+    // First, get JWT token from Tonic
+    console.log('Authenticating with Tonic API...');
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
       headers: {
@@ -29,32 +34,30 @@ serve(async (req) => {
     });
 
     if (!authResponse.ok) {
-      const errorText = await authResponse.text();
-      console.error('Auth Error:', errorText);
-      throw new Error(`Failed to authenticate with Tonic API: ${authResponse.status} ${authResponse.statusText}`);
+      const error = await authResponse.text();
+      console.error('Tonic API authentication failed:', error);
+      throw new Error(`Authentication failed: ${error}`);
     }
 
     const { token: tonicToken } = await authResponse.json();
-    console.log('Successfully obtained Tonic token');
+    console.log('Successfully obtained Tonic JWT token');
 
-    // Build the URL with query parameters
-    const url = new URL('https://api.publisher.tonic.com/v4/campaigns');
-    
-    // Add required parameters first
-    url.searchParams.append('states', states?.length ? states.join(',') : 'active');
-    url.searchParams.append('limit', limit?.toString() || '10');
-    url.searchParams.append('offset', offset?.toString() || '0');
+    // Build the campaigns URL with query parameters
+    const campaignsUrl = new URL(`${TONIC_API_URL}/campaigns`);
+    if (states?.length) campaignsUrl.searchParams.append('state', states.join(','));
+    campaignsUrl.searchParams.append('stats', 'true');
+    if (limit) campaignsUrl.searchParams.append('limit', limit.toString());
+    if (offset) campaignsUrl.searchParams.append('offset', offset.toString());
+    if (from && to) {
+      campaignsUrl.searchParams.append('from', from);
+      campaignsUrl.searchParams.append('to', to);
+    }
+    if (username) campaignsUrl.searchParams.append('campaignName', username);
 
-    // Add optional parameters
-    if (from) url.searchParams.append('from', from);
-    if (to) url.searchParams.append('to', to);
-    if (username) url.searchParams.append('campaignName', username);
-    if (countryCode) url.searchParams.append('countryCode', countryCode);
-    if (offerIds) url.searchParams.append('offerIds', offerIds);
+    console.log('Fetching campaigns from URL:', campaignsUrl.toString());
 
-    console.log('Fetching from URL:', url.toString());
-
-    const response = await fetch(url.toString(), {
+    const campaignsResponse = await fetch(campaignsUrl.toString(), {
+      method: 'GET',
       headers: {
         'Authorization': `Bearer ${tonicToken}`,
         'Content-Type': 'application/json',
@@ -62,41 +65,37 @@ serve(async (req) => {
       }
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Tonic API Error:', {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorText
-      });
-      throw new Error(`Failed to fetch campaigns: ${response.status} ${response.statusText}`);
+    if (!campaignsResponse.ok) {
+      const errorText = await campaignsResponse.text();
+      console.error('Tonic API error:', errorText);
+      throw new Error(`Failed to fetch campaigns: ${errorText}`);
     }
 
-    const data = await response.json();
-    console.log('Successfully fetched campaigns data');
+    const campaigns = await campaignsResponse.json();
+    console.log('Successfully fetched campaigns');
 
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify(campaigns),
       { 
         headers: { 
-          ...corsHeaders,
+          ...corsHeaders, 
           'Content-Type': 'application/json' 
         } 
       }
     );
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in fetch-tonic-campaigns:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        details: error.stack
+        error: error.message || 'An error occurred while fetching campaigns',
+        details: error.toString()
       }),
       { 
         status: 500,
         headers: { 
           ...corsHeaders,
-          'Content-Type': 'application/json' 
+          'Content-Type': 'application/json'
         } 
       }
     );

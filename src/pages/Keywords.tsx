@@ -85,11 +85,6 @@ const Keywords = () => {
   const keywords = response?.data || [];
   const showEmptyState = !isLoading && (!keywords || keywords.length === 0);
 
-  const handleClearFilters = () => {
-    setSelectedCountries([]);
-    setSelectedOffers([]);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -107,7 +102,6 @@ const Keywords = () => {
               onCountryChange={setSelectedCountries}
               selectedOffers={selectedOffers}
               onOfferChange={setSelectedOffers}
-              onClearFilters={handleClearFilters}
             />
           </div>
         </div>
