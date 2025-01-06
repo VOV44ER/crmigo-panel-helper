@@ -3,7 +3,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { getTonicToken } from "@/utils/tokenUtils";
 
 interface KeywordStats {
@@ -58,20 +59,29 @@ export default function Keywords() {
       const token = getTonicToken();
       if (!token) throw new Error('No authentication token found');
 
-      const response = await fetch(`/functions/v1/fetch-tonic-keywords-stats?from=${today}&to=${today}&orderField=clicks&orderOrientation=desc&offset=0`);
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
+      const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords-stats', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: {
+          from: today,
+          to: today,
+          orderField: 'clicks',
+          orderOrientation: 'desc',
+          offset: 0
+        }
+      });
+
+      if (error) {
+        console.error('Error fetching keywords:', error);
+        throw error;
       }
-      return response.json();
+
+      return data;
     },
     meta: {
       onError: (error: Error) => {
-        toast({
-          title: "Error",
-          description: `Failed to fetch keywords: ${error.message}`,
-          variant: "destructive",
-        });
+        toast.error(`Failed to fetch keywords: ${error.message}`);
       },
     },
   });
