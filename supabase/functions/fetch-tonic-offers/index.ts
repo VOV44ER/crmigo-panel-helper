@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-const TONIC_API_URL = 'https://api.publisher.tonic.com/v4'
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -10,52 +8,49 @@ const corsHeaders = {
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Starting offers fetch request...')
-    
-    // Get the Authorization header from the request
-    const authHeader = req.headers.get('Authorization')
+    const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('No authorization token provided')
+      throw new Error('No authorization token provided');
     }
 
-    console.log('Fetching offers from Tonic API...')
-    const offersResponse = await fetch(`${TONIC_API_URL}/offers`, {
+    console.log('Fetching offers with auth header:', authHeader);
+
+    const response = await fetch('https://api.publisher.tonic.com/v4/offers', {
       method: 'GET',
       headers: {
         'Authorization': authHeader,
         'Accept': 'application/json',
-        'Content-Type': 'application/json',
       },
-    })
+    });
 
-    const offersResponseText = await offersResponse.text()
-    console.log('Offers response status:', offersResponse.status)
-    console.log('Offers response:', offersResponseText)
+    const responseText = await response.text();
+    console.log('Offers response status:', response.status);
+    console.log('Offers response:', responseText);
 
-    if (!offersResponse.ok) {
-      throw new Error(`Offers fetch failed with status ${offersResponse.status}: ${offersResponseText}`)
+    if (!response.ok) {
+      throw new Error(`Offers fetch failed with status ${response.status}: ${responseText}`);
     }
 
-    let offersData
+    let data;
     try {
-      offersData = JSON.parse(offersResponseText)
+      data = JSON.parse(responseText);
     } catch (e) {
-      console.error('Failed to parse offers response:', e)
-      throw new Error(`Invalid offers response format: ${offersResponseText}`)
+      console.error('Failed to parse offers response:', e);
+      throw new Error(`Invalid offers response format: ${responseText}`);
     }
 
-    return new Response(JSON.stringify(offersData), { 
+    return new Response(JSON.stringify(data), { 
       headers: { 
         ...corsHeaders,
         'Content-Type': 'application/json',
       },
-    })
+    });
   } catch (error) {
-    console.error('Error in fetch-tonic-offers:', error)
+    console.error('Error in fetch-tonic-offers:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
@@ -68,6 +63,6 @@ serve(async (req) => {
         },
         status: 500,
       },
-    )
+    );
   }
 })
