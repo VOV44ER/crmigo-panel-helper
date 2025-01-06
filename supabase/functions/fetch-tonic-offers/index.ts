@@ -17,12 +17,14 @@ serve(async (req) => {
       throw new Error('No authorization token provided');
     }
 
-    console.log('Fetching offers with auth token...');
+    // Extract the token from the Bearer format
+    const token = authHeader.replace('Bearer ', '');
+    console.log('Using token for Tonic API request:', token);
 
     const response = await fetch('https://api.publisher.tonic.com/v4/offers', {
       method: 'GET',
       headers: {
-        'Authorization': authHeader,
+        'Authorization': `Bearer ${token}`,
         'Accept': 'application/json',
       },
     });
