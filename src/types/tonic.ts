@@ -42,3 +42,42 @@ export interface TonicResponse {
   pagination: TonicPagination;
   sorting: TonicSorting;
 }
+
+export interface KeywordStats {
+  keyword: string;
+  campaigns: Array<{
+    id: number;
+    name: string;
+    status: string;
+    country: {
+      code: string;
+      name: string;
+    };
+    imprint: string;
+    offer: {
+      id: number;
+      name: string;
+      vertical: {
+        id: number;
+        name: string;
+      };
+    };
+    trackingLink: string;
+    created: string;
+  }>;
+  countries: Array<{
+    code: string;
+    name: string;
+  }>;
+  offers: Array<{
+    id: number;
+    name: string;
+    vertical: {
+      id: number;
+      name: string;
+    };
+  }>;
+  clicks: number;
+  revenue: number;
+  rpc: number;
+}

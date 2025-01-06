@@ -1,60 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/layout/Navbar";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { getTonicToken } from "@/utils/tokenUtils";
-import { useState } from "react";
 import { DateRange } from "react-day-picker";
 import CampaignFilters from "@/components/campaigns/CampaignFilters";
 import { format } from "date-fns";
-import { FileX } from "lucide-react";
-import "flag-icons/css/flag-icons.min.css";
-
-interface KeywordStats {
-  keyword: string;
-  campaigns: Array<{
-    id: number;
-    name: string;
-    status: string;
-    country: {
-      code: string;
-      name: string;
-    };
-    imprint: string;
-    offer: {
-      id: number;
-      name: string;
-      vertical: {
-        id: number;
-        name: string;
-      };
-    };
-    trackingLink: string;
-    created: string;
-  }>;
-  countries: Array<{
-    code: string;
-    name: string;
-  }>;
-  offers: Array<{
-    id: number;
-    name: string;
-    vertical: {
-      id: number;
-      name: string;
-    };
-  }>;
-  clicks: number;
-  revenue: number;
-  rpc: number;
-}
-
-interface KeywordResponse {
-  data: KeywordStats[];
-}
+import { useState } from "react";
+import KeywordTable from "@/components/keywords/KeywordTable";
+import KeywordCard from "@/components/keywords/KeywordCard";
+import EmptyState from "@/components/keywords/EmptyState";
+import { KeywordStats } from "@/types/tonic";
 
 export default function Keywords() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -65,16 +21,10 @@ export default function Keywords() {
   const { data: keywordsData, isLoading } = useQuery({
     queryKey: ['keywords', dateRange],
     queryFn: async () => {
-      const token = getTonicToken();
-      if (!token) throw new Error('No authentication token found');
-
       const { data: userData } = await supabase.auth.getUser();
       const username = userData.user?.email?.split('@')[0] || '';
 
       const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords-stats', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         body: {
           from: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
           to: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
@@ -99,13 +49,16 @@ export default function Keywords() {
     },
   });
 
-  const EmptyState = () => (
-    <div className="flex flex-col items-center justify-center py-12 px-4">
-      <FileX className="h-12 w-12 text-gray-400 mb-4" />
-      <h3 className="text-lg font-medium text-gray-900 mb-1">No Keywords Found</h3>
-      <p className="text-sm text-gray-500">
-        There are no keywords available for the selected date range.
-      </p>
+  const LoadingSkeleton = () => (
+    <div className="space-y-4">
+      <div className="hidden sm:block">
+        <Skeleton className="h-[400px] w-full" />
+      </div>
+      <div className="sm:hidden space-y-4">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-[200px] w-full" />
+        ))}
+      </div>
     </div>
   );
 
@@ -120,94 +73,39 @@ export default function Keywords() {
             onStateChange={() => {}}
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
+            hideStateFilter
           />
         </div>
         
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            {isLoading ? (
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-gray-50 border-b">
-                    <TableHead className="font-semibold text-gray-600">Keyword</TableHead>
-                    <TableHead className="font-semibold text-gray-600">Campaigns</TableHead>
-                    <TableHead className="font-semibold text-gray-600">Campaign Offer</TableHead>
-                    <TableHead className="font-semibold text-gray-600">Geo</TableHead>
-                    <TableHead className="font-semibold text-gray-600 text-right">RPC</TableHead>
-                    <TableHead className="font-semibold text-gray-600 text-right">Conv.</TableHead>
-                    <TableHead className="font-semibold text-gray-600 text-right">Rev.</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell colSpan={7}>
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-full" />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            ) : !keywordsData?.data || keywordsData.data.length === 0 ? (
-              <EmptyState />
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-gray-50 border-b">
-                    <TableHead className="font-semibold text-gray-600">Keyword</TableHead>
-                    <TableHead className="font-semibold text-gray-600">Campaigns</TableHead>
-                    <TableHead className="font-semibold text-gray-600">Campaign Offer</TableHead>
-                    <TableHead className="font-semibold text-gray-600">Geo</TableHead>
-                    <TableHead className="font-semibold text-gray-600 text-right">RPC</TableHead>
-                    <TableHead className="font-semibold text-gray-600 text-right">Conv.</TableHead>
-                    <TableHead className="font-semibold text-gray-600 text-right">Rev.</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {keywordsData.data.map((item) => (
-                    <TableRow key={item.keyword} className="hover:bg-gray-50">
-                      <TableCell className="font-medium">{item.keyword}</TableCell>
-                      <TableCell>
-                        {item.campaigns.map((campaign) => (
-                          <div key={campaign.id} className="mb-1">
-                            <Badge 
-                              variant="default"
-                              className="text-xs"
-                            >
-                              {campaign.name}
-                            </Badge>
-                          </div>
-                        ))}
-                      </TableCell>
-                      <TableCell>
-                        {item.offers.map((offer) => (
-                          <span key={offer.id} className="text-sm text-gray-600">
-                            {offer.name}
-                          </span>
-                        ))}
-                      </TableCell>
-                      <TableCell>
-                        {item.countries.map((country) => (
-                          <span 
-                            key={country.code} 
-                            className="inline-flex items-center"
-                          >
-                            <span className={`fi fi-${country.code.toLowerCase()} mr-2`}></span>
-                            {country.name}
-                          </span>
-                        ))}
-                      </TableCell>
-                      <TableCell className="text-right">${item.rpc.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">{item.clicks}</TableCell>
-                      <TableCell className="text-right">${item.revenue.toFixed(2)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </div>
+          {isLoading ? (
+            <LoadingSkeleton />
+          ) : !keywordsData?.data || keywordsData.data.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <>
+              {/* Desktop View */}
+              <div className="hidden sm:block">
+                <KeywordTable keywords={keywordsData.data} />
+              </div>
+              
+              {/* Mobile View */}
+              <div className="sm:hidden p-4 space-y-4">
+                {keywordsData.data.map((item: KeywordStats) => (
+                  <KeywordCard
+                    key={item.keyword}
+                    keyword={item.keyword}
+                    campaigns={item.campaigns}
+                    countries={item.countries}
+                    offers={item.offers}
+                    clicks={item.clicks}
+                    revenue={item.revenue}
+                    rpc={item.rpc}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </main>
     </div>
