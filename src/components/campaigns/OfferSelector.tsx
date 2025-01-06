@@ -65,12 +65,12 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
-        <Command>
+        <Command className="w-full">
           <CommandInput placeholder="Search offer..." />
           <CommandEmpty>No offer found.</CommandEmpty>
           <CommandGroup className="max-h-[300px] overflow-y-auto">
             {Object.entries(offersByVertical).map(([vertical, verticalOffers]) => (
-              <div key={vertical} className="py-1">
+              <div key={vertical}>
                 <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
                   {vertical}
                 </div>

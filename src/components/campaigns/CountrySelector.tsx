@@ -49,7 +49,7 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
-        <Command>
+        <Command className="w-full">
           <CommandInput placeholder="Search country..." />
           <CommandEmpty>No country found.</CommandEmpty>
           <CommandGroup className="max-h-[300px] overflow-y-auto">
