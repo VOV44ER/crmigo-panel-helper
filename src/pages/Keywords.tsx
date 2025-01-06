@@ -3,7 +3,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { getTonicToken } from "@/utils/tokenUtils";
 
 interface KeywordStats {
@@ -65,8 +65,14 @@ export default function Keywords() {
       }
       return response.json();
     },
-    onError: (error) => {
-      toast.error(`Failed to fetch keywords: ${error.message}`);
+    meta: {
+      onError: (error: Error) => {
+        toast({
+          title: "Error",
+          description: `Failed to fetch keywords: ${error.message}`,
+          variant: "destructive",
+        });
+      },
     },
   });
 
@@ -119,7 +125,7 @@ export default function Keywords() {
                     <TableCell>
                       {item.campaigns.map((campaign) => (
                         <div key={campaign.id} className="mb-1">
-                          <Badge variant={campaign.status === 'active' ? 'success' : 'secondary'}>
+                          <Badge variant={campaign.status === 'active' ? 'default' : 'secondary'}>
                             {campaign.name}
                           </Badge>
                         </div>
