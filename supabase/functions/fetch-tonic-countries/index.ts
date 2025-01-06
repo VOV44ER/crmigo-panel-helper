@@ -14,16 +14,16 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Starting Tonic API authentication...')
+    console.log('Starting Tonic API request...')
     
     const consumerKey = Deno.env.get('TONIC_CONSUMER_KEY')
     const consumerSecret = Deno.env.get('TONIC_CONSUMER_SECRET')
     
     if (!consumerKey || !consumerSecret) {
+      console.error('Missing API credentials')
       throw new Error('Missing Tonic API credentials')
     }
 
-    // First, authenticate with Tonic API
     console.log('Authenticating with Tonic API...')
     const authResponse = await fetch(`${TONIC_API_URL}/jwt/authenticate`, {
       method: 'POST',
@@ -37,21 +37,28 @@ serve(async (req) => {
       }),
     })
 
+    const authResponseText = await authResponse.text()
+    console.log('Auth response status:', authResponse.status)
+    console.log('Auth response:', authResponseText)
+
     if (!authResponse.ok) {
-      const errorText = await authResponse.text()
-      console.error('Auth response error:', errorText)
-      throw new Error(`Authentication failed with status ${authResponse.status}: ${errorText}`)
+      throw new Error(`Authentication failed with status ${authResponse.status}: ${authResponseText}`)
     }
 
-    const authData = await authResponse.json()
-    console.log('Successfully authenticated with Tonic API')
+    let authData
+    try {
+      authData = JSON.parse(authResponseText)
+    } catch (e) {
+      console.error('Failed to parse auth response:', e)
+      throw new Error(`Invalid auth response format: ${authResponseText}`)
+    }
 
     if (!authData.token) {
+      console.error('No token in response:', authData)
       throw new Error('No token received in auth response')
     }
 
-    // Now fetch countries with the token
-    console.log('Fetching countries...')
+    console.log('Successfully authenticated, fetching countries...')
     const countriesResponse = await fetch(`${TONIC_API_URL}/countries`, {
       method: 'GET',
       headers: {
@@ -61,15 +68,22 @@ serve(async (req) => {
       },
     })
 
+    const countriesResponseText = await countriesResponse.text()
+    console.log('Countries response status:', countriesResponse.status)
+    console.log('Countries response:', countriesResponseText)
+
     if (!countriesResponse.ok) {
-      const errorText = await countriesResponse.text()
-      console.error('Countries response error:', errorText)
-      throw new Error(`Countries fetch failed with status ${countriesResponse.status}: ${errorText}`)
+      throw new Error(`Countries fetch failed with status ${countriesResponse.status}: ${countriesResponseText}`)
     }
 
-    const countriesData = await countriesResponse.json()
-    console.log('Successfully fetched countries')
-    
+    let countriesData
+    try {
+      countriesData = JSON.parse(countriesResponseText)
+    } catch (e) {
+      console.error('Failed to parse countries response:', e)
+      throw new Error(`Invalid countries response format: ${countriesResponseText}`)
+    }
+
     return new Response(JSON.stringify(countriesData), { 
       headers: { 
         ...corsHeaders,

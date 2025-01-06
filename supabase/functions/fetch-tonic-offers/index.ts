@@ -14,16 +14,16 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Starting Tonic API authentication...')
+    console.log('Starting Tonic API request...')
     
     const consumerKey = Deno.env.get('TONIC_CONSUMER_KEY')
     const consumerSecret = Deno.env.get('TONIC_CONSUMER_SECRET')
     
     if (!consumerKey || !consumerSecret) {
+      console.error('Missing API credentials')
       throw new Error('Missing Tonic API credentials')
     }
 
-    // First, authenticate with Tonic API
     console.log('Authenticating with Tonic API...')
     const authResponse = await fetch(`${TONIC_API_URL}/jwt/authenticate`, {
       method: 'POST',
@@ -37,21 +37,28 @@ serve(async (req) => {
       }),
     })
 
+    const authResponseText = await authResponse.text()
+    console.log('Auth response status:', authResponse.status)
+    console.log('Auth response:', authResponseText)
+
     if (!authResponse.ok) {
-      const errorText = await authResponse.text()
-      console.error('Auth response error:', errorText)
-      throw new Error(`Authentication failed with status ${authResponse.status}: ${errorText}`)
+      throw new Error(`Authentication failed with status ${authResponse.status}: ${authResponseText}`)
     }
 
-    const authData = await authResponse.json()
-    console.log('Successfully authenticated with Tonic API')
+    let authData
+    try {
+      authData = JSON.parse(authResponseText)
+    } catch (e) {
+      console.error('Failed to parse auth response:', e)
+      throw new Error(`Invalid auth response format: ${authResponseText}`)
+    }
 
     if (!authData.token) {
+      console.error('No token in response:', authData)
       throw new Error('No token received in auth response')
     }
 
-    // Now fetch offers with the token
-    console.log('Fetching offers...')
+    console.log('Successfully authenticated, fetching offers...')
     const offersResponse = await fetch(`${TONIC_API_URL}/offers`, {
       method: 'GET',
       headers: {
@@ -61,15 +68,22 @@ serve(async (req) => {
       },
     })
 
+    const offersResponseText = await offersResponse.text()
+    console.log('Offers response status:', offersResponse.status)
+    console.log('Offers response:', offersResponseText)
+
     if (!offersResponse.ok) {
-      const errorText = await offersResponse.text()
-      console.error('Offers response error:', errorText)
-      throw new Error(`Offers fetch failed with status ${offersResponse.status}: ${errorText}`)
+      throw new Error(`Offers fetch failed with status ${offersResponse.status}: ${offersResponseText}`)
     }
 
-    const offersData = await offersResponse.json()
-    console.log('Successfully fetched offers')
-    
+    let offersData
+    try {
+      offersData = JSON.parse(offersResponseText)
+    } catch (e) {
+      console.error('Failed to parse offers response:', e)
+      throw new Error(`Invalid offers response format: ${offersResponseText}`)
+    }
+
     return new Response(JSON.stringify(offersData), { 
       headers: { 
         ...corsHeaders,
