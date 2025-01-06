@@ -1,29 +1,20 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { formatCurrency } from "@/components/campaigns/campaignUtils";
+import { KeywordStats } from "@/types/tonic";
 import "flag-icons/css/flag-icons.min.css";
 
-interface KeywordCardProps {
-  keyword: string;
-  campaigns: Array<{
-    id: number;
-    name: string;
-    status: string;
-  }>;
-  countries: Array<{
-    code: string;
-    name: string;
-  }>;
-  offers: Array<{
-    id: number;
-    name: string;
-  }>;
-  clicks: number;
-  revenue: number;
-  rpc: number;
-}
+interface KeywordCardProps extends KeywordStats {}
 
-export const KeywordCard = ({ keyword, campaigns, countries, offers, clicks, revenue, rpc }: KeywordCardProps) => {
+export const KeywordCard = ({ 
+  keyword, 
+  campaigns, 
+  countries, 
+  offers, 
+  clicks, 
+  revenue, 
+  rpc 
+}: KeywordCardProps) => {
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-2">
@@ -35,7 +26,11 @@ export const KeywordCard = ({ keyword, campaigns, countries, offers, clicks, rev
             <p className="text-sm text-muted-foreground mb-1">Campaigns</p>
             <div className="flex flex-wrap gap-2">
               {campaigns.map((campaign) => (
-                <Badge key={campaign.id} variant="secondary" className="text-xs">
+                <Badge 
+                  key={campaign.id} 
+                  variant={campaign.status === 'active' ? 'default' : 'secondary'} 
+                  className="text-xs"
+                >
                   {campaign.name}
                 </Badge>
               ))}
