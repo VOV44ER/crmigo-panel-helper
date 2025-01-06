@@ -73,7 +73,7 @@ const UserDashboard = () => {
           } : {}),
           username,
           ...(selectedCountries.length > 0 && {
-            countryCodes: selectedCountries.map(c => c.code).join(',')
+            countryCode: selectedCountries.map(c => c.code).join(',')
           }),
           ...(selectedOffers.length > 0 && {
             offerIds: selectedOffers.map(o => o.id).join(',')
@@ -113,6 +113,10 @@ const UserDashboard = () => {
               onCountryChange={setSelectedCountries}
               selectedOffers={selectedOffers}
               onOfferChange={setSelectedOffers}
+              onClearFilters={() => {
+                setSelectedCountries([]);
+                setSelectedOffers([]);
+              }}
             />
           </div>
           <div className="shrink-0">
