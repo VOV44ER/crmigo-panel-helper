@@ -19,21 +19,23 @@ const CampaignPagination = ({
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-t">
-      <div className="text-sm text-gray-500">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-t">
+      <div className="text-sm text-gray-500 text-center sm:text-left">
         Showing {offset + 1} to {Math.min(offset + limit, total)} of {total} results
       </div>
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-500">Rows per page:</span>
-        <select 
-          className="border rounded px-2 py-1"
-          value={limit}
-          onChange={(e) => onLimitChange(Number(e.target.value))}
-        >
-          <option value={10}>10</option>
-          <option value={20}>20</option>
-          <option value={50}>50</option>
-        </select>
+      <div className="flex flex-col sm:flex-row items-center gap-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500">Rows per page:</span>
+          <select 
+            className="border rounded px-2 py-1"
+            value={limit}
+            onChange={(e) => onLimitChange(Number(e.target.value))}
+          >
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+        </div>
         <div className="flex items-center gap-1">
           <Button 
             variant="outline" 
@@ -51,7 +53,9 @@ const CampaignPagination = ({
           >
             ⟨
           </Button>
-          <span className="text-sm">{currentPage} of {totalPages}</span>
+          <span className="text-sm min-w-[80px] text-center">
+            {currentPage} of {totalPages}
+          </span>
           <Button 
             variant="outline" 
             size="icon"

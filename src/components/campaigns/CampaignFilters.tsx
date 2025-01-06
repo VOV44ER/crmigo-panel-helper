@@ -32,12 +32,13 @@ const CampaignFilters = ({
   };
 
   return (
-    <div className="flex items-center gap-4 mb-6">
-      <div className="flex gap-2">
+    <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center">
+      <div className="flex flex-wrap gap-2">
         <Button 
           variant={selectedStates.includes('active') ? "default" : "outline"}
           onClick={() => toggleState('active')}
           className={cn(
+            "flex-1 sm:flex-none",
             selectedStates.includes('active') 
               ? "bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900"
               : "hover:bg-green-100 hover:text-green-800"
@@ -49,6 +50,7 @@ const CampaignFilters = ({
           variant={selectedStates.includes('pending') ? "default" : "outline"}
           onClick={() => toggleState('pending')}
           className={cn(
+            "flex-1 sm:flex-none",
             selectedStates.includes('pending')
               ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-200 hover:text-yellow-900"
               : "hover:bg-yellow-100 hover:text-yellow-800"
@@ -60,6 +62,7 @@ const CampaignFilters = ({
           variant={selectedStates.includes('stopped') ? "default" : "outline"}
           onClick={() => toggleState('stopped')}
           className={cn(
+            "flex-1 sm:flex-none",
             selectedStates.includes('stopped')
               ? "bg-red-100 text-red-800 hover:bg-red-200 hover:text-red-900"
               : "hover:bg-red-100 hover:text-red-800"
@@ -68,13 +71,12 @@ const CampaignFilters = ({
           Stopped
         </Button>
       </div>
-      <div className="flex-1" />
       <Popover>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             className={cn(
-              "w-[280px] justify-start text-left font-normal",
+              "w-full sm:w-[280px] justify-start text-left font-normal",
               !dateRange && "text-muted-foreground"
             )}
           >
@@ -105,7 +107,7 @@ const CampaignFilters = ({
             defaultMonth={dateRange?.from}
             selected={dateRange}
             onSelect={onDateRangeChange}
-            numberOfMonths={2}
+            numberOfMonths={1}
             className="rounded-md border shadow-md bg-white"
           />
         </PopoverContent>
