@@ -37,7 +37,7 @@ const CampaignCard = ({ campaign, onEdit }: CampaignCardProps) => {
             variant="ghost" 
             size="icon" 
             onClick={copyTrackingLink} 
-            className={`cursor-pointer ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             disabled={isDisabled}
           >
             <Copy className={`h-4 w-4 ${isDisabled ? 'text-gray-400' : ''}`} />
