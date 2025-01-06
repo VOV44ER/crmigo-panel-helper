@@ -1,4 +1,9 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface Country {
   code: string;
@@ -13,6 +18,7 @@ interface CountrySelectorProps {
 }
 
 export function CountrySelector({ selectedCountry, onCountrySelect, countries = [], isLoading }: CountrySelectorProps) {
+  const [open, setOpen] = useState(false);
   const validCountries = Array.isArray(countries) ? countries : [];
 
   console.log('CountrySelector render:', {
@@ -23,39 +29,45 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
   });
 
   return (
-    <Select
-      value={selectedCountry?.code}
-      onValueChange={(code) => {
-        const country = validCountries.find(c => c.code === code);
-        if (country) {
-          console.log('Country selected:', country);
-          onCountrySelect(country);
-        }
-      }}
-      disabled={isLoading}
-    >
-      <SelectTrigger className="w-full">
-        <SelectValue placeholder={isLoading ? "Loading countries..." : "Select country..."} />
-      </SelectTrigger>
-      <SelectContent 
-        className="bg-white border border-gray-200 shadow-lg"
-        position="popper"
-        style={{ 
-          maxHeight: "200px",
-          overflowY: "auto",
-          zIndex: 50
-        }}
-      >
-        {validCountries.map((country) => (
-          <SelectItem 
-            key={country.code} 
-            value={country.code}
-            className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100 py-2"
-          >
-            {country.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between"
+          disabled={isLoading}
+        >
+          {selectedCountry ? selectedCountry.name : isLoading ? "Loading countries..." : "Select country..."}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-full p-0">
+        <Command>
+          <CommandInput placeholder="Search country..." />
+          <CommandEmpty>No country found.</CommandEmpty>
+          <CommandGroup className="max-h-[200px] overflow-y-auto">
+            {validCountries.map((country) => (
+              <CommandItem
+                key={country.code}
+                value={country.name}
+                onSelect={() => {
+                  onCountrySelect(country);
+                  setOpen(false);
+                }}
+              >
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    selectedCountry?.code === country.code ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                {country.name}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
