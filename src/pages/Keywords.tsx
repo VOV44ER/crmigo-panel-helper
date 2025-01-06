@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Database, Loader } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
@@ -10,14 +9,45 @@ import CampaignFilters from "@/components/campaigns/CampaignFilters";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
+interface Campaign {
+  id: number;
+  name: string;
+  status: string;
+  country: {
+    code: string;
+    name: string;
+  };
+  imprint: string;
+  offer: {
+    id: number;
+    name: string;
+    vertical: {
+      id: number;
+      name: string;
+    };
+  };
+  trackingLink: string;
+  created: string;
+}
+
 interface Keyword {
   keyword: string;
-  campaigns: string;
-  campaignOffer: string;
-  geo: string;
-  rpc: string;
-  conv: number;
-  rev: string;
+  campaigns: Campaign[];
+  countries: Array<{
+    code: string;
+    name: string;
+  }>;
+  offers: Array<{
+    id: number;
+    name: string;
+    vertical: {
+      id: number;
+      name: string;
+    };
+  }>;
+  clicks: number;
+  revenue: number;
+  rpc: number;
 }
 
 export default function Keywords() {
@@ -46,6 +76,13 @@ export default function Keywords() {
   if (error) {
     toast.error('Failed to fetch keywords');
   }
+
+  const formatNumber = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(value);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -77,31 +114,35 @@ export default function Keywords() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Keyword</TableHead>
-                  <TableHead>Campaigns</TableHead>
-                  <TableHead>Campaign Offer</TableHead>
-                  <TableHead>Geo</TableHead>
-                  <TableHead>RPC</TableHead>
-                  <TableHead className="text-right">Conv.</TableHead>
-                  <TableHead className="text-right">Rev.</TableHead>
+                  <TableHead>Campaign</TableHead>
+                  <TableHead>Offer</TableHead>
+                  <TableHead>Country</TableHead>
+                  <TableHead className="text-right">Clicks</TableHead>
+                  <TableHead className="text-right">RPC</TableHead>
+                  <TableHead className="text-right">Revenue</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {keywords.map((keyword: Keyword, index: number) => (
-                  <TableRow key={index} className="cursor-pointer hover:bg-gray-50">
+                  <TableRow key={index}>
                     <TableCell className="font-medium">{keyword.keyword}</TableCell>
-                    <TableCell>{keyword.campaigns}</TableCell>
-                    <TableCell>{keyword.campaignOffer}</TableCell>
+                    <TableCell>{keyword.campaigns[0]?.name || 'N/A'}</TableCell>
+                    <TableCell>{keyword.offers[0]?.name || 'N/A'}</TableCell>
                     <TableCell>
-                      <img 
-                        src={`https://flagcdn.com/w20/${keyword.geo.toLowerCase()}.png`}
-                        alt={keyword.geo}
-                        className="inline-block mr-2"
-                      />
-                      {keyword.geo}
+                      {keyword.countries[0] && (
+                        <>
+                          <img 
+                            src={`https://flagcdn.com/w20/${keyword.countries[0].code.toLowerCase()}.png`}
+                            alt={keyword.countries[0].name}
+                            className="inline-block mr-2"
+                          />
+                          {keyword.countries[0].name}
+                        </>
+                      )}
                     </TableCell>
-                    <TableCell>{keyword.rpc}</TableCell>
-                    <TableCell className="text-right">{keyword.conv}</TableCell>
-                    <TableCell className="text-right">{keyword.rev}</TableCell>
+                    <TableCell className="text-right">{keyword.clicks}</TableCell>
+                    <TableCell className="text-right">{formatNumber(keyword.rpc)}</TableCell>
+                    <TableCell className="text-right">{formatNumber(keyword.revenue)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
