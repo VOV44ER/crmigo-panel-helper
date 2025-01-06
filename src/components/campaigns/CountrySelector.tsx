@@ -45,26 +45,28 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
         <Command>
           <CommandInput placeholder="Search country..." />
           <CommandEmpty>No country found.</CommandEmpty>
-          <CommandGroup className="max-h-[200px] overflow-y-auto">
-            {validCountries.map((country) => (
-              <CommandItem
-                key={country.code}
-                value={country.code}
-                onSelect={() => {
-                  onCountrySelect(country);
-                  setOpen(false);
-                }}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    selectedCountry?.code === country.code ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {country.name}
-              </CommandItem>
-            ))}
-          </CommandGroup>
+          {validCountries.length > 0 && (
+            <CommandGroup className="max-h-[200px] overflow-y-auto">
+              {validCountries.map((country) => (
+                <CommandItem
+                  key={country.code}
+                  value={country.code}
+                  onSelect={() => {
+                    onCountrySelect(country);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selectedCountry?.code === country.code ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {country.name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
         </Command>
       </PopoverContent>
     </Popover>
