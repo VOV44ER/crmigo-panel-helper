@@ -14,6 +14,8 @@ serve(async (req) => {
   }
 
   try {
+    const { from, to, orderField, orderOrientation, offset, campaignName } = await req.json()
+
     // First, get JWT token from Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
@@ -34,26 +36,26 @@ serve(async (req) => {
     }
 
     const { token: tonicToken } = await authResponse.json()
-    
-    // Get query parameters from request URL
-    const url = new URL(req.url)
-    const from = url.searchParams.get('from') || new Date().toISOString().split('T')[0]
-    const to = url.searchParams.get('to') || from
-    const orderField = url.searchParams.get('orderField') || 'clicks'
-    const orderOrientation = url.searchParams.get('orderOrientation') || 'desc'
-    const offset = url.searchParams.get('offset') || '0'
+
+    // Build the URL with query parameters
+    const url = new URL(`${TONIC_API_URL}/statistics/keywords`)
+    url.searchParams.append('from', from)
+    url.searchParams.append('to', to)
+    url.searchParams.append('orderField', orderField)
+    url.searchParams.append('orderOrientation', orderOrientation)
+    url.searchParams.append('offset', offset.toString())
+    if (campaignName) {
+      url.searchParams.append('campaignName', campaignName)
+    }
 
     // Fetch keywords stats from Tonic
-    const response = await fetch(
-      `${TONIC_API_URL}/statistics/keywords?from=${from}&to=${to}&orderField=${orderField}&orderOrientation=${orderOrientation}&offset=${offset}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${tonicToken}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Authorization': `Bearer ${tonicToken}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       }
-    )
+    })
 
     if (!response.ok) {
       const error = await response.text()
