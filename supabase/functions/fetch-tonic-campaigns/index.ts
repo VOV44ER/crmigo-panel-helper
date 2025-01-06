@@ -26,18 +26,12 @@ serve(async (req) => {
       throw new Error('No authorization header provided')
     }
 
-    const token = authHeader.split(' ')[1]
-    if (!token) {
-      throw new Error('No token provided in authorization header')
-    }
-
-    console.log('Fetching campaigns with token...')
-
     // First, get JWT token from Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
         consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),

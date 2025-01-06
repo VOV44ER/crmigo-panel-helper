@@ -9,7 +9,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -18,7 +17,7 @@ serve(async (req) => {
     const { countryId, offerId, name, targetDomain, userId } = await req.json()
     
     if (!countryId || !offerId || !name || !userId) {
-      throw new Error('Missing required fields: countryId, offerId, name, and userId are required')
+      throw new Error('Missing required fields')
     }
 
     // Get authorization header from the request
@@ -27,18 +26,12 @@ serve(async (req) => {
       throw new Error('No authorization header provided')
     }
 
-    const token = authHeader.split(' ')[1]
-    if (!token) {
-      throw new Error('No token provided in authorization header')
-    }
-
-    console.log('Creating campaign with token...')
-
     // First, get JWT token from Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
         consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
@@ -66,8 +59,8 @@ serve(async (req) => {
       body: JSON.stringify({
         country_id: countryId,
         offer_id: offerId,
-        name,
-        ...(targetDomain ? { target_domain: targetDomain } : {})
+        name: name,
+        target_domain: targetDomain
       })
     })
 
@@ -77,8 +70,8 @@ serve(async (req) => {
       throw new Error(`Failed to create campaign: ${errorText}`)
     }
 
-    const campaignData = await response.json()
-    console.log('Campaign created in Tonic:', campaignData)
+    const campaign = await response.json()
+    console.log('Campaign created in Tonic:', campaign)
 
     // Store campaign in Supabase
     const supabase = createClient(
@@ -86,30 +79,32 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { error: supabaseError } = await supabase
+    const { error: dbError } = await supabase
       .from('campaigns')
       .insert({
         user_id: userId,
-        campaign_id: campaignData.data.id.toString(),
-        name,
+        campaign_id: campaign.data.id.toString(),
+        name: name,
         offer_id: offerId,
         country_id: countryId,
         target_domain: targetDomain
       })
 
-    if (supabaseError) {
-      throw new Error(`Failed to store campaign in database: ${supabaseError.message}`)
+    if (dbError) {
+      console.error('Database error:', dbError)
+      throw new Error(`Failed to store campaign in database: ${dbError.message}`)
     }
-    
+
     return new Response(
-      JSON.stringify(campaignData),
+      JSON.stringify(campaign),
       { 
         headers: { 
           ...corsHeaders, 
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json' 
         } 
-      },
+      }
     )
+
   } catch (error) {
     console.error('Error:', error)
     return new Response(
@@ -117,10 +112,10 @@ serve(async (req) => {
       { 
         status: 400,
         headers: { 
-          ...corsHeaders, 
+          ...corsHeaders,
           'Content-Type': 'application/json'
-        },
-      },
+        } 
+      }
     )
   }
 })
