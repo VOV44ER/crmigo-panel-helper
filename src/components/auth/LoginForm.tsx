@@ -26,7 +26,14 @@ export const LoginForm = () => {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message === "Invalid login credentials") {
+          toast.error("Invalid username or password");
+        } else {
+          toast.error("An error occurred during login");
+        }
+        return;
+      }
 
       // Check if user is admin
       const isAdmin = email === 'admin@admin.com';
@@ -37,8 +44,8 @@ export const LoginForm = () => {
         navigate("/dashboard");
       }
     } catch (error: any) {
+      toast.error("An unexpected error occurred");
       console.error('Login error:', error);
-      toast.error("Invalid username or password");
     } finally {
       setLoading(false);
     }
