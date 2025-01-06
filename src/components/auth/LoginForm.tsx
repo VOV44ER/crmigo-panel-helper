@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,60 +6,23 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const LoginForm = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [credentials, setCredentials] = useState({
-    email: "",
-    password: "",
-  });
-
-  // Check if user is already logged in
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const isAdmin = session.user.email === "admin@admin.com";
-        navigate(isAdmin ? "/admin" : "/dashboard");
-      }
-    };
-    checkSession();
-  }, [navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
 
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email: credentials.email,
-        password: credentials.password,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      if (signInError) {
-        if (signInError.message.includes("Email not confirmed")) {
-          const { error: resendError } = await supabase.auth.resend({
-            type: 'signup',
-            email: credentials.email,
-          });
-          
-          if (resendError) throw resendError;
-          
-          toast.error("Please check your email to confirm your account");
-          return;
-        }
-        throw signInError;
-      }
+      if (error) throw error;
 
-      // Check if the user is admin (admin@admin.com)
-      const isAdmin = credentials.email === "admin@admin.com";
-      
+      const isAdmin = email === 'admin@admin.com';
       if (isAdmin) {
-        // Verify admin status through RPC
-        const { data: isAdminVerified, error: adminError } = await supabase.rpc('is_admin');
-        if (adminError || !isAdminVerified) {
-          toast.error("Unauthorized access");
-          await supabase.auth.signOut();
-          return;
-        }
         toast.success("Welcome back, Admin!");
         navigate("/admin");
       } else {
@@ -69,36 +31,32 @@ export const LoginForm = () => {
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.message || "Invalid credentials");
-    } finally {
-      setLoading(false);
+      toast.error(error.message || "Failed to login");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm">
-      <div className="space-y-2">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
         <Input
           type="email"
+          name="email"
           placeholder="Email"
-          value={credentials.email}
-          onChange={(e) =>
-            setCredentials({ ...credentials, email: e.target.value })
-          }
           required
-        />
-        <Input
-          type="password"
-          placeholder="Password"
-          value={credentials.password}
-          onChange={(e) =>
-            setCredentials({ ...credentials, password: e.target.value })
-          }
-          required
+          className="w-full"
         />
       </div>
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? "Logging in..." : "Login"}
+      <div>
+        <Input
+          type="password"
+          name="password"
+          placeholder="Password"
+          required
+          className="w-full"
+        />
+      </div>
+      <Button type="submit" className="w-full">
+        Sign In
       </Button>
     </form>
   );
