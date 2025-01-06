@@ -1,191 +1,80 @@
-import { Edit, Copy, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { TonicCampaign } from "@/types/tonic";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import CampaignCard from "./CampaignCard";
-import { getStatusColor, formatCurrency, formatPercentage } from "./campaignUtils";
-import { toast } from "sonner";
-import { useState } from "react";
-import { KeywordEditModal } from "./KeywordEditModal";
+import { Database } from "lucide-react";
+
+interface Campaign {
+  id: string;
+  name: string;
+  state: string;
+  budget: number;
+  spent: number;
+  remaining: number;
+  created_at: string;
+}
 
 interface CampaignTableProps {
-  campaigns: TonicCampaign[];
+  campaigns: Campaign[];
   isLoading: boolean;
 }
 
 const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
-  const [selectedCampaign, setSelectedCampaign] = useState<TonicCampaign | null>(null);
-
-  const copyTrackingLink = (trackingLink: string | null) => {
-    if (!trackingLink) {
-      toast.error("No tracking link available");
-      return;
-    }
-    navigator.clipboard.writeText(trackingLink);
-    toast.success("Tracking link copied to clipboard");
-  };
-
-  const LoadingRow = () => (
-    <TableRow>
-      {Array(15).fill(0).map((_, i) => (
-        <TableCell key={i}>
-          <Skeleton className="h-4 w-full" />
-        </TableCell>
-      ))}
-    </TableRow>
-  );
-
   if (isLoading) {
     return (
-      <div>
-        <div className="hidden sm:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-24">Status</TableHead>
-                <TableHead className="w-20">Id</TableHead>
-                <TableHead className="w-64">Name</TableHead>
-                <TableHead className="w-24">Type</TableHead>
-                <TableHead className="w-24">Vertical</TableHead>
-                <TableHead className="w-32">Offer</TableHead>
-                <TableHead className="w-20">Geo</TableHead>
-                <TableHead className="w-20 text-center">TL</TableHead>
-                <TableHead className="w-24 text-center">Imprint</TableHead>
-                <TableHead className="w-24 text-right">Views</TableHead>
-                <TableHead className="w-24 text-right">Clicks</TableHead>
-                <TableHead className="w-20 text-right">VTC</TableHead>
-                <TableHead className="w-24 text-right">RPC</TableHead>
-                <TableHead className="w-24 text-right">RPMV</TableHead>
-                <TableHead className="w-24 text-right">Revenue</TableHead>
-                <TableHead className="w-20 text-center">Edit</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <LoadingRow />
-              <LoadingRow />
-              <LoadingRow />
-            </TableBody>
-          </Table>
-        </div>
-        <div className="grid gap-4 sm:hidden">
-          {Array(3).fill(0).map((_, i) => (
-            <Skeleton key={i} className="h-48 w-full" />
-          ))}
-        </div>
+      <div className="p-4">
+        <Skeleton className="h-12 w-full mb-4" />
+        <Skeleton className="h-12 w-full mb-4" />
+        <Skeleton className="h-12 w-full" />
+      </div>
+    );
+  }
+
+  if (campaigns.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-4">
+        <Database className="h-12 w-12 text-gray-400 mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-1">No campaigns found</h3>
+        <p className="text-sm text-gray-500">Get started by creating a new campaign.</p>
       </div>
     );
   }
 
   return (
-    <div>
-      {/* Desktop Table View */}
-      <div className="hidden sm:block overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-24">Status</TableHead>
-              <TableHead className="w-20">Id</TableHead>
-              <TableHead className="w-64">Name</TableHead>
-              <TableHead className="w-24">Type</TableHead>
-              <TableHead className="w-24">Vertical</TableHead>
-              <TableHead className="w-32">Offer</TableHead>
-              <TableHead className="w-20">Geo</TableHead>
-              <TableHead className="w-20 text-center">TL</TableHead>
-              <TableHead className="w-24 text-center">Imprint</TableHead>
-              <TableHead className="w-24 text-right">Views</TableHead>
-              <TableHead className="w-24 text-right">Clicks</TableHead>
-              <TableHead className="w-20 text-right">VTC</TableHead>
-              <TableHead className="w-24 text-right">RPC</TableHead>
-              <TableHead className="w-24 text-right">RPMV</TableHead>
-              <TableHead className="w-24 text-right">Revenue</TableHead>
-              <TableHead className="w-20 text-center">Edit</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {campaigns.map((campaign) => {
-              const isDisabled = !campaign.trackingLink;
-              return (
-                <TableRow key={campaign.id} className="hover:bg-gray-50">
-                  <TableCell>
-                    <Badge variant="secondary" className={getStatusColor(campaign.status)}>
-                      {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{campaign.id}</TableCell>
-                  <TableCell className="font-medium text-base">{campaign.name}</TableCell>
-                  <TableCell className="capitalize">{campaign.type}</TableCell>
-                  <TableCell>{campaign.offer.vertical.name}</TableCell>
-                  <TableCell>{campaign.offer.name}</TableCell>
-                  <TableCell>{campaign.country.code}</TableCell>
-                  <TableCell className="text-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => copyTrackingLink(campaign.trackingLink)}
-                      className={`${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                      disabled={isDisabled}
-                    >
-                      <Copy className={`h-4 w-4 ${isDisabled ? 'text-gray-400' : ''}`} />
-                    </Button>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {campaign.imprint === 'yes' ? (
-                      <span className="text-green-600">✓</span>
-                    ) : (
-                      <X className="h-4 w-4 mx-auto text-red-600" />
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">{campaign.views.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">{campaign.clicks.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">{formatPercentage(campaign.vtc / 100)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(campaign.rpc)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(campaign.rpmv)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(campaign.revenue)}</TableCell>
-                  <TableCell className="text-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setSelectedCampaign(campaign)}
-                      className="cursor-pointer"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Mobile Card View */}
-      <div className="grid gap-4 sm:hidden">
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Campaign Name</TableHead>
+          <TableHead>State</TableHead>
+          <TableHead>Budget</TableHead>
+          <TableHead>Spent</TableHead>
+          <TableHead>Remaining</TableHead>
+          <TableHead>Created At</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {campaigns.map((campaign) => (
-          <CampaignCard 
-            key={campaign.id} 
-            campaign={campaign}
-            onEdit={() => setSelectedCampaign(campaign)}
-          />
+          <TableRow key={campaign.id}>
+            <TableCell className="font-medium">{campaign.name}</TableCell>
+            <TableCell>
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  campaign.state === 'active'
+                    ? 'bg-green-100 text-green-800'
+                    : campaign.state === 'pending'
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : 'bg-red-100 text-red-800'
+                }`}
+              >
+                {campaign.state}
+              </span>
+            </TableCell>
+            <TableCell>${campaign.budget.toFixed(2)}</TableCell>
+            <TableCell>${campaign.spent.toFixed(2)}</TableCell>
+            <TableCell>${campaign.remaining.toFixed(2)}</TableCell>
+            <TableCell>{new Date(campaign.created_at).toLocaleDateString()}</TableCell>
+          </TableRow>
         ))}
-      </div>
-
-      {/* Edit Modal */}
-      <KeywordEditModal
-        isOpen={!!selectedCampaign}
-        onClose={() => setSelectedCampaign(null)}
-        campaignName={selectedCampaign?.name || ""}
-        campaignId={selectedCampaign?.id || ""}
-      />
-    </div>
+      </TableBody>
+    </Table>
   );
 };
 

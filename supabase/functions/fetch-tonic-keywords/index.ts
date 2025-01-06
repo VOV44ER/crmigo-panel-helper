@@ -5,19 +5,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const TONIC_API_URL = "https://api.publisher.tonic.com/privileged/v3"
-
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { campaign_id } = await req.json()
+    const { from, to } = await req.json()
     
-    if (!campaign_id) {
-      throw new Error('Campaign ID is required')
+    if (!from || !to) {
+      throw new Error('Date range is required')
     }
 
     // First, get JWT token from Tonic
@@ -42,13 +39,16 @@ serve(async (req) => {
     const { token: tonicToken } = await authResponse.json()
     
     // Fetch keywords from Tonic
-    const response = await fetch(`${TONIC_API_URL}/campaign/keywords?campaign_id=${campaign_id}`, {
-      headers: {
-        'Authorization': `Bearer ${tonicToken}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+    const response = await fetch(
+      `https://api.publisher.tonic.com/v4/statistics/keywords?from=${from}&to=${to}&orderField=clicks&orderOrientation=desc&offset=0`, 
+      {
+        headers: {
+          'Authorization': `Bearer ${tonicToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
       }
-    })
+    )
 
     if (!response.ok) {
       const error = await response.text()
