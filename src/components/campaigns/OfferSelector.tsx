@@ -24,6 +24,9 @@ interface OfferSelectorProps {
 export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoading }: OfferSelectorProps) {
   const [open, setOpen] = useState(false);
 
+  // Ensure we have a valid array to work with
+  const validOffers = Array.isArray(offers) ? offers : [];
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -49,7 +52,7 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
           <CommandInput placeholder="Search offer..." />
           <CommandEmpty>No offer found.</CommandEmpty>
           <CommandGroup className="max-h-[200px] overflow-y-auto">
-            {(offers || []).map((offer) => (
+            {validOffers.map((offer) => (
               <CommandItem
                 key={offer.id}
                 value={offer.name}
