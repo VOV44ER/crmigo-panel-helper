@@ -77,20 +77,23 @@ const AdminPanel = () => {
   const handleCreateUser = async (newUser: NewUser) => {
     setLoading(true);
     try {
-      // Use admin API to create user without auto-sign-in
-      const { data: authData, error: signUpError } = await supabase.auth.admin.createUser({
+      // First, create the auth user
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: `${newUser.username}@user.com`,
         password: newUser.password,
-        email_confirm: true,
-        user_metadata: {
-          username: newUser.username,
-          full_name: newUser.full_name
+        options: {
+          data: {
+            username: newUser.username,
+            full_name: newUser.full_name
+          },
+          emailRedirectTo: `${window.location.origin}/auth`
         }
       });
 
       if (signUpError) throw signUpError;
       if (!authData.user) throw new Error("No user returned from auth creation");
 
+      // Update the password_text in profiles table
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -103,6 +106,16 @@ const AdminPanel = () => {
       toast.success("User created successfully!");
       setIsModalOpen(false);
       refetch();
+
+      // Ensure we maintain the admin's session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || session.user.email !== "admin@admin.com") {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: "admin@admin.com",
+          password: "admin123" // Make sure this matches your admin password
+        });
+        if (signInError) throw signInError;
+      }
     } catch (error: any) {
       console.error('Error creating user:', error);
       toast.error(error.message || "Failed to create user");
