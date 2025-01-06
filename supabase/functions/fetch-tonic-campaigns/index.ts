@@ -15,9 +15,9 @@ serve(async (req) => {
 
   try {
     console.log('Received request to fetch campaigns');
-    const { states, limit, offset, from, to, username } = await req.json();
+    const { states, limit, offset, from, to, username, countryCode, offerIds } = await req.json();
     
-    console.log('Request params:', { states, limit, offset, from, to, username });
+    console.log('Request params:', { states, limit, offset, from, to, username, countryCode, offerIds });
 
     // First, get JWT token from Tonic
     console.log('Authenticating with Tonic API...');
@@ -53,6 +53,8 @@ serve(async (req) => {
       campaignsUrl.searchParams.append('to', to);
     }
     if (username) campaignsUrl.searchParams.append('campaignName', username);
+    if (countryCode) campaignsUrl.searchParams.append('countryCode', countryCode);
+    if (offerIds) campaignsUrl.searchParams.append('offerId', offerIds);
 
     console.log('Fetching campaigns from URL:', campaignsUrl.toString());
 

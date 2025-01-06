@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { from, to, username } = await req.json()
+    const { from, to, username, countryCodes, offerIds } = await req.json()
 
     // Enhanced validation
     if (!from || !to) {
@@ -20,7 +20,7 @@ serve(async (req) => {
       throw new Error('Date range is required')
     }
 
-    console.log('Processing request for date range:', { from, to, username })
+    console.log('Processing request for date range:', { from, to, username, countryCodes, offerIds })
 
     // First, get JWT token from Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
@@ -53,6 +53,12 @@ serve(async (req) => {
     url.searchParams.set('offset', '0')
     if (username) {
       url.searchParams.set('campaignName', username)
+    }
+    if (countryCodes) {
+      url.searchParams.set('countryCodes', countryCodes)
+    }
+    if (offerIds) {
+      url.searchParams.set('offerIds', offerIds)
     }
 
     console.log('Fetching keywords from URL:', url.toString())
