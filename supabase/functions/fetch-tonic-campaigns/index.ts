@@ -54,7 +54,7 @@ serve(async (req) => {
     }
     if (username) campaignsUrl.searchParams.append('campaignName', username);
     if (countryCodes) campaignsUrl.searchParams.append('countryCode', countryCodes);
-    if (offerIds) campaignsUrl.searchParams.append('offerId', offerIds);
+    if (offerIds) campaignsUrl.searchParams.append('offerIds', offerIds); // Changed from offerId to offerIds to match keywords endpoint
 
     console.log('Fetching campaigns from URL:', campaignsUrl.toString());
 
