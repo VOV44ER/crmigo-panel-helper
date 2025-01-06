@@ -19,6 +19,8 @@ const Keywords = () => {
   });
   const [username, setUsername] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [selectedCountries, setSelectedCountries] = useState<Array<{ code: string; name: string }>>([]);
+  const [selectedOffers, setSelectedOffers] = useState<Array<{ id: number; name: string; vertical: { id: number; name: string } }>>([]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -53,7 +55,7 @@ const Keywords = () => {
   }, []);
 
   const { data: response, isLoading } = useQuery({
-    queryKey: ['keywords', dateRange, username],
+    queryKey: ['keywords', dateRange, username, selectedCountries, selectedOffers],
     queryFn: async () => {
       if (!username || !dateRange.from || !dateRange.to) return null;
 
@@ -62,6 +64,12 @@ const Keywords = () => {
           from: format(dateRange.from, "yyyy-MM-dd"),
           to: format(dateRange.to, "yyyy-MM-dd"),
           username,
+          ...(selectedCountries.length > 0 && {
+            countryCodes: selectedCountries.map(c => c.code).join(',')
+          }),
+          ...(selectedOffers.length > 0 && {
+            offerIds: selectedOffers.map(o => o.id).join(',')
+          })
         }
       });
 
@@ -82,7 +90,7 @@ const Keywords = () => {
       <Navbar />
       
       <main className="container mx-auto py-6 px-4">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-4 mb-6">
           <div className="flex-grow">
             <CampaignFilters 
               selectedStates={[]}
@@ -90,6 +98,10 @@ const Keywords = () => {
               dateRange={dateRange}
               onDateRangeChange={setDateRange}
               hideStateFilter={true}
+              selectedCountries={selectedCountries}
+              onCountryChange={setSelectedCountries}
+              selectedOffers={selectedOffers}
+              onOfferChange={setSelectedOffers}
             />
           </div>
         </div>

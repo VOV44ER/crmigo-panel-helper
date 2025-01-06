@@ -22,6 +22,8 @@ const UserDashboard = () => {
     to: today,
   });
   const [username, setUsername] = useState<string | null>(null);
+  const [selectedCountries, setSelectedCountries] = useState<Array<{ code: string; name: string }>>([]);
+  const [selectedOffers, setSelectedOffers] = useState<Array<{ id: number; name: string; vertical: { id: number; name: string } }>>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -38,7 +40,6 @@ const UserDashboard = () => {
         navigate("/admin");
       }
 
-      // Get username from profiles table
       const { data: profile } = await supabase
         .from('profiles')
         .select('username')
@@ -54,7 +55,7 @@ const UserDashboard = () => {
   }, [navigate]);
 
   const { data: response, isLoading, error } = useQuery({
-    queryKey: ['campaigns', selectedStates, limit, offset, dateRange, username],
+    queryKey: ['campaigns', selectedStates, limit, offset, dateRange, username, selectedCountries, selectedOffers],
     queryFn: async () => {
       if (selectedStates.length === 0) {
         setSelectedStates(['active']);
@@ -70,7 +71,13 @@ const UserDashboard = () => {
             from: format(dateRange.from, "yyyy-MM-dd"),
             to: format(dateRange.to, "yyyy-MM-dd"),
           } : {}),
-          username
+          username,
+          ...(selectedCountries.length > 0 && {
+            countryCodes: selectedCountries.map(c => c.code).join(',')
+          }),
+          ...(selectedOffers.length > 0 && {
+            offerIds: selectedOffers.map(o => o.id).join(',')
+          })
         }
       });
 
@@ -89,7 +96,7 @@ const UserDashboard = () => {
       <Navbar />
       
       <main className="container mx-auto py-6 px-4">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-4 mb-6">
           <div className="flex-grow">
             <CampaignFilters 
               selectedStates={selectedStates}
@@ -102,6 +109,10 @@ const UserDashboard = () => {
               }}
               dateRange={dateRange}
               onDateRangeChange={setDateRange}
+              selectedCountries={selectedCountries}
+              onCountryChange={setSelectedCountries}
+              selectedOffers={selectedOffers}
+              onOfferChange={setSelectedOffers}
             />
           </div>
           <div className="shrink-0">
