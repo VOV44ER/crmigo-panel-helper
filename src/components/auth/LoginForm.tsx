@@ -27,10 +27,12 @@ export const LoginForm = () => {
       });
 
       if (error) {
-        if (error.message === "Invalid login credentials") {
-          toast.error("Invalid username or password");
+        if (error.message.includes("Invalid login credentials")) {
+          toast.error("Invalid username or password. Please try again.");
+        } else if (error.message.includes("Email not confirmed")) {
+          toast.error("Please confirm your email before logging in.");
         } else {
-          toast.error("An error occurred during login");
+          toast.error("Login failed: " + error.message);
         }
         return;
       }
@@ -38,13 +40,16 @@ export const LoginForm = () => {
       // Check if user is admin
       const isAdmin = email === 'admin@admin.com';
       
+      // Show welcome message
+      toast.success(`Welcome ${isAdmin ? 'Admin' : username}!`);
+
       if (isAdmin) {
         navigate("/admin");
       } else {
         navigate("/dashboard");
       }
     } catch (error: any) {
-      toast.error("An unexpected error occurred");
+      toast.error("An unexpected error occurred. Please try again.");
       console.error('Login error:', error);
     } finally {
       setLoading(false);
