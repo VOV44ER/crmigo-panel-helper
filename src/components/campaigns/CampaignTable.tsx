@@ -1,14 +1,23 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Database } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface Campaign {
   id: string;
   name: string;
   state: string;
-  budget: number;
-  spent: number;
-  remaining: number;
+  type?: string;
+  vertical?: string;
+  offer_id: number;
+  offer_name?: string;
+  country_id: string;
+  views?: number;
+  clicks?: number;
+  vtc?: number;
+  rpc?: number;
+  rpmv?: number;
+  revenue?: number;
   created_at: string;
 }
 
@@ -38,44 +47,77 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
     );
   }
 
-  const formatNumber = (value: number | undefined | null) => {
+  const formatCurrency = (value: number | undefined) => {
     if (typeof value !== 'number') return '$0.00';
-    return `$${value.toFixed(2)}`;
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value);
+  };
+
+  const formatPercentage = (value: number | undefined) => {
+    if (typeof value !== 'number') return '0%';
+    return `${value.toFixed(1)}%`;
+  };
+
+  const formatNumber = (value: number | undefined) => {
+    if (typeof value !== 'number') return '0';
+    return new Intl.NumberFormat('en-US').format(value);
   };
 
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Campaign Name</TableHead>
-          <TableHead>State</TableHead>
-          <TableHead>Budget</TableHead>
-          <TableHead>Spent</TableHead>
-          <TableHead>Remaining</TableHead>
-          <TableHead>Created At</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>ID</TableHead>
+          <TableHead>Name</TableHead>
+          <TableHead>Type</TableHead>
+          <TableHead>Vertical</TableHead>
+          <TableHead>Offer</TableHead>
+          <TableHead>Geo</TableHead>
+          <TableHead>Views</TableHead>
+          <TableHead>Clicks</TableHead>
+          <TableHead>VTC</TableHead>
+          <TableHead>RPC</TableHead>
+          <TableHead>RPMV</TableHead>
+          <TableHead>Revenue</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {campaigns.map((campaign) => (
           <TableRow key={campaign.id}>
-            <TableCell className="font-medium">{campaign.name}</TableCell>
             <TableCell>
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  campaign.state === 'active'
-                    ? 'bg-green-100 text-green-800'
-                    : campaign.state === 'pending'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-red-100 text-red-800'
-                }`}
+              <Badge 
+                variant={campaign.state === 'active' ? 'success' : 'secondary'}
+                className="capitalize"
               >
                 {campaign.state}
-              </span>
+              </Badge>
             </TableCell>
-            <TableCell>{formatNumber(campaign.budget)}</TableCell>
-            <TableCell>{formatNumber(campaign.spent)}</TableCell>
-            <TableCell>{formatNumber(campaign.remaining)}</TableCell>
-            <TableCell>{new Date(campaign.created_at).toLocaleDateString()}</TableCell>
+            <TableCell>{campaign.id}</TableCell>
+            <TableCell className="font-medium">{campaign.name}</TableCell>
+            <TableCell>{campaign.type || 'Display'}</TableCell>
+            <TableCell>{campaign.vertical || '-'}</TableCell>
+            <TableCell>{campaign.offer_name || '-'}</TableCell>
+            <TableCell>
+              <div className="flex items-center gap-2">
+                <img 
+                  src={`https://flagcdn.com/w20/${campaign.country_id.toLowerCase()}.png`}
+                  alt={campaign.country_id}
+                  className="w-5 h-auto"
+                />
+                {campaign.country_id}
+              </div>
+            </TableCell>
+            <TableCell>{formatNumber(campaign.views)}</TableCell>
+            <TableCell>{formatNumber(campaign.clicks)}</TableCell>
+            <TableCell>{formatPercentage(campaign.vtc)}</TableCell>
+            <TableCell>{formatCurrency(campaign.rpc)}</TableCell>
+            <TableCell>{formatCurrency(campaign.rpmv)}</TableCell>
+            <TableCell>{formatCurrency(campaign.revenue)}</TableCell>
           </TableRow>
         ))}
       </TableBody>
