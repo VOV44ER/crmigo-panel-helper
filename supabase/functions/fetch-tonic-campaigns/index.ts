@@ -6,6 +6,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -30,39 +31,26 @@ serve(async (req) => {
     if (!authResponse.ok) {
       const errorText = await authResponse.text();
       console.error('Auth Error:', errorText);
-      throw new Error('Failed to authenticate with Tonic API');
+      throw new Error(`Failed to authenticate with Tonic API: ${authResponse.status} ${authResponse.statusText}`);
     }
 
     const { token: tonicToken } = await authResponse.json();
+    console.log('Successfully obtained Tonic token');
 
     // Build the URL with query parameters
     const url = new URL('https://api.publisher.tonic.com/v4/campaigns');
     
-    // Only append parameters if they exist and are not empty
-    if (states?.length) {
-      url.searchParams.append('states', states.join(','));
-    }
-    if (limit) {
-      url.searchParams.append('limit', limit.toString());
-    }
-    if (offset) {
-      url.searchParams.append('offset', offset.toString());
-    }
-    if (from) {
-      url.searchParams.append('from', from);
-    }
-    if (to) {
-      url.searchParams.append('to', to);
-    }
-    if (username) {
-      url.searchParams.append('campaignName', username);
-    }
-    if (countryCode) {
-      url.searchParams.append('countryCode', countryCode);
-    }
-    if (offerIds) {
-      url.searchParams.append('offerIds', offerIds);
-    }
+    // Add required parameters first
+    url.searchParams.append('states', states?.length ? states.join(',') : 'active');
+    url.searchParams.append('limit', limit?.toString() || '10');
+    url.searchParams.append('offset', offset?.toString() || '0');
+
+    // Add optional parameters
+    if (from) url.searchParams.append('from', from);
+    if (to) url.searchParams.append('to', to);
+    if (username) url.searchParams.append('campaignName', username);
+    if (countryCode) url.searchParams.append('countryCode', countryCode);
+    if (offerIds) url.searchParams.append('offerIds', offerIds);
 
     console.log('Fetching from URL:', url.toString());
 
@@ -76,8 +64,12 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Tonic API Error:', errorText);
-      throw new Error(`Failed to fetch campaigns: ${response.statusText}`);
+      console.error('Tonic API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText
+      });
+      throw new Error(`Failed to fetch campaigns: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
@@ -96,7 +88,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack
+      }),
       { 
         status: 500,
         headers: { 
