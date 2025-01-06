@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const TONIC_API_URL = "https://api.publisher.tonic.com/v3"
 
@@ -21,25 +20,6 @@ serve(async (req) => {
     }
 
     console.log('Fetching campaigns with params:', { states, limit, offset, from, to, userId })
-
-    // Get user's username from Supabase
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', userId)
-      .single()
-
-    if (profileError) {
-      throw new Error(`Failed to fetch user profile: ${profileError.message}`)
-    }
-
-    const username = profile.username || 'unknown'
-    console.log('Fetching campaigns for username:', username)
 
     // First, get JWT token from Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
@@ -88,10 +68,11 @@ serve(async (req) => {
     const allCampaigns = await campaignsResponse.json()
     console.log('All campaigns from Tonic:', allCampaigns)
 
-    // Filter campaigns by username in campaign name
-    const userCampaigns = allCampaigns.data.filter(campaign => 
-      campaign.name.includes(`| ${username}`)
-    )
+    // Filter campaigns by username in campaign name (format: "name | username")
+    const userCampaigns = allCampaigns.data.filter(campaign => {
+      const parts = campaign.name.split('|')
+      return parts.length === 2 && parts[1].trim() === username
+    })
 
     // Apply date filtering if provided
     let dateFilteredCampaigns = userCampaigns
