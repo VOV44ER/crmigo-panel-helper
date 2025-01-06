@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Label } from "@/components/ui/label";
 
 interface Country {
   code: string;
@@ -37,6 +36,7 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onFocus={() => setIsOpen(true)}
+          onBlur={() => setTimeout(() => setIsOpen(false), 200)}
           className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         {isOpen && filteredCountries.length > 0 && (
@@ -53,12 +53,6 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
           </div>
         )}
       </div>
-      {selectedCountry && (
-        <div className="flex items-center gap-2 mt-2">
-          <Label>Selected:</Label>
-          <span className="text-sm font-medium">{selectedCountry.name}</span>
-        </div>
-      )}
     </div>
   );
 }

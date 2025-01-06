@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Label } from "@/components/ui/label";
 
 interface Offer {
   id: number;
@@ -51,6 +50,7 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onFocus={() => setIsOpen(true)}
+          onBlur={() => setTimeout(() => setIsOpen(false), 200)}
           className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         {isOpen && Object.keys(groupedOffers).length > 0 && (
@@ -74,12 +74,6 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
           </div>
         )}
       </div>
-      {selectedOffer && (
-        <div className="flex items-center gap-2 mt-2">
-          <Label>Selected:</Label>
-          <span className="text-sm font-medium">{selectedOffer.name}</span>
-        </div>
-      )}
     </div>
   );
 }

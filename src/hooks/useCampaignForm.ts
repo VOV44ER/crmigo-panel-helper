@@ -29,13 +29,6 @@ export const useCampaignForm = (onSuccess: () => void) => {
       const token = getTonicToken();
       if (!token) return;
 
-      console.log('Creating campaign with:', {
-        countryId: selectedCountry.code,
-        offerId: selectedOffer.id,
-        name: campaignName,
-        targetDomain: targetDomain || undefined
-      });
-
       const { error } = await supabase.functions.invoke('create-tonic-campaign', {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -58,7 +51,6 @@ export const useCampaignForm = (onSuccess: () => void) => {
       setCampaignName("");
       setTargetDomain("");
     } catch (error: any) {
-      console.error('Campaign creation error:', error);
       toast.error(error.message || "Failed to create campaign");
     }
   };
