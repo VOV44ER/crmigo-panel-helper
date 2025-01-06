@@ -1,9 +1,9 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -12,24 +12,45 @@ serve(async (req) => {
   }
 
   try {
-    // Get the Tonic API credentials from environment variables
-    const consumerKey = Deno.env.get('TONIC_CONSUMER_KEY');
-    const consumerSecret = Deno.env.get('TONIC_CONSUMER_SECRET');
-
-    if (!consumerKey || !consumerSecret) {
-      throw new Error('Tonic API credentials not configured');
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header provided');
     }
 
-    // Create Basic auth token for Tonic API
-    const credentials = btoa(`${consumerKey}:${consumerSecret}`);
-    const basicAuth = `Basic ${credentials}`;
+    // Extract the token
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      throw new Error('No token provided in authorization header');
+    }
 
-    console.log('Fetching offers from Tonic API...');
+    console.log('Fetching offers with token...');
+
+    // First, get JWT token from Tonic
+    const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
+        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+      }),
+    });
+
+    if (!authResponse.ok) {
+      const error = await authResponse.text();
+      console.error('Tonic API authentication failed:', error);
+      throw new Error('Failed to authenticate with Tonic API');
+    }
+
+    const { token: tonicToken } = await authResponse.json();
+    console.log('Successfully obtained Tonic JWT token');
 
     const response = await fetch('https://api.publisher.tonic.com/v4/offers', {
       method: 'GET',
       headers: {
-        'Authorization': basicAuth,
+        'Authorization': `Bearer ${tonicToken}`,
         'Accept': 'application/json',
       },
     });
@@ -72,4 +93,4 @@ serve(async (req) => {
       },
     );
   }
-})
+});
