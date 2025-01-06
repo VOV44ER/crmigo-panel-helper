@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { getTonicToken } from "@/utils/tokenUtils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface KeywordEditModalProps {
   isOpen: boolean;
@@ -21,30 +21,20 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
-    const token = getTonicToken();
-    if (!token) return;
-
     // Filter out empty keywords
     const filteredKeywords = keywords.filter(keyword => keyword.trim() !== "");
 
     try {
       setIsSaving(true);
-      const response = await fetch('https://api.publisher.tonic.com/privileged/v3/campaign/keywords', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('update-tonic-keywords', {
+        body: {
           campaign_id: campaignId,
           keywords: filteredKeywords,
           keyword_amount: Number(keywordAmount)
-        })
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to save keywords');
-      }
+      if (error) throw error;
 
       toast.success("Keywords saved successfully");
       onClose();
