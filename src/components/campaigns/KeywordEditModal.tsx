@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,38 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
   const [keywordAmount, setKeywordAmount] = useState("3");
   const [keywords, setKeywords] = useState(Array(3).fill(""));
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchExistingKeywords = async () => {
+      if (!isOpen || !campaignId) return;
+
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords', {
+          query: { campaign_id: campaignId }
+        });
+
+        if (error) throw error;
+
+        if (data.KwAmount && data.Keywords) {
+          setKeywordAmount(data.KwAmount.toString());
+          const newKeywords = Array(data.KwAmount).fill("");
+          data.Keywords.forEach((kw: string, index: number) => {
+            newKeywords[index] = kw;
+          });
+          setKeywords(newKeywords);
+        }
+      } catch (error) {
+        console.error('Error fetching keywords:', error);
+        toast.error("Failed to fetch existing keywords");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchExistingKeywords();
+  }, [isOpen, campaignId]);
 
   const handleSave = async () => {
     // Filter out empty keywords
@@ -84,28 +116,34 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
 
           <ScrollArea className="h-[40vh] pr-4">
             <div className="space-y-4">
-              {[...Array(Number(keywordAmount))].map((_, index) => (
-                <div key={index} className="space-y-2">
-                  <Label>Keyword #{index + 1}</Label>
-                  <Input
-                    value={keywords[index] || ""}
-                    onChange={(e) => {
-                      const newKeywords = [...keywords];
-                      newKeywords[index] = e.target.value;
-                      setKeywords(newKeywords);
-                    }}
-                    placeholder="Empty fields will be filled by us"
-                    className="bg-white"
-                  />
+              {isLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  Loading existing keywords...
                 </div>
-              ))}
+              ) : (
+                [...Array(Number(keywordAmount))].map((_, index) => (
+                  <div key={index} className="space-y-2">
+                    <Label>Keyword #{index + 1}</Label>
+                    <Input
+                      value={keywords[index] || ""}
+                      onChange={(e) => {
+                        const newKeywords = [...keywords];
+                        newKeywords[index] = e.target.value;
+                        setKeywords(newKeywords);
+                      }}
+                      placeholder="Empty fields will be filled by us"
+                      className="bg-white"
+                    />
+                  </div>
+                ))
+              )}
             </div>
           </ScrollArea>
 
           <Button 
             onClick={handleSave} 
             className="w-full mt-4"
-            disabled={isSaving}
+            disabled={isSaving || isLoading}
           >
             {isSaving ? "Saving..." : "Save Keywords"}
           </Button>
