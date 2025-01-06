@@ -55,9 +55,9 @@ const Keywords = () => {
   const { data: response, isLoading } = useQuery({
     queryKey: ['keywords', dateRange, username],
     queryFn: async () => {
-      if (!username) return null;
+      if (!username || !dateRange.from || !dateRange.to) return null;
 
-      const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords', {
+      const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords-stats', {
         body: { 
           from: format(dateRange.from, "yyyy-MM-dd"),
           to: format(dateRange.to, "yyyy-MM-dd"),
@@ -65,10 +65,13 @@ const Keywords = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching keywords:', error);
+        throw error;
+      }
       return data;
     },
-    enabled: !!username,
+    enabled: !!username && !!dateRange.from && !!dateRange.to,
   });
 
   const keywords = response?.data || [];

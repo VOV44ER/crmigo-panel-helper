@@ -5,8 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const TONIC_API_URL = "https://api.publisher.tonic.com/v4"
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -14,7 +12,15 @@ serve(async (req) => {
   }
 
   try {
-    const { from, to, orderField, orderOrientation, offset, campaignName } = await req.json()
+    const { from, to, username } = await req.json()
+
+    // Enhanced validation
+    if (!from || !to) {
+      console.error('Missing date range parameters')
+      throw new Error('Date range is required')
+    }
+
+    console.log('Processing request for date range:', { from, to, username })
 
     // First, get JWT token from Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
@@ -36,38 +42,42 @@ serve(async (req) => {
     }
 
     const { token: tonicToken } = await authResponse.json()
+    console.log('Successfully authenticated with Tonic')
 
     // Build the URL with query parameters
-    const url = new URL(`${TONIC_API_URL}/statistics/keywords`)
-    url.searchParams.append('from', from)
-    url.searchParams.append('to', to)
-    url.searchParams.append('orderField', orderField)
-    url.searchParams.append('orderOrientation', orderOrientation)
-    url.searchParams.append('offset', offset.toString())
-    if (campaignName) {
-      url.searchParams.append('campaignName', campaignName)
+    const url = new URL('https://api.publisher.tonic.com/v4/statistics/keywords')
+    url.searchParams.set('from', from)
+    url.searchParams.set('to', to)
+    url.searchParams.set('orderField', 'clicks')
+    url.searchParams.set('orderOrientation', 'desc')
+    url.searchParams.set('offset', '0')
+    if (username) {
+      url.searchParams.set('campaignName', username)
     }
 
-    // Fetch keywords stats from Tonic with explicit headers
-    const response = await fetch(url.toString(), {
+    console.log('Fetching keywords from URL:', url.toString())
+
+    // Fetch keywords from Tonic API
+    const response = await fetch(url, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'Authorization': `Bearer ${tonicToken}`,
-      }
+      },
     })
 
     if (!response.ok) {
-      const error = await response.text()
-      console.error('Tonic API error:', error)
-      throw new Error(`Failed to fetch keywords stats: ${error}`)
+      const errorText = await response.text()
+      console.error('Tonic API error:', errorText)
+      throw new Error(`Failed to fetch keywords stats: ${errorText}`)
     }
 
-    const result = await response.json()
-    console.log('Successfully fetched keywords stats:', result)
+    const data = await response.json()
+    console.log('Successfully fetched keywords statistics')
 
     return new Response(
-      JSON.stringify(result),
+      JSON.stringify(data),
       { 
         headers: { 
           ...corsHeaders, 
