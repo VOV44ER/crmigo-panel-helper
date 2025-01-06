@@ -28,7 +28,7 @@ serve(async (req) => {
     }
 
     const tonicToken = authHeader.replace('Bearer ', '')
-    console.log('Using Tonic token from request:', tonicToken)
+    console.log('Using Tonic token:', tonicToken)
     
     // Create campaign in Tonic
     const response = await fetch(`${TONIC_API_URL}/campaigns/create`, {
@@ -48,10 +48,12 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text()
+      console.error('Tonic API error:', errorText)
       throw new Error(`Failed to create campaign: ${errorText}`)
     }
 
     const campaignData = await response.json()
+    console.log('Campaign created in Tonic:', campaignData)
 
     // Store campaign in Supabase
     const supabase = createClient(
@@ -84,6 +86,7 @@ serve(async (req) => {
       },
     )
   } catch (error) {
+    console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 

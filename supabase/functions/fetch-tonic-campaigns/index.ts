@@ -27,7 +27,7 @@ serve(async (req) => {
     }
 
     const tonicToken = authHeader.replace('Bearer ', '')
-    console.log('Using Tonic token from request:', tonicToken)
+    console.log('Using Tonic token:', tonicToken)
 
     // Get user's campaign IDs from Supabase
     const supabase = createClient(
@@ -69,8 +69,6 @@ serve(async (req) => {
     const filteredCampaigns = allCampaigns.data.filter(campaign => 
       userCampaignIds.has(campaign.id.toString())
     )
-
-    console.log('Filtered campaigns for user:', filteredCampaigns)
 
     // Apply date filtering if provided
     let dateFilteredCampaigns = filteredCampaigns
