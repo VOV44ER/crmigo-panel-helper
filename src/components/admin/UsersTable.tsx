@@ -29,7 +29,7 @@ export const UsersTable = ({ users, onDeleteUser }: UsersTableProps) => {
         </TableHeader>
         <TableBody>
           {users.map((user) => (
-            <TableRow key={user.id}>
+            <TableRow key={user.id} className="cursor-pointer hover:bg-gray-50">
               <TableCell>{user.full_name}</TableCell>
               <TableCell>{user.username}</TableCell>
               <TableCell>{user.password_text}</TableCell>
@@ -38,6 +38,7 @@ export const UsersTable = ({ users, onDeleteUser }: UsersTableProps) => {
                   variant="destructive"
                   size="sm"
                   onClick={() => onDeleteUser(user.id)}
+                  className="cursor-pointer"
                 >
                   <Trash className="h-4 w-4" />
                 </Button>

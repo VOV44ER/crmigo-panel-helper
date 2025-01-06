@@ -108,7 +108,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
           </TableHeader>
           <TableBody>
             {campaigns.map((campaign) => (
-              <TableRow key={campaign.id}>
+              <TableRow key={campaign.id} className="cursor-pointer hover:bg-gray-50">
                 <TableCell>
                   <Badge variant="secondary" className={getStatusColor(campaign.status)}>
                     {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
@@ -125,6 +125,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
                     variant="ghost"
                     size="icon"
                     onClick={() => copyTrackingLink(campaign.trackingLink)}
+                    className="cursor-pointer"
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
@@ -147,6 +148,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
                     variant="ghost"
                     size="icon"
                     onClick={() => setSelectedCampaign(campaign)}
+                    className="cursor-pointer"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>

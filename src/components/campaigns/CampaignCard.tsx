@@ -18,7 +18,7 @@ const CampaignCard = ({ campaign, onEdit }: CampaignCardProps) => {
   };
 
   return (
-    <Card>
+    <Card className="cursor-pointer hover:shadow-lg transition-shadow">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex flex-col space-y-1.5">
           <Badge variant="secondary" className={getStatusColor(campaign.status)}>
@@ -27,10 +27,10 @@ const CampaignCard = ({ campaign, onEdit }: CampaignCardProps) => {
           <h2 className="font-semibold text-base">{campaign.name}</h2>
         </div>
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" onClick={copyTrackingLink}>
+          <Button variant="ghost" size="icon" onClick={copyTrackingLink} className="cursor-pointer">
             <Copy className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={onEdit}>
+          <Button variant="ghost" size="icon" onClick={onEdit} className="cursor-pointer">
             <Edit className="h-4 w-4" />
           </Button>
         </div>

@@ -47,7 +47,7 @@ const CampaignFilters = ({
           variant={selectedStates.includes('active') ? "default" : "outline"}
           onClick={() => toggleState('active')}
           className={cn(
-            "flex-1 sm:flex-none",
+            "flex-1 sm:flex-none cursor-pointer",
             selectedStates.includes('active') 
               ? "bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900"
               : "hover:bg-green-100 hover:text-green-800"
@@ -59,7 +59,7 @@ const CampaignFilters = ({
           variant={selectedStates.includes('pending') ? "default" : "outline"}
           onClick={() => toggleState('pending')}
           className={cn(
-            "flex-1 sm:flex-none",
+            "flex-1 sm:flex-none cursor-pointer",
             selectedStates.includes('pending')
               ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-200 hover:text-yellow-900"
               : "hover:bg-yellow-100 hover:text-yellow-800"
@@ -71,7 +71,7 @@ const CampaignFilters = ({
           variant={selectedStates.includes('stopped') ? "default" : "outline"}
           onClick={() => toggleState('stopped')}
           className={cn(
-            "flex-1 sm:flex-none",
+            "flex-1 sm:flex-none cursor-pointer",
             selectedStates.includes('stopped')
               ? "bg-red-100 text-red-800 hover:bg-red-200 hover:text-red-900"
               : "hover:bg-red-100 hover:text-red-800"
