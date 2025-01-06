@@ -77,15 +77,14 @@ const AdminPanel = () => {
   const handleCreateUser = async (newUser: NewUser) => {
     setLoading(true);
     try {
-      // Changed email domain from @admin.com to @user.com for regular users
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      // Use admin API to create user without auto-sign-in
+      const { data: authData, error: signUpError } = await supabase.auth.admin.createUser({
         email: `${newUser.username}@user.com`,
         password: newUser.password,
-        options: {
-          data: {
-            username: newUser.username,
-            full_name: newUser.full_name
-          }
+        email_confirm: true,
+        user_metadata: {
+          username: newUser.username,
+          full_name: newUser.full_name
         }
       });
 
@@ -114,21 +113,11 @@ const AdminPanel = () => {
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      // Get the current user's session
-      const { data: { session } } = await supabase.auth.getSession();
-      const currentUserId = session?.user?.id;
-
       const { error } = await supabase.rpc('delete_user_with_profile', {
         user_id: userId
       });
 
       if (error) throw error;
-
-      // If the deleted user is the current user, sign them out
-      if (currentUserId === userId) {
-        await supabase.auth.signOut();
-        navigate("/auth");
-      }
 
       toast.success("User deleted successfully!");
       refetch();
