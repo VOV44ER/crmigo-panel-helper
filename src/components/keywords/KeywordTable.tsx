@@ -8,7 +8,7 @@ interface KeywordTableProps {
   keywords: KeywordStats[];
 }
 
-const KeywordTable = ({ keywords }: KeywordTableProps) => {
+export const KeywordTable = ({ keywords }: KeywordTableProps) => {
   return (
     <div className="overflow-x-auto">
       <Table>

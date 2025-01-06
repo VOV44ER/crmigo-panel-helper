@@ -7,9 +7,9 @@ import { useQuery } from "@tanstack/react-query";
 import CampaignFilters from "@/components/campaigns/CampaignFilters";
 import { DateRange } from "react-day-picker";
 import { addDays, format } from "date-fns";
-import { KeywordTable } from "@/components/keywords/KeywordTable";
-import { KeywordCard } from "@/components/keywords/KeywordCard";
-import { EmptyState } from "@/components/keywords/EmptyState";
+import KeywordTable from "@/components/keywords/KeywordTable";
+import KeywordCard from "@/components/keywords/KeywordCard";
+import EmptyState from "@/components/keywords/EmptyState";
 import "flag-icons/css/flag-icons.min.css";
 
 const Keywords = () => {

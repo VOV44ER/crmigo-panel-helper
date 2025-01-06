@@ -1,6 +1,6 @@
 import { FileX } from "lucide-react";
 
-const EmptyState = () => {
+export const EmptyState = () => {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4">
       <FileX className="h-12 w-12 text-gray-400 mb-4" />

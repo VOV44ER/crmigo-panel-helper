@@ -23,7 +23,7 @@ interface KeywordCardProps {
   rpc: number;
 }
 
-const KeywordCard = ({ keyword, campaigns, countries, offers, clicks, revenue, rpc }: KeywordCardProps) => {
+export const KeywordCard = ({ keyword, campaigns, countries, offers, clicks, revenue, rpc }: KeywordCardProps) => {
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-2">
