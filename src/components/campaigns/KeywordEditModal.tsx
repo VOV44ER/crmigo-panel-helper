@@ -24,22 +24,29 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && campaignId) {
       setKeywords(Array(Number(keywordAmount)).fill(""));
       fetchExistingKeywords();
     }
   }, [isOpen, campaignId]);
 
   const fetchExistingKeywords = async () => {
-    if (!campaignId) return;
+    if (!campaignId) {
+      toast.error("Campaign ID is missing");
+      return;
+    }
 
     try {
       setIsLoading(true);
+      console.log('Fetching keywords for campaign:', campaignId);
+      
       const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords', {
-        body: { campaign_id: campaignId }
+        body: { campaign_id: campaignId.toString() }
       });
 
       if (error) throw error;
+
+      console.log('Received keywords data:', data);
 
       if (data?.KwAmount && Array.isArray(data?.Keywords)) {
         setKeywordAmount(data.KwAmount.toString());
@@ -66,7 +73,7 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
       setIsSaving(true);
       const { data, error } = await supabase.functions.invoke('update-tonic-keywords', {
         body: {
-          campaign_id: campaignId,
+          campaign_id: campaignId.toString(),
           keywords: filteredKeywords,
           keyword_amount: Number(keywordAmount)
         }
