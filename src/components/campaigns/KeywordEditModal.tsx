@@ -25,6 +25,7 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
 
   useEffect(() => {
     if (isOpen) {
+      setKeywords(Array(Number(keywordAmount)).fill(""));
       fetchExistingKeywords();
     }
   }, [isOpen, campaignId]);
