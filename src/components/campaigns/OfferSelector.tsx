@@ -59,7 +59,7 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
         <Command>
           <CommandInput placeholder="Search offer..." />
           <CommandEmpty>No offer found.</CommandEmpty>
-          <CommandGroup className="max-h-[300px] overflow-y-auto">
+          <div className="max-h-[300px] overflow-y-auto">
             {Object.entries(offersByVertical).map(([vertical, verticalOffers]) => (
               <CommandGroup key={vertical} heading={vertical}>
                 {verticalOffers.map((offer) => (
@@ -82,7 +82,7 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
                 ))}
               </CommandGroup>
             ))}
-          </CommandGroup>
+          </div>
         </Command>
       </PopoverContent>
     </Popover>

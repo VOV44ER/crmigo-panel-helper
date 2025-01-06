@@ -45,7 +45,7 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
         <Command>
           <CommandInput placeholder="Search country..." />
           <CommandEmpty>No country found.</CommandEmpty>
-          <CommandGroup className="max-h-[200px] overflow-y-auto">
+          <CommandGroup>
             {validCountries.map((country) => (
               <CommandItem
                 key={country.code}
