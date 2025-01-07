@@ -4,7 +4,6 @@ import { corsHeaders } from "../_shared/cors.ts"
 const TIMEOUT_MS = 15000; // 15 second timeout
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -25,6 +24,28 @@ serve(async (req) => {
       // Not logging tokens for security
     });
 
+    // First, get JWT token from Tonic
+    const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
+        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+      }),
+    });
+
+    if (!authResponse.ok) {
+      const error = await authResponse.text();
+      console.error('Tonic API authentication failed:', error);
+      throw new Error('Failed to authenticate with Tonic API');
+    }
+
+    const { token: tonicToken } = await authResponse.json();
+    console.log('Successfully obtained Tonic JWT token');
+
     // Create an AbortController for timeout management
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -36,7 +57,8 @@ serve(async (req) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Deno.env.get('TONIC_TOKEN')}`,
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${tonicToken}`,
           },
           body: JSON.stringify({
             'campaign_id': campaign_id,
@@ -54,9 +76,9 @@ serve(async (req) => {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.text();
         console.error('Tonic API error:', errorData);
-        throw new Error(JSON.stringify(errorData));
+        throw new Error(errorData);
       }
 
       const data = await response.json();
