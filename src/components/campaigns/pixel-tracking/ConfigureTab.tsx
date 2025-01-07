@@ -24,6 +24,7 @@ export const ConfigureTab = ({
   isLoading,
 }: ConfigureTabProps) => {
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleSavePixel = async () => {
     try {
@@ -51,6 +52,26 @@ export const ConfigureTab = ({
       toast.error('Failed to save pixel configuration');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeletePixel = async () => {
+    try {
+      setIsDeleting(true);
+      const { error } = await supabase.functions.invoke('delete-tonic-pixel', {
+        body: { campaign_id: campaignId }
+      });
+
+      if (error) throw error;
+
+      toast.success("Pixel configuration deleted successfully");
+      setPixelId('');
+      setAccessToken('');
+    } catch (error) {
+      console.error('Error deleting pixel:', error);
+      toast.error('Failed to delete pixel configuration');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -95,10 +116,11 @@ export const ConfigureTab = ({
         <Button 
           type="button" 
           variant="destructive"
-          disabled={true}
+          disabled={!pixelId || isDeleting || isLoading}
           className="w-24"
+          onClick={handleDeletePixel}
         >
-          Delete
+          {isDeleting ? "..." : "Delete"}
         </Button>
       </div>
     </div>
