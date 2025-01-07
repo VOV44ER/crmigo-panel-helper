@@ -43,7 +43,7 @@ export const ConfigureTab = ({
           campaign_id: campaignId,
           pixel_id: pixelId,
           access_token: accessToken,
-          event_name: camelCaseEventType,
+          event_type: camelCaseEventType,
           revenue_type: "preestimated_revenue"
         }
       });

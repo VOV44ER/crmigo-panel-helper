@@ -1,10 +1,9 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -12,9 +11,9 @@ serve(async (req) => {
   }
 
   try {
-    const { campaign_id, pixel_id, access_token, event_name, revenue_type } = await req.json();
+    const { campaign_id, pixel_id, access_token, event_type, revenue_type } = await req.json();
 
-    console.log('Received request with params:', { campaign_id, pixel_id, access_token, event_name, revenue_type });
+    console.log('Received request with params:', { campaign_id, pixel_id, access_token, event_type, revenue_type });
 
     // First authenticate with Tonic API
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
@@ -55,7 +54,7 @@ serve(async (req) => {
         campaign_id,
         pixel_id,
         access_token,
-        event_name,
+        event_type,
         revenue_type
       }),
     });
