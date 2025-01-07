@@ -11,6 +11,7 @@ interface ConfigureTabProps {
   setAccessToken: (value: string) => void;
   campaignId: string;
   tabsRef: React.RefObject<HTMLDivElement>;
+  isLoading: boolean;
 }
 
 export const ConfigureTab = ({
@@ -20,6 +21,7 @@ export const ConfigureTab = ({
   setAccessToken,
   campaignId,
   tabsRef,
+  isLoading,
 }: ConfigureTabProps) => {
   const [isSaving, setIsSaving] = useState(false);
 
@@ -66,6 +68,7 @@ export const ConfigureTab = ({
           onChange={(e) => setPixelId(e.target.value)}
           placeholder="Enter pixel ID"
           required
+          disabled={isLoading}
         />
       </div>
 
@@ -76,6 +79,7 @@ export const ConfigureTab = ({
           onChange={(e) => setAccessToken(e.target.value)}
           placeholder="Enter access token"
           required
+          disabled={isLoading}
         />
       </div>
 
@@ -84,7 +88,7 @@ export const ConfigureTab = ({
           type="button" 
           className="flex-1"
           onClick={handleSavePixel}
-          disabled={isSaving}
+          disabled={isSaving || isLoading}
         >
           {isSaving ? "Saving..." : "Save Configuration"}
         </Button>
