@@ -55,10 +55,12 @@ export const PixelTrackingModal = ({ isOpen, onClose, campaignName, campaignId }
       const { data, error } = await supabase.functions.invoke('invoke-tonic-pixel', {
         body: {
           campaign_id: campaignId,
-          pixel_id: pixelId,
-          event_type: camelCaseEventType,
-          access_token: accessToken,
-          test_token: testToken,
+          'pixel-pixel_id': pixelId,
+          'tiktok_access_token': accessToken,
+          'pixel-test-token': testToken,
+          'pixel-event_type': camelCaseEventType,
+          'pixel-revenue_choice': 'preestimated_revenue',
+          'pixel-target': 'tiktok'
         }
       });
 

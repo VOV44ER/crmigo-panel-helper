@@ -8,16 +8,22 @@ serve(async (req) => {
   }
 
   try {
-    const { campaign_id, pixel_id, event_type, access_token, test_token } = await req.json();
+    const { 
+      campaign_id, 
+      'pixel-pixel_id': pixelId,
+      'tiktok_access_token': accessToken,
+      'pixel-test-token': testToken,
+      'pixel-event_type': eventType,
+    } = await req.json();
 
     console.log('Invoking pixel with params:', {
       campaign_id,
-      pixel_id,
-      event_type,
+      pixelId,
+      eventType,
       // Not logging tokens for security
     });
 
-    const response = await fetch(`https://api.publisher.tonic.com/privileged/display/details/pixel/${pixel_id}`, {
+    const response = await fetch(`https://api.publisher.tonic.com/privileged/display/details/pixel/${pixelId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -25,10 +31,10 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         'campaign_id': campaign_id,
-        'pixel-pixel_id': pixel_id,
-        'tiktok_access_token': access_token,
-        'pixel-test-token': test_token,
-        'pixel-event_type': event_type,
+        'pixel-pixel_id': pixelId,
+        'tiktok_access_token': accessToken,
+        'pixel-test-token': testToken,
+        'pixel-event_type': eventType,
         'pixel-revenue_choice': 'preestimated_revenue',
         'pixel-target': 'tiktok'
       }),
