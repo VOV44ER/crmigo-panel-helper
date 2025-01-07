@@ -17,7 +17,7 @@ serve(async (req) => {
     console.log('Received request with params:', { campaign_id, pixel_id, access_token, event_name, revenue_type });
 
     // First authenticate with Tonic API
-    const authResponse = await fetch('https://api.publisher.tonic.com/privileged/auth', {
+    const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -40,6 +40,8 @@ serve(async (req) => {
       console.error('No token in auth response:', authData);
       throw new Error('No token received from Tonic API');
     }
+
+    console.log('Making request to save pixel with token:', authData.token);
 
     // Save pixel configuration
     const response = await fetch('https://api.publisher.tonic.com/privileged/v3/campaign/pixel/tiktok', {
