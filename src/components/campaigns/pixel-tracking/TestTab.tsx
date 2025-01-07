@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -7,8 +8,6 @@ interface TestTabProps {
   testToken: string;
   setTestToken: (value: string) => void;
   campaignId: string;
-  pixelId: string;
-  accessToken: string;
   onClose: () => void;
 }
 
@@ -16,41 +15,29 @@ export const TestTab = ({
   testToken,
   setTestToken,
   campaignId,
-  pixelId,
-  accessToken,
   onClose,
 }: TestTabProps) => {
+  const [isInvoking, setIsInvoking] = useState(false);
+
   const handleInvokePixel = async () => {
     try {
+      setIsInvoking(true);
       const { data, error } = await supabase.functions.invoke('invoke-tonic-pixel', {
         body: {
           campaign_id: campaignId,
-          'pixel-pixel_id': pixelId,
-          'tiktok_access_token': accessToken,
-          'pixel-test-token': testToken,
-          'pixel-revenue_choice': 'preestimated_revenue',
-          'pixel-target': 'tiktok'
+          token: testToken,
         }
       });
 
       if (error) throw error;
 
-      // Show success messages
-      if (data.successes?.length > 0) {
-        data.successes.forEach((message: string) => toast.success(message));
-      }
-
-      // Show error messages
-      if (data.errors?.length > 0) {
-        data.errors.forEach((message: string) => toast.error(message));
-      }
-
-      if (!data.errors?.length) {
-        onClose();
-      }
+      toast.success('Pixel invoked successfully');
+      onClose();
     } catch (error) {
       console.error('Error invoking pixel:', error);
       toast.error('Failed to invoke pixel');
+    } finally {
+      setIsInvoking(false);
     }
   };
 
@@ -70,8 +57,9 @@ export const TestTab = ({
         type="button" 
         className="w-full"
         onClick={handleInvokePixel}
+        disabled={isInvoking}
       >
-        Invoke Pixel
+        {isInvoking ? "Invoking..." : "Invoke Pixel"}
       </Button>
     </div>
   );
