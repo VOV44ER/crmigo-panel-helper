@@ -36,7 +36,7 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
 
   const handleSelect = (offer: Offer) => {
     onOfferSelect(offer);
-    setSearchTerm(offer.name);
+    setSearchTerm(""); // Clear the search term after selection
     setIsOpen(false);
   };
 
@@ -47,7 +47,10 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
           type="text"
           placeholder={isLoading ? "Loading offers..." : "Search and select offer..."}
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            if (!isOpen) setIsOpen(true);
+          }}
           onFocus={() => setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 200)}
           className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-text"
@@ -56,7 +59,7 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
           <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
             {Object.entries(groupedOffers).map(([vertical, verticalOffers]) => (
               <div key={vertical}>
-                <div className="px-3 py-1 bg-gray-50 text-sm font-semibold">
+                <div className="px-3 py-1 bg-gray-50 text-sm font-semibold sticky top-0">
                   {vertical}
                 </div>
                 {verticalOffers.map((offer) => (

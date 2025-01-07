@@ -23,7 +23,7 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
 
   const handleSelect = (country: Country) => {
     onCountrySelect(country);
-    setSearchTerm(country.name);
+    setSearchTerm(""); // Clear the search term after selection
     setIsOpen(false);
   };
 
@@ -34,7 +34,10 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
           type="text"
           placeholder={isLoading ? "Loading countries..." : "Search and select country..."}
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            if (!isOpen) setIsOpen(true);
+          }}
           onFocus={() => setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 200)}
           className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-text"
@@ -44,9 +47,10 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
             {filteredCountries.map((country) => (
               <div
                 key={country.code}
-                className="px-3 py-2 cursor-pointer hover:bg-gray-100"
+                className="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center gap-2"
                 onClick={() => handleSelect(country)}
               >
+                <span className={`fi fi-${country.code.toLowerCase()}`} />
                 {country.name}
               </div>
             ))}

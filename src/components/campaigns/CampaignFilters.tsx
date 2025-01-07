@@ -50,7 +50,7 @@ const CampaignFilters = ({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-4">
         {!hideStateFilter && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {['active', 'pending', 'stopped'].map((state) => (
               <Button
                 key={state}
@@ -62,7 +62,7 @@ const CampaignFilters = ({
                   onStateChange(newStates);
                 }}
                 className={cn(
-                  "capitalize",
+                  "capitalize whitespace-nowrap",
                   selectedStates.includes(state) && state === 'active' && "bg-green-500 hover:bg-green-600",
                   selectedStates.includes(state) && state === 'pending' && "bg-yellow-500 hover:bg-yellow-600",
                   selectedStates.includes(state) && state === 'stopped' && "bg-red-500 hover:bg-red-600"
@@ -78,7 +78,7 @@ const CampaignFilters = ({
             <Button
               variant="outline"
               className={cn(
-                "w-[280px] justify-start text-left font-normal",
+                "w-full sm:w-[280px] justify-start text-left font-normal",
                 !dateRange && "text-muted-foreground"
               )}
             >
@@ -155,10 +155,11 @@ const CampaignFilters = ({
                   variant="secondary"
                   size="sm"
                   onClick={() => onCountryChange(selectedCountries.filter(c => c.code !== country.code))}
+                  className="flex items-center gap-2"
                 >
-                  <span className={`fi fi-${country.code.toLowerCase()} mr-2`} />
-                  {country.name}
-                  <span className="ml-2">×</span>
+                  <span className={`fi fi-${country.code.toLowerCase()}`} />
+                  <span className="max-w-[150px] truncate">{country.name}</span>
+                  <span className="ml-1">×</span>
                 </Button>
               ))}
             </div>
@@ -185,9 +186,10 @@ const CampaignFilters = ({
                   variant="secondary"
                   size="sm"
                   onClick={() => onOfferChange(selectedOffers.filter(o => o.id !== offer.id))}
+                  className="flex items-center gap-2"
                 >
-                  {offer.name}
-                  <span className="ml-2">×</span>
+                  <span className="max-w-[150px] truncate">{offer.name}</span>
+                  <span className="ml-1">×</span>
                 </Button>
               ))}
             </div>
