@@ -66,8 +66,12 @@ serve(async (req) => {
       params.append('pixel-revenue_choice', 'preestimated_revenue');
       params.append('pixel-target', 'tiktok');
 
+      // Log the request URL and params for debugging
+      console.log('Request URL:', `https://publisher.tonic.com/privileged/display/details/pixel/${pixelId}`);
+      console.log('Request params:', params.toString());
+
       const response = await fetch(
-        `https://publisher.tonic.com/privileged/display/details/pixel/${pixelId}`,
+        'https://publisher.tonic.com/privileged/display/details/pixel',
         {
           method: 'POST',
           headers: {
