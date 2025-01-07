@@ -5,7 +5,7 @@ import CampaignCard from "./CampaignCard";
 import { useState } from "react";
 import { KeywordEditModal } from "./KeywordEditModal";
 import { PixelTrackingModal } from "./PixelTrackingModal";
-import { TableHeader } from "./TableHeader";
+import { CampaignTableHeader } from "./TableHeader";
 import { CampaignTableRow } from "./TableRow";
 import { LoadingState } from "./LoadingState";
 
@@ -23,7 +23,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
       <div>
         <div className="hidden sm:block">
           <Table>
-            <TableHeader />
+            <CampaignTableHeader />
             <LoadingState />
           </Table>
         </div>
@@ -41,7 +41,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
       {/* Desktop Table View */}
       <div className="hidden sm:block overflow-x-auto">
         <Table>
-          <TableHeader />
+          <CampaignTableHeader />
           <TableBody>
             {campaigns.map((campaign) => (
               <CampaignTableRow
@@ -72,13 +72,13 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
         isOpen={!!selectedCampaign}
         onClose={() => setSelectedCampaign(null)}
         campaignName={selectedCampaign?.name || ""}
-        campaignId={selectedCampaign?.id.toString()}
+        campaignId={selectedCampaign?.id.toString() || ""}
       />
       <PixelTrackingModal
         isOpen={!!pixelTrackingCampaign}
         onClose={() => setPixelTrackingCampaign(null)}
         campaignName={pixelTrackingCampaign?.name || ""}
-        campaignId={pixelTrackingCampaign?.id.toString()}
+        campaignId={pixelTrackingCampaign?.id.toString() || ""}
       />
     </div>
   );

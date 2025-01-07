@@ -1,11 +1,11 @@
 import {
   TableHead,
-  TableHeader,
+  TableHeader as UITableHeader,
   TableRow,
 } from "@/components/ui/table";
 
-export const TableHeader = () => (
-  <TableHeader>
+export const CampaignTableHeader = () => (
+  <UITableHeader>
     <TableRow>
       <TableHead className="w-24">Status</TableHead>
       <TableHead className="w-20">Id</TableHead>
@@ -24,5 +24,5 @@ export const TableHeader = () => (
       <TableHead className="w-24 text-right">Revenue</TableHead>
       <TableHead className="w-24 text-center">Edit</TableHead>
     </TableRow>
-  </TableHeader>
+  </UITableHeader>
 );
