@@ -51,9 +51,8 @@ serve(async (req) => {
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     try {
-      // Updated URL to match the correct endpoint
       const response = await fetch(
-        `https://publisher.tonic.com/privileged/display/details/pixel/${pixelId}`,
+        `https://api.publisher.tonic.com/privileged/display/details/pixel/${pixelId}`,
         {
           method: 'POST',
           headers: {
