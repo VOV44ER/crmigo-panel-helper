@@ -41,12 +41,17 @@ serve(async (req) => {
     });
 
     if (!authResponse.ok) {
-      const error = await authResponse.text();
-      console.error('Tonic API authentication failed:', error);
-      throw new Error(`Failed to authenticate with Tonic API: ${error}`);
+      const errorText = await authResponse.text();
+      console.error('Tonic API authentication failed. Status:', authResponse.status, 'Response:', errorText);
+      throw new Error(`Failed to authenticate with Tonic API: ${errorText}`);
     }
 
-    const { token: tonicToken } = await authResponse.json();
+    const authData = await authResponse.json();
+    if (!authData.token) {
+      console.error('No token in auth response:', authData);
+      throw new Error('No token received from Tonic API');
+    }
+
     console.log('Successfully obtained Tonic JWT token');
 
     // Create an AbortController for timeout management
@@ -66,8 +71,8 @@ serve(async (req) => {
       params.append('pixel-revenue_choice', 'preestimated_revenue');
       params.append('pixel-target', 'tiktok');
 
-      // Log the request URL and params for debugging
-      console.log('Request URL:', `https://publisher.tonic.com/privileged/display/details/pixel/${pixelId}`);
+      // Log the request details
+      console.log('Request URL:', 'https://publisher.tonic.com/privileged/display/details/pixel');
       console.log('Request params:', params.toString());
 
       const response = await fetch(
@@ -76,7 +81,7 @@ serve(async (req) => {
           method: 'POST',
           headers: {
             'Accept': 'application/json',
-            'Authorization': `Bearer ${tonicToken}`,
+            'Authorization': `Bearer ${authData.token}`,
             'Content-Type': 'application/x-www-form-urlencoded',
           },
           body: params.toString(),
@@ -86,33 +91,34 @@ serve(async (req) => {
 
       clearTimeout(timeoutId);
 
-      // Log response details for debugging
+      // Log response details
       console.log('Tonic API response status:', response.status);
       console.log('Tonic API response headers:', Object.fromEntries(response.headers.entries()));
 
-      if (!response.ok) {
-        const contentType = response.headers.get('content-type');
-        let errorMessage;
-        
-        if (contentType?.includes('application/json')) {
-          const errorData = await response.json();
-          errorMessage = JSON.stringify(errorData);
-        } else {
-          const errorText = await response.text();
-          console.error('Raw error response:', errorText);
-          errorMessage = `Non-JSON error response: ${errorText.substring(0, 200)}...`;
-        }
-        
-        console.error('Tonic API error:', errorMessage);
-        throw new Error(`Tonic API error: ${errorMessage}`);
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (error) {
+        console.error('Failed to parse response as JSON:', error);
+        throw new Error(`Invalid JSON response from Tonic API: ${responseText.substring(0, 200)}...`);
       }
 
-      const data = await response.json();
-      console.log('Tonic API response data:', data);
+      if (!response.ok) {
+        console.error('Tonic API error response:', responseData);
+        throw new Error(`Tonic API error: ${JSON.stringify(responseData)}`);
+      }
 
-      return new Response(JSON.stringify(data), {
+      return new Response(JSON.stringify({
+        data: responseData,
+        successes: ['Pixel tracking successfully invoked'],
+        errors: []
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+
     } catch (error) {
       if (error.name === 'AbortError') {
         console.error('Request timed out');
