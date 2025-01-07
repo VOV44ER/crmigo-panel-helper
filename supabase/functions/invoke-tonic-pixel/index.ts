@@ -54,24 +54,25 @@ serve(async (req) => {
     try {
       console.log(`Making request to Tonic API with pixel ID: ${pixelId}`);
       
+      // Create FormData and append all fields
+      const formData = new FormData();
+      formData.append('campaign_id', campaign_id);
+      formData.append('pixel-pixel_id', pixelId);
+      formData.append('tiktok_access_token', accessToken);
+      formData.append('pixel-test-token', testToken);
+      formData.append('pixel-event_type', eventType);
+      formData.append('pixel-revenue_choice', 'preestimated_revenue');
+      formData.append('pixel-target', 'tiktok');
+
       const response = await fetch(
         `https://publisher.tonic.com/privileged/display/details/pixel/${pixelId}`,
         {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
             'Accept': 'application/json',
             'Authorization': `Bearer ${tonicToken}`,
           },
-          body: JSON.stringify({
-            'campaign_id': campaign_id,
-            'pixel-pixel_id': pixelId,
-            'tiktok_access_token': accessToken,
-            'pixel-test-token': testToken,
-            'pixel-event_type': eventType,
-            'pixel-revenue_choice': 'preestimated_revenue',
-            'pixel-target': 'tiktok'
-          }),
+          body: formData,
           signal: controller.signal,
         }
       );
