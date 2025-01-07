@@ -40,11 +40,17 @@ export const TestTab = ({
 
       if (error) throw error;
 
-      toast.success('Pixel invoked successfully');
+      // Check if the response indicates an error
+      if (data?.data?.success === false) {
+        toast.error(data.data.message || 'Failed to invoke pixel');
+        return;
+      }
+
+      toast.success(data?.message || 'Pixel invoked successfully');
       onClose();
     } catch (error) {
       console.error('Error invoking pixel:', error);
-      toast.error('Failed to invoke pixel');
+      toast.error(error.message || 'Failed to invoke pixel');
     } finally {
       setIsInvoking(false);
     }

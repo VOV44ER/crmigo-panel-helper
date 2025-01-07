@@ -46,26 +46,28 @@ serve(async (req) => {
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Invoke error:', errorText);
-      throw new Error('Failed to invoke pixel');
-    }
-
     const result = await response.json();
     console.log('Invoke result:', result);
 
+    // Check if the response indicates an error
+    if (!response.ok || (result.data && result.data.success === false)) {
+      const errorMessage = result.data?.message || 'Failed to invoke pixel';
+      throw new Error(errorMessage);
+    }
+
     return new Response(
-      JSON.stringify({ 
-        data: result,
-        message: 'Pixel invoked successfully' 
-      }),
+      JSON.stringify(result),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (error) {
     console.error('Error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        data: {
+          success: false,
+          message: error.message
+        }
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
