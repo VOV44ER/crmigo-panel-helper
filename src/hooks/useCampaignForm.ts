@@ -43,7 +43,8 @@ export const useCampaignForm = (onSuccess: () => void) => {
           countryId: selectedCountry.code,
           offerId: selectedOffer.id,
           name: campaignName,
-          userId: session.user.id
+          userId: session.user.id,
+          imprint: false // Added hardcoded imprint parameter
         }
       });
 

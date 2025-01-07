@@ -71,6 +71,7 @@ serve(async (req) => {
     tonicUrl.searchParams.append('name', campaignName)
     tonicUrl.searchParams.append('offer_id', offerId.toString())
     tonicUrl.searchParams.append('country', countryId)
+    tonicUrl.searchParams.append('imprint', 'false') // Added hardcoded imprint parameter
     if (targetDomain) {
       tonicUrl.searchParams.append('domain', targetDomain)
     }
