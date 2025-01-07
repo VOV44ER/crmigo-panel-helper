@@ -1,7 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { corsHeaders } from "../_shared/cors.ts"
 
-const TIMEOUT_MS = 15000; // 15 second timeout
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -49,20 +51,20 @@ serve(async (req) => {
 
     // Create an AbortController for timeout management
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     try {
       console.log(`Making request to Tonic API with pixel ID: ${pixelId}`);
       
-      // Create FormData and append all fields
-      const formData = new FormData();
-      formData.append('campaign_id', campaign_id);
-      formData.append('pixel-pixel_id', pixelId);
-      formData.append('tiktok_access_token', accessToken);
-      formData.append('pixel-test-token', testToken);
-      formData.append('pixel-event_type', eventType);
-      formData.append('pixel-revenue_choice', 'preestimated_revenue');
-      formData.append('pixel-target', 'tiktok');
+      // Create URLSearchParams instead of FormData
+      const params = new URLSearchParams();
+      params.append('campaign_id', campaign_id);
+      params.append('pixel-pixel_id', pixelId);
+      params.append('tiktok_access_token', accessToken);
+      params.append('pixel-test-token', testToken);
+      params.append('pixel-event_type', eventType);
+      params.append('pixel-revenue_choice', 'preestimated_revenue');
+      params.append('pixel-target', 'tiktok');
 
       const response = await fetch(
         `https://publisher.tonic.com/privileged/display/details/pixel/${pixelId}`,
@@ -71,15 +73,16 @@ serve(async (req) => {
           headers: {
             'Accept': 'application/json',
             'Authorization': `Bearer ${tonicToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
           },
-          body: formData,
+          body: params.toString(),
           signal: controller.signal,
         }
       );
 
       clearTimeout(timeoutId);
 
-      // Log the response status and headers for debugging
+      // Log response details for debugging
       console.log('Tonic API response status:', response.status);
       console.log('Tonic API response headers:', Object.fromEntries(response.headers.entries()));
 
@@ -92,6 +95,7 @@ serve(async (req) => {
           errorMessage = JSON.stringify(errorData);
         } else {
           const errorText = await response.text();
+          console.error('Raw error response:', errorText);
           errorMessage = `Non-JSON error response: ${errorText.substring(0, 200)}...`;
         }
         
@@ -108,7 +112,7 @@ serve(async (req) => {
     } catch (error) {
       if (error.name === 'AbortError') {
         console.error('Request timed out');
-        throw new Error('Request timed out after ' + TIMEOUT_MS + 'ms');
+        throw new Error('Request timed out after 15000ms');
       }
       throw error;
     } finally {
