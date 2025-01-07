@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, subDays, startOfToday } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { CountrySelector } from "./CountrySelector";
 import { OfferSelector } from "./OfferSelector";
@@ -25,6 +25,15 @@ interface CampaignFiltersProps {
   selectedOffers: Array<{ id: number; name: string; vertical: { id: number; name: string } }>;
   onOfferChange: (offers: Array<{ id: number; name: string; vertical: { id: number; name: string } }>) => void;
 }
+
+const PRESET_RANGES = [
+  { label: 'Today', getDates: () => ({ from: startOfToday(), to: startOfToday() }) },
+  { label: 'Last day', getDates: () => ({ from: subDays(startOfToday(), 1), to: subDays(startOfToday(), 1) }) },
+  { label: 'Last 3 days', getDates: () => ({ from: subDays(startOfToday(), 3), to: startOfToday() }) },
+  { label: 'Last week', getDates: () => ({ from: subDays(startOfToday(), 7), to: startOfToday() }) },
+  { label: 'Last 2 weeks', getDates: () => ({ from: subDays(startOfToday(), 14), to: startOfToday() }) },
+  { label: 'Last month', getDates: () => ({ from: subDays(startOfToday(), 30), to: startOfToday() }) },
+];
 
 const CampaignFilters = ({ 
   selectedStates,
@@ -43,6 +52,13 @@ const CampaignFilters = ({
 
   const handleSaveDate = () => {
     onDateRangeChange(tempDateRange);
+    setOpen(false);
+  };
+
+  const handlePresetClick = (preset: typeof PRESET_RANGES[number]) => {
+    const newRange = preset.getDates();
+    setTempDateRange(newRange);
+    onDateRangeChange(newRange);
     setOpen(false);
   };
 
@@ -103,6 +119,18 @@ const CampaignFilters = ({
             sideOffset={8}
           >
             <div className="p-3 space-y-3 bg-white rounded-md border shadow-lg">
+              <div className="grid grid-cols-2 gap-2">
+                {PRESET_RANGES.map((preset) => (
+                  <Button
+                    key={preset.label}
+                    variant="outline"
+                    className="w-full text-sm"
+                    onClick={() => handlePresetClick(preset)}
+                  >
+                    {preset.label}
+                  </Button>
+                ))}
+              </div>
               <Calendar
                 initialFocus
                 mode="range"
