@@ -1,4 +1,4 @@
-import { Edit, Copy, X } from "lucide-react";
+import { Edit, Wand2, Copy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -16,6 +16,7 @@ import { getStatusColor, formatCurrency, formatPercentage } from "./campaignUtil
 import { toast } from "sonner";
 import { useState } from "react";
 import { KeywordEditModal } from "./KeywordEditModal";
+import { PixelTrackingModal } from "./PixelTrackingModal";
 
 interface CampaignTableProps {
   campaigns: TonicCampaign[];
@@ -24,6 +25,7 @@ interface CampaignTableProps {
 
 const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
   const [selectedCampaign, setSelectedCampaign] = useState<TonicCampaign | null>(null);
+  const [pixelTrackingCampaign, setPixelTrackingCampaign] = useState<TonicCampaign | null>(null);
 
   const copyTrackingLink = (trackingLink: string | null) => {
     if (!trackingLink) {
@@ -36,7 +38,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
 
   const LoadingRow = () => (
     <TableRow>
-      {Array(15).fill(0).map((_, i) => (
+      {Array(16).fill(0).map((_, i) => (
         <TableCell key={i}>
           <Skeleton className="h-4 w-full" />
         </TableCell>
@@ -66,7 +68,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
                 <TableHead className="w-24 text-right">RPC</TableHead>
                 <TableHead className="w-24 text-right">RPMV</TableHead>
                 <TableHead className="w-24 text-right">Revenue</TableHead>
-                <TableHead className="w-20 text-center">Edit</TableHead>
+                <TableHead className="w-24 text-center">Edit</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -107,7 +109,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
               <TableHead className="w-24 text-right">RPC</TableHead>
               <TableHead className="w-24 text-right">RPMV</TableHead>
               <TableHead className="w-24 text-right">Revenue</TableHead>
-              <TableHead className="w-20 text-center">Edit</TableHead>
+              <TableHead className="w-24 text-center">Edit</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -150,15 +152,25 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
                   <TableCell className="text-right">{formatCurrency(campaign.rpc)}</TableCell>
                   <TableCell className="text-right">{formatCurrency(campaign.rpmv)}</TableCell>
                   <TableCell className="text-right">{formatCurrency(campaign.revenue)}</TableCell>
-                  <TableCell className="text-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setSelectedCampaign(campaign)}
-                      className="cursor-pointer"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
+                  <TableCell>
+                    <div className="flex justify-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setSelectedCampaign(campaign)}
+                        className="cursor-pointer"
+                      >
+                        <Wand2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setPixelTrackingCampaign(campaign)}
+                        className="cursor-pointer"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -174,16 +186,22 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
             key={campaign.id} 
             campaign={campaign}
             onEdit={() => setSelectedCampaign(campaign)}
+            onPixelTracking={() => setPixelTrackingCampaign(campaign)}
           />
         ))}
       </div>
 
-      {/* Edit Modal */}
+      {/* Modals */}
       <KeywordEditModal
         isOpen={!!selectedCampaign}
         onClose={() => setSelectedCampaign(null)}
         campaignName={selectedCampaign?.name || ""}
         campaignId={selectedCampaign?.id || ""}
+      />
+      <PixelTrackingModal
+        isOpen={!!pixelTrackingCampaign}
+        onClose={() => setPixelTrackingCampaign(null)}
+        campaignName={pixelTrackingCampaign?.name || ""}
       />
     </div>
   );
