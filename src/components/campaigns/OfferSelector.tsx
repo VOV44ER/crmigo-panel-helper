@@ -14,9 +14,16 @@ interface OfferSelectorProps {
   onOfferSelect: (offer: Offer) => void;
   offers: Offer[];
   isLoading: boolean;
+  placeholder?: string;  // Added placeholder prop as optional
 }
 
-export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoading }: OfferSelectorProps) {
+export function OfferSelector({ 
+  selectedOffer, 
+  onOfferSelect, 
+  offers = [], 
+  isLoading,
+  placeholder 
+}: OfferSelectorProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const validOffers = Array.isArray(offers) ? offers : [];
@@ -45,7 +52,7 @@ export function OfferSelector({ selectedOffer, onOfferSelect, offers = [], isLoa
       <div className="relative">
         <input
           type="text"
-          placeholder={isLoading ? "Loading offers..." : "Search and select offer..."}
+          placeholder={isLoading ? "Loading offers..." : placeholder || "Search and select offer..."}
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);

@@ -10,9 +10,16 @@ interface CountrySelectorProps {
   onCountrySelect: (country: Country) => void;
   countries: Country[];
   isLoading: boolean;
+  placeholder?: string;  // Added placeholder prop as optional
 }
 
-export function CountrySelector({ selectedCountry, onCountrySelect, countries = [], isLoading }: CountrySelectorProps) {
+export function CountrySelector({ 
+  selectedCountry, 
+  onCountrySelect, 
+  countries = [], 
+  isLoading,
+  placeholder 
+}: CountrySelectorProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const validCountries = Array.isArray(countries) ? countries : [];
@@ -32,7 +39,7 @@ export function CountrySelector({ selectedCountry, onCountrySelect, countries = 
       <div className="relative">
         <input
           type="text"
-          placeholder={isLoading ? "Loading countries..." : "Search and select country..."}
+          placeholder={isLoading ? "Loading countries..." : placeholder || "Search and select country..."}
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
