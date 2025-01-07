@@ -12,6 +12,11 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
+    }
+
     console.log('Authenticating with Tonic API...');
 
     // First, get JWT token from Tonic

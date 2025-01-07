@@ -8,6 +8,8 @@ interface TestTabProps {
   testToken: string;
   setTestToken: (value: string) => void;
   campaignId: string;
+  pixelId: string;
+  accessToken: string;
   onClose: () => void;
 }
 
@@ -15,11 +17,18 @@ export const TestTab = ({
   testToken,
   setTestToken,
   campaignId,
+  pixelId,
+  accessToken,
   onClose,
 }: TestTabProps) => {
   const [isInvoking, setIsInvoking] = useState(false);
 
   const handleInvokePixel = async () => {
+    if (!pixelId || !accessToken) {
+      toast.error('Pixel configuration is incomplete');
+      return;
+    }
+
     try {
       setIsInvoking(true);
       const { data, error } = await supabase.functions.invoke('invoke-tonic-pixel', {
@@ -57,7 +66,7 @@ export const TestTab = ({
         type="button" 
         className="w-full"
         onClick={handleInvokePixel}
-        disabled={isInvoking}
+        disabled={isInvoking || !pixelId || !accessToken}
       >
         {isInvoking ? "Invoking..." : "Invoke Pixel"}
       </Button>
