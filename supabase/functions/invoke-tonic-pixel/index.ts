@@ -9,8 +9,8 @@ serve(async (req) => {
   }
 
   try {
-    const { 
-      campaign_id, 
+    const {
+      campaign_id,
       'pixel-pixel_id': pixelId,
       'tiktok_access_token': accessToken,
       'pixel-test-token': testToken,
@@ -53,7 +53,7 @@ serve(async (req) => {
     try {
       // Updated URL to match the correct endpoint
       const response = await fetch(
-        `https://publisher.tonic.com/privileged/display/details/pixel/${pixelId}`,
+        `https://publisher.tonic.com/privileged/display/details/pixel/[0-9]+`,
         {
           method: 'POST',
           headers: {
@@ -100,11 +100,11 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error.message);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         errors: [error.message || 'Failed to invoke pixel'],
-        successes: [] 
+        successes: []
       }),
-      { 
+      {
         status: error.name === 'AbortError' ? 504 : 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
