@@ -4,11 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PixelTrackingModalProps {
   isOpen: boolean;
   onClose: () => void;
   campaignName: string;
+  campaignId: string;
 }
 
 const eventTypes = [
@@ -28,20 +30,58 @@ const eventTypes = [
   "View Content"
 ];
 
-export const PixelTrackingModal = ({ isOpen, onClose, campaignName }: PixelTrackingModalProps) => {
+export const PixelTrackingModal = ({ isOpen, onClose, campaignName, campaignId }: PixelTrackingModalProps) => {
   const [pixelId, setPixelId] = useState("");
   const [eventType, setEventType] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [testToken, setTestToken] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+
     try {
-      // TODO: Implement pixel tracking logic here
-      toast.success("Pixel tracking invoked successfully");
-      onClose();
+      // Convert event type to camelCase
+      const camelCaseEventType = eventType
+        .split(' ')
+        .map((word, index) => 
+          index === 0 
+            ? word.toLowerCase() 
+            : word.charAt(0).toUpperCase() + word.slice(1)
+        )
+        .join('');
+
+      const { data, error } = await supabase.functions.invoke('invoke-tonic-pixel', {
+        body: {
+          campaign_id: campaignId,
+          pixel_id: pixelId,
+          event_type: camelCaseEventType,
+          access_token: accessToken,
+          test_token: testToken,
+        }
+      });
+
+      if (error) throw error;
+
+      // Show success messages
+      if (data.successes?.length > 0) {
+        data.successes.forEach((message: string) => toast.success(message));
+      }
+
+      // Show error messages
+      if (data.errors?.length > 0) {
+        data.errors.forEach((message: string) => toast.error(message));
+      }
+
+      if (!data.errors?.length) {
+        onClose();
+      }
     } catch (error) {
-      toast.error("Failed to invoke pixel tracking");
+      console.error('Error invoking pixel:', error);
+      toast.error('Failed to invoke pixel');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -103,8 +143,8 @@ export const PixelTrackingModal = ({ isOpen, onClose, campaignName }: PixelTrack
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Invoke Pixel
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Invoking Pixel...' : 'Invoke Pixel'}
           </Button>
         </form>
       </DialogContent>

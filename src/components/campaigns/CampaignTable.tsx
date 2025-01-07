@@ -202,6 +202,7 @@ const CampaignTable = ({ campaigns, isLoading }: CampaignTableProps) => {
         isOpen={!!pixelTrackingCampaign}
         onClose={() => setPixelTrackingCampaign(null)}
         campaignName={pixelTrackingCampaign?.name || ""}
+        campaignId={pixelTrackingCampaign?.id || ""}
       />
     </div>
   );
