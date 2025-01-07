@@ -12,7 +12,9 @@ serve(async (req) => {
   }
 
   try {
-    const { campaign_id, pixel_id, access_token, event_type, revenue_type } = await req.json();
+    const { campaign_id, pixel_id, access_token, event_name, revenue_type } = await req.json();
+
+    console.log('Received request with params:', { campaign_id, pixel_id, access_token, event_name, revenue_type });
 
     // First authenticate with Tonic API
     const authResponse = await fetch('https://api.publisher.tonic.com/privileged/auth', {
@@ -51,7 +53,7 @@ serve(async (req) => {
         campaign_id,
         pixel_id,
         access_token,
-        event_type,
+        event_name,
         revenue_type
       }),
     });
