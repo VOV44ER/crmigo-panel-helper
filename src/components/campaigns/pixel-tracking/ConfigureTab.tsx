@@ -1,49 +1,36 @@
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { eventTypes } from "./constants";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ConfigureTabProps {
   pixelId: string;
   setPixelId: (value: string) => void;
-  eventType: string;
-  setEventType: (value: string) => void;
   accessToken: string;
   setAccessToken: (value: string) => void;
   campaignId: string;
-  onClose: () => void;
+  tabsRef: React.RefObject<HTMLDivElement>;
 }
 
 export const ConfigureTab = ({
   pixelId,
   setPixelId,
-  eventType,
-  setEventType,
   accessToken,
   setAccessToken,
   campaignId,
-  onClose,
+  tabsRef,
 }: ConfigureTabProps) => {
+  const [isSaving, setIsSaving] = useState(false);
+
   const handleSavePixel = async () => {
     try {
-      // Convert event type to camelCase
-      const camelCaseEventType = eventType
-        .split(' ')
-        .map((word, index) => 
-          index === 0 
-            ? word.toLowerCase() 
-            : word.charAt(0).toUpperCase() + word.slice(1)
-        )
-        .join('');
-
+      setIsSaving(true);
       const { data, error } = await supabase.functions.invoke('save-tonic-pixel', {
         body: {
           campaign_id: campaignId,
           pixel_id: pixelId,
           access_token: accessToken,
-          event_type: camelCaseEventType,
           revenue_type: "preestimated_revenue"
         }
       });
@@ -51,10 +38,17 @@ export const ConfigureTab = ({
       if (error) throw error;
 
       toast.success("Pixel configuration saved successfully");
-      onClose();
+      
+      // Switch to test tab
+      const testTrigger = tabsRef.current?.querySelector('[value="test"]') as HTMLButtonElement;
+      if (testTrigger) {
+        testTrigger.click();
+      }
     } catch (error) {
       console.error('Error saving pixel:', error);
       toast.error('Failed to save pixel configuration');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -76,22 +70,6 @@ export const ConfigureTab = ({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Event Type:</label>
-        <Select value={eventType} onValueChange={setEventType} required>
-          <SelectTrigger>
-            <SelectValue placeholder="Select event type" />
-          </SelectTrigger>
-          <SelectContent>
-            {eventTypes.map((type) => (
-              <SelectItem key={type} value={type}>
-                {type}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
         <label className="text-sm font-medium">Access Token:</label>
         <Input
           value={accessToken}
@@ -101,13 +79,24 @@ export const ConfigureTab = ({
         />
       </div>
 
-      <Button 
-        type="button" 
-        className="w-full"
-        onClick={handleSavePixel}
-      >
-        Save Configuration
-      </Button>
+      <div className="flex gap-2">
+        <Button 
+          type="button" 
+          className="flex-1"
+          onClick={handleSavePixel}
+          disabled={isSaving}
+        >
+          {isSaving ? "Saving..." : "Save Configuration"}
+        </Button>
+        <Button 
+          type="button" 
+          variant="destructive"
+          disabled={true}
+          className="w-24"
+        >
+          Delete
+        </Button>
+      </div>
     </div>
   );
 };

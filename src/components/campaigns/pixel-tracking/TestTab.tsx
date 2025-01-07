@@ -9,7 +9,6 @@ interface TestTabProps {
   campaignId: string;
   pixelId: string;
   accessToken: string;
-  eventType: string;
   onClose: () => void;
 }
 
@@ -19,7 +18,6 @@ export const TestTab = ({
   campaignId,
   pixelId,
   accessToken,
-  eventType,
   onClose,
 }: TestTabProps) => {
   const handleInvokePixel = async () => {
@@ -30,14 +28,6 @@ export const TestTab = ({
           'pixel-pixel_id': pixelId,
           'tiktok_access_token': accessToken,
           'pixel-test-token': testToken,
-          'pixel-event_name': eventType
-            .split(' ')
-            .map((word, index) => 
-              index === 0 
-                ? word.toLowerCase() 
-                : word.charAt(0).toUpperCase() + word.slice(1)
-            )
-            .join(''),
           'pixel-revenue_choice': 'preestimated_revenue',
           'pixel-target': 'tiktok'
         }

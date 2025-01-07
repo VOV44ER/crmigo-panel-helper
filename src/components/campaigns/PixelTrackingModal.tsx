@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConfigureTab } from "./pixel-tracking/ConfigureTab";
@@ -13,9 +13,9 @@ interface PixelTrackingModalProps {
 
 export const PixelTrackingModal = ({ isOpen, onClose, campaignName, campaignId }: PixelTrackingModalProps) => {
   const [pixelId, setPixelId] = useState("");
-  const [eventType, setEventType] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [testToken, setTestToken] = useState("");
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -24,7 +24,7 @@ export const PixelTrackingModal = ({ isOpen, onClose, campaignName, campaignId }
           <DialogTitle>Pixel Tracking - {campaignName}</DialogTitle>
         </DialogHeader>
         
-        <Tabs defaultValue="configure" className="mt-4">
+        <Tabs defaultValue="configure" className="mt-4" ref={tabsRef}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="configure">Configure</TabsTrigger>
             <TabsTrigger value="test">Test</TabsTrigger>
@@ -34,12 +34,10 @@ export const PixelTrackingModal = ({ isOpen, onClose, campaignName, campaignId }
             <ConfigureTab
               pixelId={pixelId}
               setPixelId={setPixelId}
-              eventType={eventType}
-              setEventType={setEventType}
               accessToken={accessToken}
               setAccessToken={setAccessToken}
               campaignId={campaignId}
-              onClose={onClose}
+              tabsRef={tabsRef}
             />
           </TabsContent>
 
@@ -50,7 +48,6 @@ export const PixelTrackingModal = ({ isOpen, onClose, campaignName, campaignId }
               campaignId={campaignId}
               pixelId={pixelId}
               accessToken={accessToken}
-              eventType={eventType}
               onClose={onClose}
             />
           </TabsContent>
