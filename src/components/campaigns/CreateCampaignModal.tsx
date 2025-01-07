@@ -45,6 +45,7 @@ export function CreateCampaignModal() {
               onCountrySelect={setSelectedCountry}
               countries={countriesResponse?.data || []}
               isLoading={isLoadingCountries}
+              placeholder={selectedCountry ? `${selectedCountry.name} (${selectedCountry.code})` : "Select a country"}
             />
           </div>
 
@@ -55,6 +56,7 @@ export function CreateCampaignModal() {
               onOfferSelect={setSelectedOffer}
               offers={offersResponse?.data || []}
               isLoading={isLoadingOffers}
+              placeholder={selectedOffer ? `${selectedOffer.name} (${selectedOffer.vertical.name})` : "Select an offer"}
             />
           </div>
 
