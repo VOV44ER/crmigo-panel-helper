@@ -51,9 +51,10 @@ serve(async (req) => {
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     try {
-      // Updated URL to match the correct endpoint
+      console.log(`Making request to Tonic API with pixel ID: ${pixelId}`);
+      
       const response = await fetch(
-        `https://publisher.tonic.com/privileged/display/details/pixel/[0-9]+`,
+        `https://publisher.tonic.com/privileged/display/details/pixel/${pixelId}`,
         {
           method: 'POST',
           headers: {
