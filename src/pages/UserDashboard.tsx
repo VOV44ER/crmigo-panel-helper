@@ -54,6 +54,11 @@ const UserDashboard = () => {
     checkAuth();
   }, [navigate]);
 
+  // Reset offset when filters change
+  useEffect(() => {
+    setOffset(0);
+  }, [dateRange, selectedCountries, selectedOffers, selectedStates]);
+
   const { data: response, isLoading, error } = useQuery({
     queryKey: ['campaigns', selectedStates, limit, offset, dateRange, username, selectedCountries, selectedOffers],
     queryFn: async () => {
@@ -129,7 +134,10 @@ const UserDashboard = () => {
             total={response?.pagination.total || 0}
             limit={limit}
             offset={offset}
-            onLimitChange={setLimit}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setOffset(0); // Reset to first page when changing limit
+            }}
             onOffsetChange={setOffset}
           />
         </div>
