@@ -32,13 +32,23 @@ export const PixelTrackingModal = ({ isOpen, onClose, campaignName, campaignId }
 
         if (error) throw error;
 
-        if (data && data.pixel_id && data.access_token) {
-          setPixelId(data.pixel_id);
-          setAccessToken(data.access_token);
+        // Reset fields if no data or if pixel_id and access_token are not present
+        if (!data || !data.pixel_id || !data.access_token) {
+          setPixelId("");
+          setAccessToken("");
+          setTestToken("");
+          return;
         }
+
+        setPixelId(data.pixel_id);
+        setAccessToken(data.access_token);
       } catch (error) {
         console.error('Error fetching pixel data:', error);
         toast.error('Failed to fetch pixel configuration');
+        // Reset fields on error
+        setPixelId("");
+        setAccessToken("");
+        setTestToken("");
       } finally {
         setIsLoading(false);
       }
