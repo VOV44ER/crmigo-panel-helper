@@ -8,12 +8,15 @@ import CampaignFilters from "@/components/campaigns/CampaignFilters";
 import CampaignPagination from "@/components/campaigns/CampaignPagination";
 import CampaignTable from "@/components/campaigns/CampaignTable";
 import { CreateCampaignModal } from "@/components/campaigns/CreateCampaignModal";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 import { addDays, format } from "date-fns";
 
 const UserDashboard = () => {
   const navigate = useNavigate();
   const [selectedStates, setSelectedStates] = useState<string[]>(['active']);
+  const [isFacebook, setIsFacebook] = useState<boolean>(false);
   const [limit, setLimit] = useState(10);
   const [offset, setOffset] = useState(0);
   const today = new Date();
@@ -28,7 +31,7 @@ const UserDashboard = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         toast.error("Please login first");
         navigate("/auth");
@@ -68,7 +71,7 @@ const UserDashboard = () => {
       }
 
       const { data, error } = await supabase.functions.invoke('fetch-tonic-campaigns', {
-        body: { 
+        body: {
           states: selectedStates,
           limit,
           offset,
@@ -99,26 +102,44 @@ const UserDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
+
       <main className="container mx-auto py-6 px-4">
         <div className="flex flex-col sm:flex-row sm:items-start gap-4 mb-6">
           <div className="flex-grow">
-            <CampaignFilters 
-              selectedStates={selectedStates}
-              onStateChange={(states) => {
+            <CampaignFilters
+              selectedStates={ selectedStates }
+              onStateChange={ (states) => {
                 if (states.length === 0) {
                   toast.error("At least one state must be selected");
                   return;
                 }
                 setSelectedStates(states);
-              }}
-              dateRange={dateRange}
-              onDateRangeChange={setDateRange}
-              selectedCountries={selectedCountries}
-              onCountryChange={setSelectedCountries}
-              selectedOffers={selectedOffers}
-              onOfferChange={setSelectedOffers}
+              } }
+              dateRange={ dateRange }
+              onDateRangeChange={ setDateRange }
+              selectedCountries={ selectedCountries }
+              onCountryChange={ setSelectedCountries }
+              selectedOffers={ selectedOffers }
+              onOfferChange={ setSelectedOffers }
             />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            { ['tiktok', 'facebook'].map((state) => (
+              <Button
+                key={ state }
+                variant={ selectedStates.includes(state) ? "default" : "outline" }
+                onClick={ () => {
+                  state === 'facebook' ? setIsFacebook(true) : setIsFacebook(false)
+                } }
+                className={ cn(
+                  "capitalize whitespace-nowrap",
+                  isFacebook && state === 'facebook' && "bg-green-500 hover:bg-green-600",
+                  !isFacebook && state === 'tiktok' && "bg-green-500 hover:bg-green-600",
+                ) }
+              >
+                { state }
+              </Button>
+            )) }
           </div>
           <div className="shrink-0">
             <CreateCampaignModal />
@@ -126,19 +147,19 @@ const UserDashboard = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <CampaignTable 
-            campaigns={response?.data || []} 
-            isLoading={isLoading}
+          <CampaignTable
+            campaigns={ response?.data || [] }
+            isLoading={ isLoading }
           />
           <CampaignPagination
-            total={response?.pagination.total || 0}
-            limit={limit}
-            offset={offset}
-            onLimitChange={(newLimit) => {
+            total={ response?.pagination.total || 0 }
+            limit={ limit }
+            offset={ offset }
+            onLimitChange={ (newLimit) => {
               setLimit(newLimit);
               setOffset(0); // Reset to first page when changing limit
-            }}
-            onOffsetChange={setOffset}
+            } }
+            onOffsetChange={ setOffset }
           />
         </div>
       </main>
