@@ -15,8 +15,8 @@ serve(async (req) => {
 
   try {
     console.log('Received request to fetch campaigns');
-    const { states, limit, offset, from, to, username, countryCodes, offerIds } = await req.json();
-    
+    const { states, limit, offset, from, to, username, countryCodes, offerIds, isFacebook } = await req.json();
+
     console.log('Request params:', { states, limit, offset, from, to, username, countryCodes, offerIds });
 
     // First, get JWT token from Tonic
@@ -28,8 +28,8 @@ serve(async (req) => {
         'Accept': 'application/json'
       },
       body: JSON.stringify({
-        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
-        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+        consumer_key: !isFacebook ? Deno.env.get('TONIC_CONSUMER_KEY') : Deno.env.get('TONIC_FB_CONSUMER_KEY'),
+        consumer_secret: !isFacebook ? Deno.env.get('TONIC_CONSUMER_SECRET') : Deno.env.get('TONIC_FB_CONSUMER_SECRET'),
       }),
     });
 
@@ -78,27 +78,27 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify(campaigns),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
+      {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
     );
 
   } catch (error) {
     console.error('Error in fetch-tonic-campaigns:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: error.message || 'An error occurred while fetching campaigns',
         details: error.toString()
       }),
-      { 
+      {
         status: 500,
-        headers: { 
+        headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'
-        } 
+        }
       }
     );
   }

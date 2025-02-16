@@ -63,7 +63,7 @@ const UserDashboard = () => {
   }, [dateRange, selectedCountries, selectedOffers, selectedStates]);
 
   const { data: response, isLoading, error } = useQuery({
-    queryKey: ['campaigns', selectedStates, limit, offset, dateRange, username, selectedCountries, selectedOffers],
+    queryKey: ['campaigns', isFacebook, selectedStates, limit, offset, dateRange, username, selectedCountries, selectedOffers],
     queryFn: async () => {
       if (selectedStates.length === 0) {
         setSelectedStates(['active']);
@@ -72,6 +72,7 @@ const UserDashboard = () => {
 
       const { data, error } = await supabase.functions.invoke('fetch-tonic-campaigns', {
         body: {
+          isFacebook,
           states: selectedStates,
           limit,
           offset,
