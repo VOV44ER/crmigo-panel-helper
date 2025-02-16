@@ -17,7 +17,7 @@ export const useCampaignForm = (onSuccess: () => void) => {
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [campaignName, setCampaignName] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, isFacebook: boolean) => {
     e.preventDefault();
     if (!selectedCountry || !selectedOffer || !campaignName) {
       toast.error("Please fill in all required fields");
@@ -40,6 +40,7 @@ export const useCampaignForm = (onSuccess: () => void) => {
           Authorization: `Bearer ${token}`,
         },
         body: {
+          isFacebook: isFacebook,
           countryId: selectedCountry.code,
           offerId: selectedOffer.id,
           name: campaignName,

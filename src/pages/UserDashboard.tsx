@@ -143,7 +143,7 @@ const UserDashboard = () => {
             )) }
           </div>
           <div className="shrink-0">
-            <CreateCampaignModal />
+            <CreateCampaignModal isFacebook={ isFacebook } />
           </div>
         </div>
 

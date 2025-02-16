@@ -9,7 +9,7 @@ import { OfferSelector } from "./OfferSelector";
 import { useCampaignForm } from "@/hooks/useCampaignForm";
 import { useCampaignData } from "@/hooks/useCampaignData";
 
-export function CreateCampaignModal() {
+export function CreateCampaignModal({ isFacebook }) {
   const [open, setOpen] = useState(false);
   const { countriesResponse, isLoadingCountries, offersResponse, isLoadingOffers } = useCampaignData();
   const {
@@ -23,7 +23,7 @@ export function CreateCampaignModal() {
   } = useCampaignForm(() => setOpen(false));
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={ open } onOpenChange={ setOpen }>
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
@@ -37,34 +37,34 @@ export function CreateCampaignModal() {
             Fill in the details below to create a new campaign.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
+        <form onSubmit={ (e) => handleSubmit(e, isFacebook) } className="space-y-6 py-4">
           <div className="space-y-2">
             <Label>Select Country</Label>
             <CountrySelector
-              selectedCountry={selectedCountry}
-              onCountrySelect={setSelectedCountry}
-              countries={countriesResponse?.data || []}
-              isLoading={isLoadingCountries}
-              placeholder={selectedCountry ? `${selectedCountry.name} (${selectedCountry.code})` : "Select a country"}
+              selectedCountry={ selectedCountry }
+              onCountrySelect={ setSelectedCountry }
+              countries={ countriesResponse?.data || [] }
+              isLoading={ isLoadingCountries }
+              placeholder={ selectedCountry ? `${selectedCountry.name} (${selectedCountry.code})` : "Select a country" }
             />
           </div>
 
           <div className="space-y-2">
             <Label>Select Offer</Label>
             <OfferSelector
-              selectedOffer={selectedOffer}
-              onOfferSelect={setSelectedOffer}
-              offers={offersResponse?.data || []}
-              isLoading={isLoadingOffers}
-              placeholder={selectedOffer ? `${selectedOffer.name} (${selectedOffer.vertical.name})` : "Select an offer"}
+              selectedOffer={ selectedOffer }
+              onOfferSelect={ setSelectedOffer }
+              offers={ offersResponse?.data || [] }
+              isLoading={ isLoadingOffers }
+              placeholder={ selectedOffer ? `${selectedOffer.name} (${selectedOffer.vertical.name})` : "Select an offer" }
             />
           </div>
 
           <div className="space-y-2">
             <Label>Campaign Name</Label>
             <Input
-              value={campaignName}
-              onChange={(e) => setCampaignName(e.target.value)}
+              value={ campaignName }
+              onChange={ (e) => setCampaignName(e.target.value) }
               placeholder="Enter campaign name"
             />
           </div>

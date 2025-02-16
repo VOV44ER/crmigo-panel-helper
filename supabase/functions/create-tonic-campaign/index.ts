@@ -14,8 +14,8 @@ serve(async (req) => {
   }
 
   try {
-    const { countryId, offerId, name, targetDomain, userId } = await req.json()
-    
+    const { countryId, offerId, name, targetDomain, userId, isFacebook } = await req.json()
+
     if (!countryId || !offerId || !name || !userId) {
       throw new Error('Missing required fields')
     }
@@ -52,8 +52,8 @@ serve(async (req) => {
         'Accept': 'application/json'
       },
       body: JSON.stringify({
-        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
-        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+        consumer_key: !isFacebook ? Deno.env.get('TONIC_CONSUMER_KEY') : Deno.env.get('TONIC_FB_CONSUMER_KEY'),
+        consumer_secret: !isFacebook ? Deno.env.get('TONIC_CONSUMER_SECRET') : Deno.env.get('TONIC_FB_CONSUMER_SECRET'),
       }),
     })
 
@@ -65,7 +65,7 @@ serve(async (req) => {
 
     const { token: tonicToken } = await authResponse.json()
     console.log('Successfully obtained Tonic JWT token')
-    
+
     // Create campaign in Tonic
     const tonicUrl = new URL(`${TONIC_API_URL}/campaign/create`)
     tonicUrl.searchParams.append('name', campaignName)
@@ -108,11 +108,11 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify(campaign),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
+      {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
     )
 
@@ -120,12 +120,12 @@ serve(async (req) => {
     console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
+      {
         status: 400,
-        headers: { 
+        headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'
-        } 
+        }
       }
     )
   }
