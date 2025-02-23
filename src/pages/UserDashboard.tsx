@@ -25,6 +25,7 @@ const UserDashboard = () => {
     to: today,
   });
   const [username, setUsername] = useState<string | null>(null);
+  const [platforms, setPlatforms] = useState<string[] | null>([]);
   const [selectedCountries, setSelectedCountries] = useState<Array<{ code: string; name: string }>>([]);
   const [selectedOffers, setSelectedOffers] = useState<Array<{ id: number; name: string; vertical: { id: number; name: string } }>>([]);
 
@@ -45,12 +46,20 @@ const UserDashboard = () => {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('username')
+        .select('username, platforms')
         .eq('id', session.user.id)
         .single();
 
       if (profile?.username) {
         setUsername(profile.username);
+      }
+      if (profile?.platforms) {
+        setPlatforms(profile.platforms);
+        if (profile?.platforms[0] === 'facebook') {
+          setIsFacebook(true)
+        } else {
+          setIsFacebook(false)
+        }
       }
     };
 
@@ -125,7 +134,7 @@ const UserDashboard = () => {
             />
           </div>
           <div className="flex flex-wrap gap-2">
-            { ['tiktok', 'facebook'].map((state) => (
+            { platforms.map((state) => (
               <Button
                 key={ state }
                 variant={ selectedStates.includes(state) ? "default" : "outline" }
