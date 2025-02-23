@@ -20,7 +20,7 @@ const AdminPanel = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         toast.error("Please login first");
         navigate("/auth");
@@ -34,7 +34,7 @@ const AdminPanel = () => {
       }
 
       const { data: isAdmin, error: adminError } = await supabase.rpc('is_admin');
-      
+
       if (adminError || !isAdmin) {
         toast.error("Unauthorized access");
         navigate("/dashboard");
@@ -62,14 +62,15 @@ const AdminPanel = () => {
     queryFn: async () => {
       const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('id, username, full_name, password_text');
-      
+        .select('id, username, full_name, password_text, platforms')
+        .order('full_name', { ascending: true });
+
       if (error) {
         console.error('Error fetching users:', error);
         toast.error("Failed to fetch users");
         throw error;
       }
-      
+
       return profiles as User[];
     }
   });
@@ -97,7 +98,8 @@ const AdminPanel = () => {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          password_text: newUser.password
+          password_text: newUser.password,
+          platforms: newUser.platforms
         })
         .eq('id', authData.user.id);
 
@@ -112,9 +114,9 @@ const AdminPanel = () => {
         email: "admin@admin.com",
         password: "Qwerty98761"
       });
-      
+
       if (signInError) throw signInError;
-      
+
     } catch (error: any) {
       console.error('Error creating user:', error);
       toast.error(error.message || "Failed to create user");
@@ -142,11 +144,11 @@ const AdminPanel = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
+
       <main className="container mx-auto py-6 px-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">User Management</h1>
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <Dialog open={ isModalOpen } onOpenChange={ setIsModalOpen }>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
@@ -154,12 +156,12 @@ const AdminPanel = () => {
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <CreateUserForm onSubmit={handleCreateUser} loading={loading} />
+              <CreateUserForm onSubmit={ handleCreateUser } loading={ loading } />
             </DialogContent>
           </Dialog>
         </div>
 
-        <UsersTable users={users} onDeleteUser={handleDeleteUser} />
+        <UsersTable users={ users } refetch={ refetch } onDeleteUser={ handleDeleteUser } />
       </main>
     </div>
   );
