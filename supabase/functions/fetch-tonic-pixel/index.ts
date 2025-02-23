@@ -7,7 +7,7 @@ serve(async (req) => {
   }
 
   try {
-    const { campaign_id } = await req.json()
+    const { campaign_id, isFacebook } = await req.json()
 
     // First, authenticate with Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
@@ -16,8 +16,8 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
-        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+        consumer_key: !isFacebook ? Deno.env.get('TONIC_CONSUMER_KEY') : Deno.env.get('TONIC_FB_CONSUMER_KEY'),
+        consumer_secret: !isFacebook ? Deno.env.get('TONIC_CONSUMER_SECRET') : Deno.env.get('TONIC_FB_CONSUMER_SECRET'),
       }),
     })
 
@@ -52,7 +52,7 @@ serve(async (req) => {
     console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
+      {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }

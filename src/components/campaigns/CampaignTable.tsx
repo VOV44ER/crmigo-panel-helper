@@ -78,6 +78,7 @@ const CampaignTable = ({ campaigns, isLoading, isFacebook }: CampaignTableProps)
       />
       <PixelTrackingModal
         isOpen={ !!pixelTrackingCampaign }
+        isFacebook={ isFacebook }
         onClose={ () => setPixelTrackingCampaign(null) }
         campaignName={ pixelTrackingCampaign?.name || "" }
         campaignId={ pixelTrackingCampaign?.id.toString() || "" }

@@ -12,6 +12,7 @@ interface ConfigureTabProps {
   campaignId: string;
   tabsRef: React.RefObject<HTMLDivElement>;
   isLoading: boolean;
+  isFacebook: boolean;
 }
 
 export const ConfigureTab = ({
@@ -21,6 +22,7 @@ export const ConfigureTab = ({
   setAccessToken,
   campaignId,
   tabsRef,
+  isFacebook,
   isLoading,
 }: ConfigureTabProps) => {
   const [isSaving, setIsSaving] = useState(false);
@@ -41,7 +43,7 @@ export const ConfigureTab = ({
       if (error) throw error;
 
       toast.success("Pixel configuration saved successfully");
-      
+
       // Switch to test tab
       const testTrigger = tabsRef.current?.querySelector('[value="test"]') as HTMLButtonElement;
       if (testTrigger) {
@@ -79,48 +81,48 @@ export const ConfigureTab = ({
     <div className="space-y-4">
       <div className="space-y-2">
         <label className="text-sm font-medium">Target:</label>
-        <Input value="TikTok" disabled className="bg-gray-100" />
+        <Input value={ isFacebook ? "Facebook" : "TikTok" } disabled className="bg-gray-100" />
       </div>
-      
+
       <div className="space-y-2">
         <label className="text-sm font-medium">Pixel ID:</label>
         <Input
-          value={pixelId}
-          onChange={(e) => setPixelId(e.target.value)}
+          value={ pixelId }
+          onChange={ (e) => setPixelId(e.target.value) }
           placeholder="Enter pixel ID"
           required
-          disabled={isLoading}
+          disabled={ isLoading }
         />
       </div>
 
       <div className="space-y-2">
         <label className="text-sm font-medium">Access Token:</label>
         <Input
-          value={accessToken}
-          onChange={(e) => setAccessToken(e.target.value)}
+          value={ accessToken }
+          onChange={ (e) => setAccessToken(e.target.value) }
           placeholder="Enter access token"
           required
-          disabled={isLoading}
+          disabled={ isLoading }
         />
       </div>
 
       <div className="flex gap-2">
-        <Button 
-          type="button" 
+        <Button
+          type="button"
           className="flex-1"
-          onClick={handleSavePixel}
-          disabled={isSaving || isLoading}
+          onClick={ handleSavePixel }
+          disabled={ isSaving || isLoading }
         >
-          {isSaving ? "Saving..." : "Save Configuration"}
+          { isSaving ? "Saving..." : "Save Configuration" }
         </Button>
-        <Button 
-          type="button" 
+        <Button
+          type="button"
           variant="destructive"
-          disabled={!pixelId || isDeleting || isLoading}
+          disabled={ !pixelId || isDeleting || isLoading }
           className="w-24"
-          onClick={handleDeletePixel}
+          onClick={ handleDeletePixel }
         >
-          {isDeleting ? "..." : "Delete"}
+          { isDeleting ? "..." : "Delete" }
         </Button>
       </div>
     </div>

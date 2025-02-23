@@ -11,9 +11,10 @@ interface PixelTrackingModalProps {
   onClose: () => void;
   campaignName: string;
   campaignId: string;
+  isFacebook: boolean;
 }
 
-export const PixelTrackingModal = ({ isOpen, onClose, campaignName, campaignId }: PixelTrackingModalProps) => {
+export const PixelTrackingModal = ({ isOpen, onClose, campaignName, campaignId, isFacebook }: PixelTrackingModalProps) => {
   const [pixelId, setPixelId] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [testToken, setTestToken] = useState("");
@@ -27,7 +28,7 @@ export const PixelTrackingModal = ({ isOpen, onClose, campaignName, campaignId }
       try {
         setIsLoading(true);
         const { data, error } = await supabase.functions.invoke('fetch-tonic-pixel', {
-          body: { campaign_id: campaignId }
+          body: { campaign_id: campaignId, isFacebook: isFacebook }
         });
 
         if (error) throw error;
@@ -58,13 +59,13 @@ export const PixelTrackingModal = ({ isOpen, onClose, campaignName, campaignId }
   }, [isOpen, campaignId]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={ isOpen } onOpenChange={ onClose }>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Pixel Tracking - {campaignName}</DialogTitle>
+          <DialogTitle>Pixel Tracking - { campaignName }</DialogTitle>
         </DialogHeader>
-        
-        <Tabs defaultValue="configure" className="mt-4" ref={tabsRef}>
+
+        <Tabs defaultValue="configure" className="mt-4" ref={ tabsRef }>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="configure">Configure</TabsTrigger>
             <TabsTrigger value="test">Test</TabsTrigger>
@@ -72,24 +73,25 @@ export const PixelTrackingModal = ({ isOpen, onClose, campaignName, campaignId }
 
           <TabsContent value="configure">
             <ConfigureTab
-              pixelId={pixelId}
-              setPixelId={setPixelId}
-              accessToken={accessToken}
-              setAccessToken={setAccessToken}
-              campaignId={campaignId}
-              tabsRef={tabsRef}
-              isLoading={isLoading}
+              pixelId={ pixelId }
+              setPixelId={ setPixelId }
+              accessToken={ accessToken }
+              setAccessToken={ setAccessToken }
+              isFacebook={ isFacebook }
+              campaignId={ campaignId }
+              tabsRef={ tabsRef }
+              isLoading={ isLoading }
             />
           </TabsContent>
 
           <TabsContent value="test">
             <TestTab
-              testToken={testToken}
-              setTestToken={setTestToken}
-              campaignId={campaignId}
-              pixelId={pixelId}
-              accessToken={accessToken}
-              onClose={onClose}
+              testToken={ testToken }
+              setTestToken={ setTestToken }
+              campaignId={ campaignId }
+              pixelId={ pixelId }
+              accessToken={ accessToken }
+              onClose={ onClose }
             />
           </TabsContent>
         </Tabs>
