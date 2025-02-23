@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { from, to, username, countryCodes, offerIds } = await req.json()
+    const { from, to, username, countryCodes, offerIds, isFacebook } = await req.json()
 
     // Enhanced validation
     if (!from || !to) {
@@ -30,8 +30,8 @@ serve(async (req) => {
         'Accept': 'application/json'
       },
       body: JSON.stringify({
-        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
-        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+        consumer_key: !isFacebook ? Deno.env.get('TONIC_CONSUMER_KEY') : Deno.env.get('TONIC_FB_CONSUMER_KEY'),
+        consumer_secret: !isFacebook ? Deno.env.get('TONIC_CONSUMER_SECRET') : Deno.env.get('TONIC_FB_CONSUMER_SECRET'),
       }),
     })
 
@@ -84,11 +84,11 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify(data),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
+      {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
     )
 
@@ -96,12 +96,12 @@ serve(async (req) => {
     console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
+      {
         status: 400,
-        headers: { 
+        headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'
-        } 
+        }
       }
     )
   }

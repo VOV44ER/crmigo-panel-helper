@@ -142,9 +142,9 @@ const UserDashboard = () => {
                   state === 'facebook' ? setIsFacebook(true) : setIsFacebook(false)
                 } }
                 className={ cn(
-                  "capitalize whitespace-nowrap",
-                  isFacebook && state === 'facebook' && "bg-green-500 hover:bg-green-600",
-                  !isFacebook && state === 'tiktok' && "bg-green-500 hover:bg-green-600",
+                  "capitalize whitespace-nowrap hover:text-white",
+                  isFacebook && state === 'facebook' && "bg-green-500 hover:bg-green-600 text-white",
+                  !isFacebook && state === 'tiktok' && "bg-green-500 hover:bg-green-600 text-white",
                 ) }
               >
                 { state }
