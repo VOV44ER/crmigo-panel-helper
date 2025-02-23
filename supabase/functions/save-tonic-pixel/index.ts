@@ -11,9 +11,9 @@ serve(async (req) => {
   }
 
   try {
-    const { campaign_id, pixel_id, access_token, event_type, revenue_type } = await req.json();
+    const { campaign_id, pixel_id, access_token, event_type, revenue_type, event_name, isFacebook } = await req.json();
 
-    console.log('Received request with params:', { campaign_id, pixel_id, access_token, event_type, revenue_type });
+    console.log('Received request with params:', { campaign_id, pixel_id, access_token, event_type, revenue_type, event_name });
 
     // First authenticate with Tonic API
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
@@ -23,8 +23,8 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
-        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+        consumer_key: !isFacebook ? Deno.env.get('TONIC_CONSUMER_KEY') : Deno.env.get('TONIC_FB_CONSUMER_KEY'),
+        consumer_secret: !isFacebook ? Deno.env.get('TONIC_CONSUMER_SECRET') : Deno.env.get('TONIC_FB_CONSUMER_SECRET'),
       }),
     });
 
@@ -42,22 +42,40 @@ serve(async (req) => {
 
     console.log('Making request to save pixel with token:', authData.token);
 
-    // Save pixel configuration
-    const response = await fetch('https://api.publisher.tonic.com/privileged/v3/campaign/pixel/tiktok', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authData.token}`,
-      },
-      body: JSON.stringify({
-        campaign_id,
-        pixel_id,
-        access_token,
-        event_type,
-        revenue_type
-      }),
-    });
+    let response;
+
+    if (!isFacebook) {
+      response = await fetch('https://api.publisher.tonic.com/privileged/v3/campaign/pixel/tiktok', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authData.token}`,
+        },
+        body: JSON.stringify({
+          campaign_id,
+          pixel_id,
+          access_token,
+          event_type,
+          revenue_type
+        }),
+      });
+    } else {
+      response = await fetch('https://api.publisher.tonic.com/privileged/v3/campaign/pixel/facebook', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authData.token}`,
+        },
+        body: JSON.stringify({
+          campaign_id,
+          pixel_id,
+          access_token,
+          event_name,
+        }),
+      });
+    }
 
     const responseText = await response.text();
     console.log('Raw response:', responseText);
@@ -84,8 +102,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in save-tonic-pixel function:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message 
+    return new Response(JSON.stringify({
+      error: error.message
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

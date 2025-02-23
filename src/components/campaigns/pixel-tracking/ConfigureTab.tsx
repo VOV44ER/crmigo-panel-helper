@@ -36,7 +36,9 @@ export const ConfigureTab = ({
           campaign_id: campaignId,
           pixel_id: pixelId,
           access_token: accessToken,
-          revenue_type: "preestimated_revenue"
+          revenue_type: "preestimated_revenue",
+          isFacebook: isFacebook,
+          event_name: 'Lead'
         }
       });
 
