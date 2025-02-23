@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { campaign_id } = await req.json()
+    const { campaign_id, isFacebook } = await req.json()
 
     if (!campaign_id) {
       console.error('Missing campaign ID')
@@ -20,7 +20,7 @@ serve(async (req) => {
     }
 
     console.log('Fetching keywords for campaign:', campaign_id)
-    
+
     // First, get JWT token from Tonic
     const authResponse = await fetch('https://api.publisher.tonic.com/jwt/authenticate', {
       method: 'POST',
@@ -29,8 +29,8 @@ serve(async (req) => {
         'Accept': 'application/json'
       },
       body: JSON.stringify({
-        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
-        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+        consumer_key: !isFacebook ? Deno.env.get('TONIC_CONSUMER_KEY') : Deno.env.get('TONIC_FB_CONSUMER_KEY'),
+        consumer_secret: !isFacebook ? Deno.env.get('TONIC_CONSUMER_SECRET') : Deno.env.get('TONIC_FB_CONSUMER_SECRET'),
       }),
     })
 
@@ -67,8 +67,8 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify(data),
-      { 
-        headers: { 
+      {
+        headers: {
           ...corsHeaders,
           'Content-Type': 'application/json',
         },
@@ -79,9 +79,9 @@ serve(async (req) => {
     console.error('Error:', error.message)
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
+      {
         status: 400,
-        headers: { 
+        headers: {
           ...corsHeaders,
           'Content-Type': 'application/json',
         },

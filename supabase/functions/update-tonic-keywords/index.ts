@@ -9,8 +9,8 @@ serve(async (req) => {
   }
 
   try {
-    const { campaign_id, keywords, keyword_amount } = await req.json()
-    
+    const { campaign_id, keywords, keyword_amount, isFacebook } = await req.json()
+
     if (!campaign_id || !keywords || !keyword_amount) {
       throw new Error('Missing required fields')
     }
@@ -23,8 +23,8 @@ serve(async (req) => {
         'Accept': 'application/json'
       },
       body: JSON.stringify({
-        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
-        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+        consumer_key: !isFacebook ? Deno.env.get('TONIC_CONSUMER_KEY') : Deno.env.get('TONIC_FB_CONSUMER_KEY'),
+        consumer_secret: !isFacebook ? Deno.env.get('TONIC_CONSUMER_SECRET') : Deno.env.get('TONIC_FB_CONSUMER_SECRET'),
       }),
     })
 
@@ -35,7 +35,7 @@ serve(async (req) => {
     }
 
     const { token: tonicToken } = await authResponse.json()
-    
+
     // Update keywords in Tonic
     const response = await fetch(`${TONIC_API_URL}/campaign/keywords`, {
       method: 'POST',
@@ -61,11 +61,11 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify(result),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
+      {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
     )
 
@@ -73,12 +73,12 @@ serve(async (req) => {
     console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
+      {
         status: 400,
-        headers: { 
+        headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'
-        } 
+        }
       }
     )
   }

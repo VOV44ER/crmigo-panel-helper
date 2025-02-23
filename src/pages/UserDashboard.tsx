@@ -160,6 +160,7 @@ const UserDashboard = () => {
           <CampaignTable
             campaigns={ response?.data || [] }
             isLoading={ isLoading }
+            isFacebook={ isFacebook }
           />
           <CampaignPagination
             total={ response?.pagination.total || 0 }

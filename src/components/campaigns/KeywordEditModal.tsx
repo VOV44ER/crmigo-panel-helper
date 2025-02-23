@@ -15,9 +15,10 @@ interface KeywordEditModalProps {
   onClose: () => void;
   campaignName: string;
   campaignId: string | number;
+  isFacebook: boolean;
 }
 
-export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: KeywordEditModalProps) {
+export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId, isFacebook }: KeywordEditModalProps) {
   const [keywordAmount, setKeywordAmount] = useState("3");
   const [keywords, setKeywords] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -41,7 +42,8 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
 
       const { data, error } = await supabase.functions.invoke('fetch-tonic-keywords', {
         body: {
-          campaign_id: campaignId.toString()
+          campaign_id: campaignId.toString(),
+          isFacebook: isFacebook
         }
       });
 
@@ -61,6 +63,8 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
           }
         });
         setKeywords(newKeywords);
+      } else {
+        setKeywords([])
       }
     } catch (error) {
       console.error('Error fetching keywords:', error);
@@ -79,7 +83,8 @@ export function KeywordEditModal({ isOpen, onClose, campaignName, campaignId }: 
         body: {
           campaign_id: campaignId.toString(),
           keywords: filteredKeywords,
-          keyword_amount: Number(keywordAmount)
+          keyword_amount: Number(keywordAmount),
+          isFacebook: isFacebook
         }
       });
 
