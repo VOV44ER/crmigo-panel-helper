@@ -11,6 +11,7 @@ interface TestTabProps {
   pixelId: string;
   accessToken: string;
   onClose: () => void;
+  isFacebook: boolean;
 }
 
 export const TestTab = ({
@@ -19,6 +20,7 @@ export const TestTab = ({
   campaignId,
   pixelId,
   accessToken,
+  isFacebook,
   onClose,
 }: TestTabProps) => {
   const [isInvoking, setIsInvoking] = useState(false);
@@ -35,6 +37,7 @@ export const TestTab = ({
         body: {
           campaign_id: campaignId,
           token: testToken,
+          isFacebook: isFacebook
         }
       });
 
@@ -61,20 +64,20 @@ export const TestTab = ({
       <div className="space-y-2">
         <label className="text-sm font-medium">Test Token:</label>
         <Input
-          value={testToken}
-          onChange={(e) => setTestToken(e.target.value)}
+          value={ testToken }
+          onChange={ (e) => setTestToken(e.target.value) }
           placeholder="Enter test token"
           required
         />
       </div>
 
-      <Button 
-        type="button" 
+      <Button
+        type="button"
         className="w-full"
-        onClick={handleInvokePixel}
-        disabled={isInvoking || !pixelId || !accessToken}
+        onClick={ handleInvokePixel }
+        disabled={ isInvoking || !pixelId || !accessToken }
       >
-        {isInvoking ? "Invoking..." : "Invoke Pixel"}
+        { isInvoking ? "Invoking..." : "Invoke Pixel" }
       </Button>
     </div>
   );

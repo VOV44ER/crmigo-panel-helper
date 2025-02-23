@@ -7,7 +7,7 @@ serve(async (req) => {
   }
 
   try {
-    const { campaign_id, token } = await req.json();
+    const { campaign_id, token, isFacebook } = await req.json();
 
     console.log('Invoking pixel with:', { campaign_id, token });
 
@@ -19,8 +19,8 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        consumer_key: Deno.env.get('TONIC_CONSUMER_KEY'),
-        consumer_secret: Deno.env.get('TONIC_CONSUMER_SECRET'),
+        consumer_key: !isFacebook ? Deno.env.get('TONIC_CONSUMER_KEY') : Deno.env.get('TONIC_FB_CONSUMER_KEY'),
+        consumer_secret: !isFacebook ? Deno.env.get('TONIC_CONSUMER_SECRET') : Deno.env.get('TONIC_FB_CONSUMER_SECRET'),
       }),
     });
 
@@ -62,13 +62,13 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         data: {
           success: false,
           message: error.message
         }
       }),
-      { 
+      {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }

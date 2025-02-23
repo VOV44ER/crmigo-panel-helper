@@ -89,6 +89,7 @@ export const PixelTrackingModal = ({ isOpen, onClose, campaignName, campaignId, 
               testToken={ testToken }
               setTestToken={ setTestToken }
               campaignId={ campaignId }
+              isFacebook={ isFacebook }
               pixelId={ pixelId }
               accessToken={ accessToken }
               onClose={ onClose }
